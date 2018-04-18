@@ -1,0 +1,113 @@
+grammar br.com.kerubin.dsl.mkl.Mkl with org.eclipse.xtext.common.Terminals
+
+//generate mkl "http://www.com.br.kerubin/dsl/mkl/Mkl"
+import "br.com.kerubin.dsl.mkl.model"
+
+DomainModel:
+	'domain' Name
+	service = Service
+ ; 
+
+Service:
+	'service' Name '{'
+			(elements+=(Entity | PublicObject | Enumeration)*)
+	'}'
+;
+
+Enumeration:
+	'enum' Name '{'
+		items+=EnumItem*
+	'}'
+;
+
+EnumItem:
+	name=ID ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
+;
+
+Entity:
+	((externalObject=ExternalObject)? & 
+	(secure?='secure')?)
+	'entity' Name ('extends' superType=[Entity] )? '{'
+		Slots
+	'}'
+;
+
+ExternalObject:
+	external?='external' '(' 'domain' ':' externalDomain=ID 'service' ':' externalService=ID ')'
+;
+
+PublicObject:
+	'object' Name ('extends' superType=[PublicObject] )? '{'
+		Slots
+	'}'
+;
+
+ fragment Name returns Named:
+	name=ID ('alias' alias=ID)?
+;
+
+fragment Slots returns Slotted:
+	slots+=Slot*
+;
+
+Slot:
+	Name ':' (associationType=AssociationType)? 
+		slotType=TypeReference 
+		(optional?='?')? (many?='*')? 
+		('stored' ':' enumType=EnumType)?
+		(indexed?='indexed')?
+		(find?='find')?
+		(findResult?='findResult')?
+		('fetch' ':' fetchType=FetchType)?
+		('cascade' ':' cascadeType=CascadeType)?
+;
+
+enum EnumType:
+	STRING='string' | ORDINAL='ordinal'
+;
+
+enum CascadeType:
+	NONE='none' | ALL='all' | DETACH='detach' | MERGE='merge' | PERSIST='persist' | REFRESH='refresh' | REMOVE='remove'
+;
+
+TypeReference:
+	BasicTypeReference | ObjectTypeReference
+;
+
+ObjectTypeReference:
+	referencedType=[ServiceObject] 
+;
+
+enum FetchType:
+	EAGER='eager' | LAZY='lazy'
+;
+
+enum AssociationType:
+	CONTAINS = 'contains' |	REFERS = 'refers'
+;
+
+ServiceObject:
+	PublicObject | Entity
+;
+
+BasicTypeReference:
+	basicType=BasicType
+;
+
+BasicType:
+	StringType | IntegerType | DoubleType | MoneyType | BooleanType | DateType | TimeType | DateTimeType | UUIDType | ByteType
+;
+
+StringType: name='string' ('[' length=INT ']')?;
+IntegerType: name='int' (generated ?='generated')?;
+DoubleType: name='double';
+MoneyType: name='money';
+BooleanType: name='bool';
+DateType: name='date';
+TimeType: name='time';
+DateTimeType: name='dateTime';
+UUIDType: name='uuid' (generated ?='generated')?;
+ByteType: name='byte';
+
+ 
+ 
