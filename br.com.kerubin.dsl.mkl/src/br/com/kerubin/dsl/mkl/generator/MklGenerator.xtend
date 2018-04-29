@@ -14,12 +14,17 @@ import org.eclipse.xtext.generator.IGeneratorContext
  * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#code-generation
  */
 class MklGenerator extends AbstractGenerator {
-
+	
 	override void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
-//		fsa.generateFile('greetings.txt', 'People to greet: ' + 
-//			resource.allContents
-//				.filter(Greeting)
-//				.map[name]
-//				.join(', '))
+		
+		generate(resource, fsa)
+		
 	}
+	
+	def generate(Resource resource, IFileSystemAccess2 fsa) {
+		val javaGenerator = new JavaGenerator(resource, fsa);
+		javaGenerator.generate
+	}
+
+	
 }

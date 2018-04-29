@@ -9,10 +9,26 @@ DomainModel:
  ; 
 
 Service:
-	'service' Name '{'
-			(elements+=(Entity | PublicObject | Enumeration)*)
+	'microservice' Name '{'
+		configuration=Configuration
+		(elements+=(Entity | PublicObject | Enumeration)*)
 	'}'
 ;
+
+Configuration:
+	'config' '{' 
+		'groupId' ':' groupId=STRING
+		'version' ':' version=STRING
+	'}'
+;
+
+/*ParentModule:
+	'parentModule' '{'
+		'groupId' ':' groupId=STRING
+		'artifactId' ':' artifactId=STRING
+		'version' ':' version=STRING
+	'}'
+;*/
 
 Enumeration:
 	'enum' Name '{'
@@ -25,15 +41,19 @@ EnumItem:
 ;
 
 Entity:
-	((externalObject=ExternalObject)? & 
-	(secure?='secure')?)
+	(
+		(externalObject=ExternalObject)? & 
+		(secure?='@secure')? &
+		(mapped?='@mapped')? &
+		(audit?='@audit')? 
+	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
 		Slots
 	'}'
 ;
 
 ExternalObject:
-	external?='external' '(' 'domain' ':' externalDomain=ID 'service' ':' externalService=ID ')'
+	external?='@external' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ')'
 ;
 
 PublicObject:
@@ -54,21 +74,56 @@ Slot:
 	Name ':' (associationType=AssociationType)? 
 		slotType=TypeReference 
 		(optional?='?')? (many?='*')? 
-		('stored' ':' enumType=EnumType)?
-		(indexed?='indexed')?
-		(find?='find')?
-		(findResult?='findResult')?
-		('fetch' ':' fetchType=FetchType)?
-		('cascade' ':' cascadeType=CascadeType)?
+		(relationship = Relationship)? 
+		(
+			('stored' ':' enumType=EnumType)? &
+			(indexed?='indexed')? &
+			(find?='find')? &
+			(findResult?='findResult')? &
+			('label' ':' label=STRING)? &
+			('help' ':' help=STRING)?
+		)
+;
+
+Relationship:
+	OneToOne | OneToMany | ManyToOne | ManyToMany
+;
+
+OneToOne:
+	'oneToOne' RelationshipFeature
+;
+
+OneToMany:
+	'oneToMany' RelationshipFeature
+;
+
+ManyToOne:
+	'manyToOne' RelationshipFeature
+;
+
+ManyToMany:
+	'manyToMany' RelationshipFeature
+;
+
+fragment RelationshipFeature returns RelationshipFeatured:
+	'(' 
+		('field' ':' field=[Slot])? &
+		('fetch' ':' fetchType=FetchType)? &
+		(owner?='owner')? &
+		(orphanRemoval?='orphanRemoval')? &
+		('cascade' ':' '[' cascadeType+=CascadeType (',' cascadeType+=CascadeType)* ']')?
+	')'
+;
+
+enum CascadeType:
+	 ALL='all' | DETACH='detach' | MERGE='merge' | PERSIST='persist' | REFRESH='refresh' | REMOVE='remove'
 ;
 
 enum EnumType:
 	STRING='string' | ORDINAL='ordinal'
 ;
 
-enum CascadeType:
-	NONE='none' | ALL='all' | DETACH='detach' | MERGE='merge' | PERSIST='persist' | REFRESH='refresh' | REMOVE='remove'
-;
+
 
 TypeReference:
 	BasicTypeReference | ObjectTypeReference
@@ -99,10 +154,10 @@ BasicType:
 ;
 
 StringType: name='string' ('[' length=INT ']')?;
-IntegerType: name='int' (generated ?='generated')?;
+IntegerType: name='integer' (generated ?='generated')?;
 DoubleType: name='double';
 MoneyType: name='money';
-BooleanType: name='bool';
+BooleanType: name='boolean';
 DateType: name='date';
 TimeType: name='time';
 DateTimeType: name='dateTime';

@@ -3,6 +3,12 @@
  */
 package br.com.kerubin.dsl.mkl.scoping
 
+import br.com.kerubin.dsl.mkl.model.Relationship
+import org.eclipse.emf.ecore.EObject
+import org.eclipse.emf.ecore.EReference
+import org.eclipse.xtext.scoping.Scopes
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 /**
  * This class contains custom scoping description.
@@ -11,5 +17,18 @@ package br.com.kerubin.dsl.mkl.scoping
  * on how and when to use it.
  */
 class MklScopeProvider extends AbstractMklScopeProvider {
+	
+	override getScope(EObject context, EReference reference) {
+		
+		//Filter the scope for a relationship field only with compatible fields.
+		if (context instanceof Relationship) {
+			val ownerSlot = (context as Relationship).ownerSlot
+			val relationEntity = ownerSlot.asEntity
+			val candidateSlots = relationEntity.slots.filter[it.isEntity && it.asEntity.name == ownerSlot.ownerObject.name]
+			return Scopes.scopeFor(candidateSlots)
+		}
+		
+		super.getScope(context, reference)
+	}
 
 }
