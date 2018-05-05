@@ -87,7 +87,7 @@ class EntityUtils {
 		}
 	}
 	
-	def static Slot getRelationField(Slot slot) {
+	def static Slot getRelationOppositeSlot(Slot slot) {
 		(slot.relationship as RelationshipFeatured).field		
 	}
 	

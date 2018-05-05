@@ -215,10 +215,16 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	}
 	
 	def CharSequence createFK(Entity entity) {
-		entity.slots.filter[it.isEntity].map[createSlotByFK].join
+		entity.slots
+			.filter[it.isOneToOne || 
+					it.isManyToOne || 
+					(it.isManyToMany && it.isRelationOwner) || 
+					(it.isOneToMany && !it.isBidirectional)
+			]
+			.map[createSlotFK].join
 	}
 	
-	def CharSequence createSlotByFK(Slot slot) {
+	def CharSequence createSlotFK(Slot slot) {
 		val ownerEntity = slot.ownerEntity
 		val entity = slot.asEntity
 		var String table
@@ -226,23 +232,49 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		var String key
 		var String refTable
 		var String refKey
+		
+		val builder = new StringConcatenation
+		
 		if (slot.isManyToMany || slot.isOneToMany) {
 			table = slot.relationIntermediateTableName
-			constraintName = table
-			key = entity.getEntityIdAsFKFieldName
+			key = ownerEntity.entityIdAsFKFieldName
+			constraintName = table + '_' + key
 			refTable = ownerEntity.name.databaseName
 			refKey = ownerEntity.id.name.databaseName
-		} 
-		else {
-			table = ownerEntity.name.databaseName
-			constraintName = slot.relationIntermediateTableName
-			key = slot.getSlotIdAsFKFieldName
+			builder.append(mountFK(table, constraintName, key, refTable, refKey))
+			
+			key = entity.entityIdAsFKFieldName
+			constraintName = table + '_' + key
 			refTable = entity.name.databaseName
 			refKey = entity.id.name.databaseName
+			builder.append(mountFK(table, constraintName, key, refTable, refKey))
+		}
+		else if (slot.isOneToOne) {
+			table = ownerEntity.name.databaseName
+			key = slot.getSlotIdAsFKFieldName
+			constraintName = table + '_' + key 
+			refTable = entity.name.databaseName
+			if (entity.id.isEntity) {
+				refKey = entity.id.slotIdAsFKFieldName			
+			}
+			else {
+				refKey = entity.id.name.databaseName
+			}
+			builder.append(mountFK(table, constraintName, key, refTable, refKey))
+		}
+		else {
+			table = ownerEntity.name.databaseName
+			key = slot.getSlotIdAsFKFieldName				
+			constraintName = table + '_' + key 
+			refTable = entity.name.databaseName
+			refKey = entity.id.name.databaseName
+			builder.append(mountFK(table, constraintName, key, refTable, refKey))
 		}
 		
-		mountFK(table, constraintName, key, refTable, refKey)
+		builder
 	}
+	
+	
 	
 	def private String toSQLType(Slot slot) {
 		if (slot.slotType instanceof BasicTypeReference) {

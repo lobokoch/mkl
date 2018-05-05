@@ -137,7 +137,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		if (slot.isRelationContains && slot.isBidirectional) {
 			builder.append('mappedBy = "')	
-			builder.append(slot.relationField.name)
+			builder.append(slot.relationOppositeSlot.name)
 			builder.append('", ')
 		}
 		
@@ -186,7 +186,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		if (slot.isRelationContains && isBidirectional) {
 			builder.append('mappedBy = "')	
-			builder.append(slot.relationField.name)
+			builder.append(slot.relationOppositeSlot.name)
 			builder.append('", ')
 		}
 		
@@ -248,7 +248,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		if (!slot.isRelationOwner) {
 			builder.append('@ManyToMany(mappedBy = "')	
-			builder.append(slot.relationField.name)
+			builder.append(slot.relationOppositeSlot.name)
 			builder.append('")')
 			
 			return builder
@@ -402,9 +402,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			this.«slot.name.toFirstLower».add(«slot.relationFieldNameToAddRemoveMethod»);
 			«IF slot.isBidirectional»
 			«IF slot.isOneToMany»
-			«slot.relationFieldNameToAddRemoveMethod».set«slot.getRelationField.name.toFirstUpper»(this);
+			«slot.relationFieldNameToAddRemoveMethod».set«slot.getRelationOppositeSlot.name.toFirstUpper»(this);
 			«ELSEIF slot.isManyToMany»
-			«slot.relationFieldNameToAddRemoveMethod».get«slot.getRelationField.name.toFirstUpper»().add(this);
+			«slot.relationFieldNameToAddRemoveMethod».get«slot.getRelationOppositeSlot.name.toFirstUpper»().add(this);
 			«ENDIF»
 			«ENDIF»
 		}
@@ -413,9 +413,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			this.«slot.name.toFirstLower».remove(«slot.relationFieldNameToAddRemoveMethod»);
 			«IF slot.isBidirectional»
 			«IF slot.isOneToMany»
-			«slot.relationFieldNameToAddRemoveMethod».set«slot.getRelationField.name.toFirstUpper»(null);
+			«slot.relationFieldNameToAddRemoveMethod».set«slot.getRelationOppositeSlot.name.toFirstUpper»(null);
 			«ELSEIF slot.isManyToMany»
-			«slot.relationFieldNameToAddRemoveMethod».get«slot.getRelationField.name.toFirstUpper»().remove(this);
+			«slot.relationFieldNameToAddRemoveMethod».get«slot.getRelationOppositeSlot.name.toFirstUpper»().remove(this);
 			«ENDIF»
 			«ENDIF»
 		}
