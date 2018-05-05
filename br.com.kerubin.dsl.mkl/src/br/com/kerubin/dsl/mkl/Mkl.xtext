@@ -45,6 +45,7 @@ Entity:
 		(externalObject=ExternalObject)? & 
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
+		(baseRepository?='@baseRepository')? &
 		(audit?='@audit')? 
 	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
@@ -107,7 +108,7 @@ ManyToMany:
 
 fragment RelationshipFeature returns RelationshipFeatured:
 	'(' 
-		('field' ':' field=[Slot])? &
+		('opposite' ':' field=[Slot])? &
 		('fetch' ':' fetchType=FetchType)? &
 		(owner?='owner')? &
 		(orphanRemoval?='orphanRemoval')? &

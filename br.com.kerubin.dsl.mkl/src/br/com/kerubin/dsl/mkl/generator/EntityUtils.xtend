@@ -26,7 +26,7 @@ import br.com.kerubin.dsl.mkl.model.ManyToOne
 class EntityUtils {
 	
 	def static String getRelationIntermediateTableName(Slot slot) {
-		slot.ownerEntity.name.databaseName + "_" + slot.name.databaseName + "_" + slot.asEntity.name.databaseName
+		slot.ownerEntity.name.databaseName + "_" + slot.name.databaseName// + "_" + slot.asEntity.name.databaseName
 	}
 	
 	def static String getEntityIdAsFKFieldName(Entity entity) {
@@ -34,7 +34,8 @@ class EntityUtils {
 	}
 	
 	def static String getSlotIdAsFKFieldName(Slot slot) {
-		slot.name.databaseName + '_' + slot.asEntity.id.name.databaseName
+		val entity = slot.asEntity
+		slot.name.databaseName + '_' + entity.name.databaseName + '_' + entity.id.name.databaseName
 	}
 	
 	def static getDatabaseName(String actualName) {
@@ -55,14 +56,22 @@ class EntityUtils {
 		return false
 	}
 	
-	def static String getToJavaType(Slot slot) {
+	def static String toJavaTypeDTO(Slot slot) {
+		toJavaType(slot, false)
+	}
+	
+	def static String toJavaType(Slot slot) {
+		toJavaType(slot, true)
+	}
+	
+	def static private String toJavaType(Slot slot, boolean isEntity) {
 		if (slot.slotType instanceof BasicTypeReference) {
 			val javaBasicType = (slot.slotType as BasicTypeReference).toJavaBasicType
 			return javaBasicType
 		}
 		
 		if (slot.slotType instanceof ObjectTypeReference) {
-			val javaObjectType = (slot.slotType as ObjectTypeReference).toJavaObjectType
+			val javaObjectType = (slot.slotType as ObjectTypeReference).toJavaObjectType(isEntity)
 			return javaObjectType
 		}
 		
@@ -70,8 +79,11 @@ class EntityUtils {
 	}
 	
 	def static Entity getOwnerEntity(Slot slot) {
-		if (slot.ownerObject !== null && slot.ownerObject instanceof Entity) {
+		if (slot?.ownerObject !== null && slot.ownerObject instanceof Entity) {
 			return slot.ownerObject as Entity
+		}
+		else {
+			return null
 		}
 	}
 	
@@ -107,11 +119,12 @@ class EntityUtils {
 		slot?.relationship instanceof ManyToMany
 	}
 	
-	def static String getToJavaObjectType(ObjectTypeReference otr) {
+	def static String toJavaObjectType(ObjectTypeReference otr, boolean isEntity) {
 		val refType = otr.referencedType
 		if (refType instanceof Entity) {
 			val entity = refType as Entity
-			return entity.toEntityName
+			val entityClassName = if (isEntity) entity.toEntityName else entity.toEntityDTOName
+			return entityClassName
 		}
 		else if (refType instanceof Enumeration) {
 			val enum = refType as Enumeration
@@ -125,8 +138,33 @@ class EntityUtils {
 		"<UNKNOWN2>"
 	}
 	
-	def static getToEntityName(Entity entity) {
+	def static toEntityName(Entity entity) {
 		entity.name.toFirstUpper + "Entity"
+	}
+	
+	def static toEntityDTOName(Entity entity) {
+		entity.name.toFirstUpper
+	}
+	
+	def static toServiceName(Entity entity) {
+		entity.name.toFirstUpper + "Service"
+	}
+	
+	def static toControllerName(Entity entity) {
+		entity.name.toFirstUpper + "Controller"
+	}
+	
+	def static toDTOConverterName(Entity entity) {
+		entity.name.toFirstUpper + "DTOConverter"
+	}
+	
+	def static toRepositoryName(Entity entity) {
+		var name = entity.name.toFirstUpper 
+		if (entity.isBaseRepository) {
+			name += 'Base'
+		}
+		name += "Repository"
+		name
 	}
 	
 	def static String getToJavaBasicType(BasicTypeReference btr) {
@@ -143,7 +181,7 @@ class EntityUtils {
 		else if (basicType instanceof MoneyType) {
 			"java.math.BigDecimal"
 		}
-		else if (btr instanceof BooleanType) {
+		else if (basicType instanceof BooleanType) {
 			"Boolean"
 		}
 		else if (basicType instanceof DateType) {

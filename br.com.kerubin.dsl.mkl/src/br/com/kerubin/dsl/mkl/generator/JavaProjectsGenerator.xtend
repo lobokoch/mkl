@@ -1,5 +1,7 @@
 package br.com.kerubin.dsl.mkl.generator
 
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+
 class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
@@ -11,10 +13,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	def generateJavaProjects() {
-		val PROJECT_PARENT = 'parent'
-		val PROJECT_CLIENT = 'client'
-		val PROJECT_SERVER = 'server'
-		val MODULES_DIR = 'mod-gen/'
+		val PROJECT_PARENT = projectParentName
+		val PROJECT_CLIENT = projectClientName
+		val PROJECT_SERVER = projectServerName
+		val MODULES_DIR = getModulesDir
 		val projects = #[PROJECT_CLIENT, PROJECT_SERVER]
 		
 		//Parent first
@@ -48,9 +50,18 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		            <artifactId>spring-boot-starter-data-jpa</artifactId>
 		        </dependency>
 		        <dependency>
+		            <groupId>org.springframework.boot</groupId>
+		            <artifactId>spring-boot-starter-web</artifactId>
+		        </dependency>
+		        <dependency>
 		            <groupId>org.postgresql</groupId>
 		            <artifactId>postgresql</artifactId>
 		            <scope>runtime</scope>
+		        </dependency>
+		        <dependency>
+		          <groupId>org.modelmapper</groupId>
+		          <artifactId>modelmapper</artifactId>
+		          <version>1.1.0</version>
 		        </dependency>
 		        
 		    </dependencies>
@@ -84,6 +95,14 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		    <packaging>jar</packaging>
 		    «getPOMParentSectionFull»
 		    <dependencies>
+		    	<dependency>
+		    		<groupId>org.springframework.boot</groupId>
+		    		<artifactId>spring-boot-starter-data-jpa</artifactId>
+		    	</dependency>
+		    	<dependency>
+		    		<groupId>org.springframework.boot</groupId>
+		    		<artifactId>spring-boot-starter-web</artifactId>
+		    	</dependency>
 		    </dependencies>
 		    <build>
 		        <defaultGoal>install</defaultGoal>
@@ -169,9 +188,9 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<spring-data-releasetrain.version>Fowler-SR2</spring-data-releasetrain.version>			
 			</properties>
 			<modules>
-				<module>client</module>
-				<module>server</module>
-				<module>application</module>
+				<module>«projectClientName»</module>
+				<module>«projectServerName»</module>
+				<module>«projectApplicationName»</module>
 			</modules>
 			<dependencyManagement>
 				<dependencies>

@@ -16,7 +16,15 @@ class JavaGenerator extends BaseGenerator {
 	def generateJavaFiles() {
 		val IGeneratorExecutor[] generators = #[
 			new JavaProjectsGenerator(this),
-			new JavaJPAEntityGenerator(this)
+			new JavaServerConfigGenerator(this),
+			new JavaEntityJPAGenerator(this),
+			new JavaEntityRepositoryGenerator(this),
+			new JavaEntityServiceGenerator(this),
+			new JavaEntityDTOGenerator(this),
+			new JavaEntityDTOConverterGenerator(this),
+			new JavaClientPageResultGenerator(this),
+			new JavaEntityControllerGenerator(this),
+			new JavaPostgreSQLGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 
