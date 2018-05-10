@@ -16,6 +16,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		val PROJECT_PARENT = projectParentName
 		val PROJECT_CLIENT = projectClientName
 		val PROJECT_SERVER = projectServerName
+		
+		
 		val MODULES_DIR = getModulesDir
 		val projects = #[PROJECT_CLIENT, PROJECT_SERVER]
 		
@@ -29,6 +31,156 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		
 		generateFile(MODULES_DIR + PROJECT_CLIENT + '/pom.xml', generateClientPOM(PROJECT_CLIENT))
 		generateFile(MODULES_DIR + PROJECT_SERVER + '/pom.xml', generateServerPOM(PROJECT_SERVER, PROJECT_CLIENT))
+		
+		generateApplicationProject
+	}
+	
+	def private getApplicationName() {
+		getMainAppName.toLowerCase + '-' + service.domain.toLowerCase + '-' + service.name.toLowerCase
+	}
+	
+	def private generateApplicationProject() {
+		val MODULES_DIR = getModulesDir
+		val PROJECT_APPLICATION = projectApplicationName
+		val PROJECT_SERVER = projectServerName
+		val mainClassName = mainAppName + service.domain.toFirstUpper + service.name.toFirstUpper + 'Application'
+		
+		generateFile(MODULES_DIR + PROJECT_APPLICATION + '/pom.xml', generateApplicationPOM(PROJECT_APPLICATION, PROJECT_SERVER))
+		
+		val appSourceFolder = applicationSourceFolder
+		val path = service.servicePackagePath
+		generateFile(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
+		generateFile(getApplicationResourcesFolder + 'bootstrap.yml', generateApplicationBootstrap())
+		
+	}
+	
+	def generateApplicationBootstrap() {
+		'''
+		spring:
+		  application:
+		    name: «getApplicationName»
+		  cloud:
+		    config:
+		      uri: «service.configuration.cloudConfigUri»
+		'''
+	}
+	
+	
+	def private generateApplicationMain(String mainClassName) {
+		'''
+		package «service.servicePackage»;
+		
+		import org.springframework.boot.SpringApplication;
+		import org.springframework.boot.autoconfigure.SpringBootApplication;
+		import org.springframework.boot.autoconfigure.domain.EntityScan;
+		import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+		import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+		
+		@SpringBootApplication
+		@EnableEurekaClient
+		@EnableJpaRepositories("«basePackage»")
+		@EntityScan("«basePackage»")
+		public class «mainClassName» {
+		
+			public static void main(String[] args) {
+				SpringApplication.run(«mainClassName».class, args);
+			}
+		}
+		'''
+	}
+	
+	
+	def generateApplicationPOM(String applicationProjectName, String serverProjectName) {
+		'''
+		<?xml version="1.0" encoding="UTF-8"?>
+		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+			<modelVersion>4.0.0</modelVersion>
+		
+			<artifactId>«getApplicationName»</artifactId>
+			<packaging>jar</packaging>
+		
+			<name>kerubin-test</name>
+			<description>Kerubin Test Service</description>
+		
+			«getPOMParentSectionFull»
+		
+			<dependencies>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>«service.name»-«serverProjectName»</artifactId>
+					<version>${project.version}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-actuator</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-data-jpa</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-web</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.cloud</groupId>
+					<artifactId>spring-cloud-starter-config</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.cloud</groupId>
+					<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+				</dependency>
+		
+				<dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+					<scope>runtime</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-test</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+			
+			<!--
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>org.springframework.cloud</groupId>
+						<artifactId>spring-cloud-dependencies</artifactId>
+						<version>${spring-cloud.version}</version>
+						<type>pom</type>
+						<scope>import</scope>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+		
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+					</plugin>
+				</plugins>
+			</build>
+		
+			<repositories>
+				<repository>
+					<id>spring-milestones</id>
+					<name>Spring Milestones</name>
+					<url>https://repo.spring.io/milestone</url>
+					<snapshots>
+						<enabled>false</enabled>
+					</snapshots>
+				</repository>
+			</repositories>
+			-->
+		
+		
+		</project>
+		'''
 	}
 	
 	def generateServerPOM(String serverProjectName, String clientProjectName) {
@@ -184,8 +336,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 				<java.version>1.8</java.version>
 				<springframework.boot.version>2.0.1.RELEASE</springframework.boot.version>
-				<spring-cloud.version>Finchley.M9</spring-cloud.version>			
-				<spring-data-releasetrain.version>Fowler-SR2</spring-data-releasetrain.version>			
+				<spring-cloud.version>Finchley.RC1</spring-cloud.version>			
+				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>			
 			</properties>
 			<modules>
 				<module>«projectClientName»</module>
@@ -235,85 +387,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 						<enabled>false</enabled>
 					</snapshots>
 				</repository>
+				<repository>
+					<id>spring-libs-release</id>
+					<name>Spring Releases</name>
+					<url>https://repo.spring.io/libs-release</url>
+					<snapshots>
+						<enabled>false</enabled>
+					</snapshots>
+				</repository>
 			</repositories>
 			
 		</project>
 		'''
 	}
 	
-	def generateParentPOM2() {
-		'''
-		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-			<modelVersion>4.0.0</modelVersion>
-			«getPOMParentSection»
-			<packaging>pom</packaging>
-			<name>«service.name»-parent</name>
-			<description>«service.name»</description>
-			<organization>
-				<name>Kerubin</name>
-				<url>http://www.kerubin.com.br</url>
-			</organization>
-			<developers>
-			<developer>
-				<name>Kerubin</name>
-			</developer>
-			</developers>
-			<properties>
-				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-				<maven.compiler.source>1.8</maven.compiler.source>
-				<maven.compiler.target>1.8</maven.compiler.target>		
-			</properties>	
-			<!--distributionManagement>
-				<repository>
-					<id>kerubin-release</id>
-					<name>maven-releases</name>
-					<url>http://maven.kerubin.com.br:8081/artifactory/libs-release-local</url>
-				</repository>
-				<snapshotRepository>
-					<id>kerubin-snapshot</id>
-					<name>maven-snapshots</name>
-					<url>http://maven.kerubin.com.br:8081/artifactory/libs-snapshot-local</url>
-				</snapshotRepository>
-			</distributionManagement-->
-			<!--repositories>
-				<repository>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-					<id>central</id>
-					<name>libs-release</name>
-					<url>http://maven.kerubin.com.br:8081/artifactory/libs-release</url>
-				</repository>
-				<repository>
-					<snapshots/>
-						<id>snapshots</id>
-						<name>libs-snapshot</name>
-						<url>http://maven.kerubin.com.br:8081/artifactory/libs-snapshot</url>
-				</repository>
-			</repositories-->
-			<build>
-				<defaultGoal>install</defaultGoal>
-				<plugins>
-					<!-- Geração do jar dos sources -->
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-source-plugin</artifactId>
-						<version>3.0.0</version>
-						<executions>
-							<execution>
-								<id>attach-sources</id>
-								<goals>
-									<goal>jar</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</project>
-		
-		'''
-	}
 	
 }

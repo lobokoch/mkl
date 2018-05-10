@@ -48,7 +48,7 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence dropTable(Entity entity) {
 		'''
-		DROP TABLE IF EXISTS «entity.name.databaseName»;
+		DROP TABLE IF EXISTS «entity.databaseName» CASCADE;
 		'''
 	}
 	
@@ -60,12 +60,18 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence createTable(Entity entity) {
 		val builder = new StringConcatenation
+		val table = entity.databaseName
 		
 		builder.append('CREATE TABLE ')
-		builder.append(entity.name.databaseName)
-		builder.append(' /* ')
-		builder.append(entity.name)
-		builder.append(' */ (')
+		builder.append(table)
+		
+		if (table != entity.name) {
+			builder.append(' /* ')
+			builder.append(entity.name)
+			builder.append(' */ ')			
+		}
+		
+		builder.append(' (')			
 		builder.newLine
 		
 		//Table fields
@@ -80,12 +86,6 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		slots.forEach[builder.append(it.createIntermediateTable)]			
 		
 		builder
-		
-		/*'''
-		CREATE TABLE «entity.name.databaseName»  «entity.name»  (
-			«entity.slots.map[generateDatabaseField].join(',\n')»
-		);
-		'''*/
 	}
 	
 	def CharSequence createIntermediateTable(Slot slot) {
@@ -96,11 +96,14 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		builder.append(slot.getRelationIntermediateTableName)
 		builder.append(' /* ')
 		builder.append(slot.ownerEntity.name + ' + ' + slot.name)
-		builder.append(' */ (')
+		builder.append(' */')
+		builder.append(' (')
 		builder.newLine
 		
 		//Table fields
-		val slots = #[slot.ownerEntity.id, slot.asEntity.id]
+		var Slot[] slots
+		
+		slots = #[slot.ownerEntity.id, slot.asEntity.id]
 		builder.append(slots.map[generateDatabaseField(true)].join(',\n'))
 		
 		builder.newLine
@@ -117,17 +120,18 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	def CharSequence generateDatabaseField(Slot slot, boolean isMany) {		
 		val builder = new StringConcatenation
 		builder.append('\t')
-		if (slot.isEntity) {
-			builder.append(slot.slotIdAsFKFieldName)
+		
+		var String fieldName
+		
+		if (isMany) {
+			fieldName = slot.getSlotAsOwnerEntityIdFK
 		}
 		else {
-			if (isMany) {
-				builder.append(slot.ownerEntity.entityIdAsFKFieldName)
-			}
-			else {
-				builder.append(slot.name.databaseName)				
-			}
+			fieldName = slot.databaseName	
 		}
+		
+		builder.append(fieldName)	
+		
 		
 		builder.append(' ')
 		builder.append(slot.toSQLType)
@@ -136,13 +140,13 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 			builder.append(' NOT NULL')
 		}
 		
-		builder.append(' /* ')
-		builder.append(slot.name)
-		builder.append(' */')
+		if (fieldName != slot.name) {
+			builder.append(' /* ')
+			builder.append(slot.name)
+			builder.append(' */')
+		}
 		
 		builder
-		
-		//'''«IF slot.isEntity»«IF slot.isOneToOne»«slot.asEntity.entityIdAsFKFieldName»«ELSE»«slot.slotIdAsFKFieldName»«ENDIF»«ELSE»«slot.name.databaseName»«ENDIF» «slot.toSQLType»«IF !slot.optional» NOT NULL«ENDIF» /* «slot.name» */'''
 	}
 	
 	def CharSequence createPKs() {
@@ -155,42 +159,24 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence mountPK(String tableName, String constraintName, String keyName) {
 		'''
-		ALTER TABLE «tableName» ADD CONSTRAINT PK_«constraintName» PRIMARY KEY («keyName»);
+		ALTER TABLE «tableName» ADD CONSTRAINT pk_«constraintName» PRIMARY KEY («keyName»);
 		'''
-		/*val builder = new StringConcatenation
-		builder.append('ALTER TABLE ')
-		builder.append(tableName)
-		builder.append(' ADD CONSTRAINT PK_')
-		builder.append(constraintName)
-		builder.append(' PRIMARY KEY (')
-		builder.append(keyName)
-		builder.append(');')
-		builder*/
 	}
 	
 	def CharSequence createPK(Entity entity) {
-		val tableName = entity.name.databaseName
-		var keyName = entity.id.name.databaseName
-		if (entity.id.isEntity) {
-			/*if (entity.id.isOneToOne) {
-				keyName = entity.id.asEntity.entityIdAsFKFieldName
-			}
-			else {*/
-				keyName = entity.id.slotIdAsFKFieldName
-			//}
-		}
-		
+		val tableName = entity.databaseName
+		var keyName = entity.getEntityIdAsKey
 		val constraintName = tableName + '_' + keyName
 		
 		val builder = new StringConcatenation
 		builder.append(mountPK(tableName, constraintName, keyName))
 		
-		// mount intermediaty tables PKs
+		// mount intermediate table PKs
 		val slots = entity.slots.filter[ (it.isManyToMany && it.isRelationOwner) || (it.isOneToMany && !it.isBidirectional) ]
 		slots.forEach[slot|
 			val tableName_ = slot.getRelationIntermediateTableName
 			val constraintName_ = tableName_
-			val keyName_ = slot.ownerEntity.entityIdAsFKFieldName + ', ' + slot.asEntity.entityIdAsFKFieldName
+			val keyName_ = slot.getSlotAsOwnerEntityIdFK + ', ' + slot.getSlotAsEntityIdFK
 			builder.append(mountPK(tableName_, constraintName_, keyName_))
 		]
 		
@@ -210,7 +196,7 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence mountFK(String table, String constraintName, String key, String refTable, String refKey) {
 		'''
-		ALTER TABLE «table» ADD CONSTRAINT FK_«constraintName» FOREIGN KEY («key») REFERENCES «refTable» («refKey»);
+		ALTER TABLE «table» ADD CONSTRAINT fk_«constraintName» FOREIGN KEY («key») REFERENCES «refTable» («refKey»);
 		'''
 	}
 	
@@ -236,38 +222,27 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		val builder = new StringConcatenation
 		
 		if (slot.isManyToMany || slot.isOneToMany) {
+			// Gets owner side
 			table = slot.relationIntermediateTableName
-			key = ownerEntity.entityIdAsFKFieldName
+			key = slot.getSlotAsOwnerEntityIdFK
 			constraintName = table + '_' + key
-			refTable = ownerEntity.name.databaseName
-			refKey = ownerEntity.id.name.databaseName
+			refTable = ownerEntity.databaseName
+			refKey = ownerEntity.entityIdAsKey
 			builder.append(mountFK(table, constraintName, key, refTable, refKey))
 			
-			key = entity.entityIdAsFKFieldName
+			// Gets opposite side
+			key = slot.getSlotAsEntityIdFK
 			constraintName = table + '_' + key
-			refTable = entity.name.databaseName
-			refKey = entity.id.name.databaseName
-			builder.append(mountFK(table, constraintName, key, refTable, refKey))
-		}
-		else if (slot.isOneToOne) {
-			table = ownerEntity.name.databaseName
-			key = slot.getSlotIdAsFKFieldName
-			constraintName = table + '_' + key 
-			refTable = entity.name.databaseName
-			if (entity.id.isEntity) {
-				refKey = entity.id.slotIdAsFKFieldName			
-			}
-			else {
-				refKey = entity.id.name.databaseName
-			}
+			refTable = entity.databaseName
+			refKey = entity.entityIdAsKey
 			builder.append(mountFK(table, constraintName, key, refTable, refKey))
 		}
 		else {
-			table = ownerEntity.name.databaseName
-			key = slot.getSlotIdAsFKFieldName				
+			table = ownerEntity.databaseName
+			key = slot.databaseName				
 			constraintName = table + '_' + key 
-			refTable = entity.name.databaseName
-			refKey = entity.id.name.databaseName
+			refTable = entity.databaseName
+			refKey = entity.entityIdAsKey
 			builder.append(mountFK(table, constraintName, key, refTable, refKey))
 		}
 		

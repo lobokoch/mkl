@@ -25,6 +25,8 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def CharSequence generateEntityRepository(Entity entity) {
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		
 		'''
 		package «entity.package»;
 		
@@ -36,7 +38,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		«ELSE»
 		
 		«ENDIF»
-		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «entity.id.toJavaType»> {
+		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»> {
 		
 		}
 		'''

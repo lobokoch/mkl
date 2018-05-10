@@ -47,7 +47,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		val body = '''
 		
 		@Entity
-		@Table(name = "«entity.name.databaseName»")
+		@Table(name = "«entity.databaseName»")
 		public class «entity.toEntityName» {
 		
 			«entity.generateFields»
@@ -81,6 +81,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityName + ';')
 		}
 		'''
+		«IF slot.isOneToOne && slot.isRelationRefers»
+		@Id /* OneTone will be PK and FK pointing to «slot.asEntity.toEntityName» */
+		@Column(name="«slot.databaseName»")
+		private «slot.asEntity.id.toJavaType» «slot.asEntity.id.name.toFirstLower»;
+		
+		«ENDIF»
 		«slot.generateAnnotations(entity)»
 		«IF slot.isOneToMany»
 		private java.util.List<«slot.toJavaType»> «slot.name.toFirstLower»;
@@ -93,18 +99,27 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateAnnotations(Slot slot, Entity entity) {
+		val isOneToOne = slot.isOneToOne && slot.isRelationRefers
+		
 		'''
 		«IF slot == entity.id»
-		«IF slot.isUUID && !(slot.isOneToOne && slot.isRelationRefers)»
+		«IF slot.isUUID && !isOneToOne»
+		«entity.addImport('import javax.persistence.GeneratedValue;')»
+		«entity.addImport('import org.hibernate.annotations.GenericGenerator;')»
 		@GeneratedValue(generator = "uuid2")
 		@GenericGenerator(name = "uuid2", strategy = "uuid2")
 		«ENDIF»
+		«IF !isOneToOne»
 		@Id
+		«ENDIF»
 		«ENDIF»
 		«IF slot.hasRelationship»
 		«slot.getRelationAnnotation(entity)»
+		«IF false/*isOneToOne*/»
+		@Column(name="«slot.databaseName»")
+		«ENDIF»
 		«ELSE»
-		@Column(name="«slot.name.databaseName»")
+		@Column(name="«slot.databaseName»")
 		«ENDIF»
 		'''
 	}
@@ -169,7 +184,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		'''
 		@ManyToOne(fetch = FetchType.«slot.relationship.getFetchType»)
-		@JoinColumn(name = "«slot.asEntity.getEntityIdAsFKFieldName»")
+		@JoinColumn(name = "«slot.databaseName»")
 		'''
 	}
 	
@@ -226,12 +241,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			builder.newLine
 			builder.append('\t')
 			builder.append('joinColumns = @JoinColumn(name = "')
-			builder.append(entity.getEntityIdAsFKFieldName)
+			builder.append(entity.getEntityIdAsKey)
 			builder.append('"),')
 			builder.newLine
 			builder.append('\t')
 			builder.append('inverseJoinColumns = @JoinColumn(name = "')
-			builder.append(slot.getSlotIdAsFKFieldName)
+			builder.append(slot.getSlotAsEntityIdFK)
 			builder.append('")')
 			builder.newLine
 			builder.append(')')
@@ -283,12 +298,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		builder.newLine
 		builder.append('\t')
 		builder.append('joinColumns = @JoinColumn(name = "')
-		builder.append(entity.getEntityIdAsFKFieldName)
+		builder.append(entity.getEntityIdAsKey)
 		builder.append('"),')
 		builder.newLine
 		builder.append('\t')
 		builder.append('inverseJoinColumns = @JoinColumn(name = "')
-		builder.append(slot.getSlotIdAsFKFieldName)
+		builder.append(slot.getSlotAsEntityIdFK)
 		builder.append('")')
 		builder.newLine
 		builder.append(')')
@@ -314,13 +329,13 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«entity.addImport('import javax.persistence.FetchType;')»
 		«entity.addImport('import javax.persistence.JoinColumn;')»
 		@ManyToOne(fetch = FetchType.«slot.relationship.getFetchType»)
-		@JoinColumn(name = "«slot.asEntity.getEntityIdAsFKFieldName»")
+		@JoinColumn(name = "«slot.asEntity.getEntityIdAsKey»")
 		«ELSEIF slot.relationship instanceof OneToMany»
 		«entity.addImport('import javax.persistence.OneToMany;')»
 		«entity.addImport('import javax.persistence.FetchType;')»
 		«entity.addImport('import javax.persistence.JoinColumn;')»
 		@OneToMany(mappedBy = "«slot.asEntity.name.toLowerCase»"«slot.relationship.getCascadeType», orphanRemoval = true, fetch = FetchType.«slot.relationship.getFetchType»)
-		@JoinColumn(name = "«slot.asEntity.getEntityIdAsFKFieldName»")
+		@JoinColumn(name = "«slot.asEntity.getEntityIdAsKey»")
 		«ELSEIF slot.relationship instanceof ManyToMany»
 		«entity.addImport('import javax.persistence.ManyToMany;')»
 		«IF (slot.isRelationOwner)»
@@ -329,8 +344,8 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«entity.addImport('import javax.persistence.CascadeType;')»
 		@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 		    @JoinTable(name = "«slot.getRelationIntermediateTableName»",
-		        joinColumns = @JoinColumn(name = "«entity.getEntityIdAsFKFieldName»"),
-		        inverseJoinColumns = @JoinColumn(name = "«slot.getSlotIdAsFKFieldName»")
+		        joinColumns = @JoinColumn(name = "«entity.getEntityIdAsKey»"),
+		        inverseJoinColumns = @JoinColumn(name = "«slot.getSlotAsEntityIdFK»")
 		    )
 		«ELSE»
 		@ManyToMany(mappedBy = "«(slot.relationship as RelationshipFeatured).field.name»")
@@ -434,6 +449,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	//From https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
 	def CharSequence generateEquals(Entity entity) {
+		val id = if (entity.id.isEntity) 'id' else entity.id.name
 		'''
 		
 		@Override
@@ -445,10 +461,10 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			if (getClass() != obj.getClass())
 				return false;
 			«entity.toEntityName» other = («entity.toEntityName») obj;
-			if (id == null) {
-				if (other.id != null)
+			if («id» == null) {
+				if (other.«id» != null)
 					return false;
-			} else if (!id.equals(other.id))
+			} else if (!«id».equals(other.«id»))
 				return false;
 			
 			return true;
@@ -485,8 +501,6 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		entity.addImport('import javax.persistence.Entity;')
 		entity.addImport('import javax.persistence.Table;')
 		entity.addImport('import javax.persistence.Id;')
-		entity.addImport('import javax.persistence.GeneratedValue;')
-		entity.addImport('import org.hibernate.annotations.GenericGenerator;')
 		entity.addImport('import javax.persistence.Column;')
 	}
 	

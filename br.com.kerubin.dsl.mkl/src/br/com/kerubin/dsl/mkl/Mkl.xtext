@@ -19,6 +19,7 @@ Configuration:
 	'config' '{' 
 		'groupId' ':' groupId=STRING
 		'version' ':' version=STRING
+		'cloudConfigUri' ':' cloudConfigUri=STRING
 	'}'
 ;
 
@@ -64,7 +65,7 @@ PublicObject:
 ;
 
  fragment Name returns Named:
-	name=ID ('alias' alias=ID)?
+	name=ID ('alias' _alias=ID)?
 ;
 
 fragment Slots returns Slotted:

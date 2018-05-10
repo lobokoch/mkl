@@ -131,6 +131,8 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	//From https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
 	def CharSequence generateEquals(Entity entity) {
+		val id = if (entity.id.isEntity) entity.id.asEntity.name + '.get' + entity.id.asEntity.id.name.toFirstUpper + '()' else entity.id.name
+		
 		'''
 		
 		@Override
@@ -142,10 +144,10 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 			if (getClass() != obj.getClass())
 				return false;
 			«entity.toEntityDTOName» other = («entity.toEntityDTOName») obj;
-			if (id == null) {
-				if (other.id != null)
+			if («id» == null) {
+				if (other.«id» != null)
 					return false;
-			} else if (!id.equals(other.id))
+			} else if (!«id».equals(other.«id»))
 				return false;
 			
 			return true;

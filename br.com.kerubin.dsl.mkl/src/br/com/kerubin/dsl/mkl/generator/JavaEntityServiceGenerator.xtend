@@ -30,13 +30,14 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val entityDTOName = entity.toEntityDTOName
 		val repositoryVar = entity.toRepositoryName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
-		val idType = entity.id.toJavaType
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val actualEntityVar = 'actual' + entityName
 		val getEntityMethod = 'get' + entityName
 		
 		'''
 		package «entity.package»;
 		
+		import java.util.Optional;
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
 		import org.springframework.data.domain.Page;
@@ -64,7 +65,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			public void delete(«idType» «idVar») {
-				«repositoryVar».delete(«idVar»);
+				«repositoryVar».deleteById(«idVar»);
 			}
 			
 			public Page<«entityName»> list(Pageable pageable) {
@@ -73,11 +74,11 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			private «entityName» «getEntityMethod»(«idType» «entity.id.name») {
-				«entityName» «entityVar» = «repositoryVar».findOne(«idVar»);
-				if («entityVar» == null) {
+				Optional<«entityName»> «entityVar» = «repositoryVar».findById(«idVar»);
+				if (!«entityVar».isPresent()) {
 					throw new IllegalArgumentException("«entityDTOName» not found:" + «idVar».toString());
 				}
-				return «entityVar»;
+				return «entityVar».get();
 			}
 		}
 		'''

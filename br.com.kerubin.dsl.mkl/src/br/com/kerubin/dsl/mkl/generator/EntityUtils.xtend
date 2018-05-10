@@ -26,22 +26,35 @@ import br.com.kerubin.dsl.mkl.model.ManyToOne
 class EntityUtils {
 	
 	def static String getRelationIntermediateTableName(Slot slot) {
-		slot.ownerEntity.name.databaseName + "_" + slot.name.databaseName// + "_" + slot.asEntity.name.databaseName
+		slot.ownerEntity.databaseName + "_" + slot.databaseName
 	}
 	
-	def static String getEntityIdAsFKFieldName(Entity entity) {
-		entity.name.databaseName + '_' + entity.id.name.databaseName
+	def static String getEntityIdAsKey(Entity entity) {
+		entity.id.databaseName
 	}
 	
-	def static String getSlotIdAsFKFieldName(Slot slot) {
+	def static String getSlotAsEntityIdFK(Slot slot) {
 		val entity = slot.asEntity
-		slot.name.databaseName + '_' + entity.name.databaseName + '_' + entity.id.name.databaseName
+		entity.databaseName + '_' + entity.id.databaseName
 	}
 	
-	def static getDatabaseName(String actualName) {
-		val databaseName = actualName.replace('_', '').splitByCharacterTypeCamelCase.map[toLowerCase].join('_')
-		databaseName
+	def static String getSlotAsOwnerEntityIdFK(Slot slot) {
+		val entity = slot.ownerEntity
+		entity.databaseName + '_' + entity.id.databaseName
 	}
+	
+	def private static getDatabaseName(String name) {
+		name.replace('_', '').splitByCharacterTypeCamelCase.map[toLowerCase].join('_')
+	}
+	
+	def static getDatabaseName(Slot slot) {
+		slot.alias.getDatabaseName
+	}
+	
+	def static getDatabaseName(Entity entity) {
+		entity.alias.getDatabaseName
+	}
+	
 	
 	def static Entity asEntity(Slot slot) {
 		val reference = slot.slotType as ObjectTypeReference

@@ -31,7 +31,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val entityDTOVar = entity.toEntityDTOName.toFirstLower
 		val entityServiceVar = entity.toServiceName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
-		val idType = entity.id.toJavaType
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		
 		'''
 		package «entity.package»;
