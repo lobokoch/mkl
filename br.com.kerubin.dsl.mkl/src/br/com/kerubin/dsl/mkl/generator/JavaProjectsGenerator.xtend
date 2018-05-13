@@ -13,21 +13,21 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	def generateJavaProjects() {
-		val PROJECT_PARENT = projectParentName
+		//val PROJECT_PARENT = projectParentName
 		val PROJECT_CLIENT = projectClientName
 		val PROJECT_SERVER = projectServerName
 		
 		
 		val MODULES_DIR = getModulesDir
-		val projects = #[PROJECT_CLIENT, PROJECT_SERVER]
+		//val projects = #[PROJECT_CLIENT, PROJECT_SERVER]
 		
 		//Parent first
-		generateFile(MODULES_DIR + '.project', generateJavaProject(PROJECT_PARENT))	
+		//generateFile(MODULES_DIR + '.project', generateJavaProject(PROJECT_PARENT))	
 		generateFile(MODULES_DIR + 'pom.xml', generateParentPOM)
 		
-		projects.forEach[
+		/*projects.forEach[
 			generateFile(MODULES_DIR + it + '/.project', generateJavaProject)	
-		]
+		]*/
 		
 		generateFile(MODULES_DIR + PROJECT_CLIENT + '/pom.xml', generateClientPOM(PROJECT_CLIENT))
 		generateFile(MODULES_DIR + PROJECT_SERVER + '/pom.xml', generateServerPOM(PROJECT_SERVER, PROJECT_CLIENT))
@@ -100,8 +100,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<artifactId>«getApplicationName»</artifactId>
 			<packaging>jar</packaging>
 		
-			<name>kerubin-test</name>
-			<description>Kerubin Test Service</description>
+			<name>«getApplicationName»</name>
+			<description>Kerubin «getApplicationName» Service</description>
 		
 			«getPOMParentSectionFull»
 		
@@ -131,11 +131,14 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<groupId>org.springframework.cloud</groupId>
 					<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 				</dependency>
-		
 				<dependency>
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
 					<scope>runtime</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-core</artifactId>
 				</dependency>
 				<dependency>
 					<groupId>org.springframework.boot</groupId>
@@ -217,7 +220,36 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		        </dependency>
 		        
 		    </dependencies>
+		    <build>
+		        <plugins>
+		        	«getSourceFolderPlugin»
+		        </plugins>
+		      </build>
 		</project>
+		'''
+	}
+	
+	def static getSourceFolderPlugin() {
+		'''
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>3.0.0</version>
+            <executions>
+              <execution>
+                <id>add-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>«getJavaSourceGen»</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
 		'''
 	}
 	
@@ -259,6 +291,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		    <build>
 		        <defaultGoal>install</defaultGoal>
 		        <plugins>
+		        	«getSourceFolderPlugin»
 		        	<plugin>
 		        		<groupId>org.codehaus.mojo</groupId>
 		        		<artifactId>templating-maven-plugin</artifactId>

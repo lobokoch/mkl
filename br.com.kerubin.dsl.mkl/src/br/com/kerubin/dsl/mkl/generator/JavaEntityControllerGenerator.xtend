@@ -60,7 +60,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		
 		
 		@RestController
-		@RequestMapping("/«entityDTOVar»")
+		@RequestMapping("entities/«entityDTOVar»")
 		public class «entity.toControllerName» {
 			
 			@Autowired

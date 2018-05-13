@@ -11,16 +11,17 @@ class Utils {
 	static val BASE_SERVER_DIR = BASE_MODULES_DIR + PROJECT_SERVER + '/'
 	static val BASE_CLIENT_DIR = BASE_MODULES_DIR + PROJECT_CLIENT + '/'
 	static val BASE_APPLICATION_DIR = BASE_MODULES_DIR + PROJECT_APPLICATION + '/'
-	//static val SOURCE_GEN_BASE_DIR = 'src-gen/'
-	static val SOURCE_GEN_BASE_DIR = 'src/'
+	static val SOURCE_GEN_BASE_DIR = 'src-gen/'
+	//static val SOURCE_GEN_BASE_DIR = 'src/'
 	static val SOURCE_BASE_DIR = 'src/'
 	static val JAVA_BASE_DIR = 'main/java/'
 	static val RESOURCES_BASE_DIR = 'main/resources/'
 	static val SERVER_SOURCE_GEN_DIR = BASE_SERVER_DIR + SOURCE_GEN_BASE_DIR
 	static val CLIENT_SOURCE_GEN_DIR = BASE_CLIENT_DIR + SOURCE_GEN_BASE_DIR
 	
-	static val APPLICATION_SOURCE_GEN_DIR = BASE_APPLICATION_DIR + SOURCE_GEN_BASE_DIR
+	static val APPLICATION_SOURCE_GEN_DIR = BASE_APPLICATION_DIR + SOURCE_BASE_DIR
 	static val APPLICATION_RESOURCES_GEN_DIR = BASE_APPLICATION_DIR + SOURCE_GEN_BASE_DIR + RESOURCES_BASE_DIR
+	static val APPLICATION_RESOURCES_DIR = BASE_APPLICATION_DIR + SOURCE_BASE_DIR + RESOURCES_BASE_DIR
 	
 	static val SERVER_SOURCE_DIR = BASE_SERVER_DIR + SOURCE_BASE_DIR
 	static val CLIENT_SOURCE_DIR = BASE_CLIENT_DIR + SOURCE_BASE_DIR
@@ -28,6 +29,10 @@ class Utils {
 	
 	def static getMainAppName() {
 		MAIN_APP_NAME
+	}
+	
+	def static getJavaSourceGen() {
+		SOURCE_GEN_BASE_DIR + JAVA_BASE_DIR
 	}
 	
 	def static getProjectParentName() {
@@ -74,8 +79,12 @@ class Utils {
 		APPLICATION_SOURCE_GEN_DIR + JAVA_BASE_DIR
 	}
 	
-	def static getApplicationResourcesFolder() {
+	def static getApplicationGenResourcesFolder() {
 		APPLICATION_RESOURCES_GEN_DIR
+	}
+	
+	def static getApplicationResourcesFolder() {
+		APPLICATION_RESOURCES_DIR
 	}
 	
 	def static getClientSourceFolder() {

@@ -25,6 +25,12 @@ import br.com.kerubin.dsl.mkl.model.ManyToOne
 
 class EntityUtils {
 	
+	def static generateEntityImports(Entity entity) {
+		'''
+		«entity.imports.map[it].join('\r\n')»
+		'''
+	}
+	
 	def static String getRelationIntermediateTableName(Slot slot) {
 		slot.ownerEntity.databaseName + "_" + slot.databaseName
 	}
@@ -157,6 +163,30 @@ class EntityUtils {
 	
 	def static toEntityDTOName(Entity entity) {
 		entity.name.toFirstUpper
+	}
+	
+	def static buildMethodGet(Slot slot) {
+		slot.name.buildMethodGet
+	}
+	
+	def static buildMethodGet(Entity entity) {
+		entity.name.buildMethodGet
+	}
+	
+	def static buildMethodGet(String name) {
+		'get' + name.toFirstUpper + '(' + ')'
+	}
+	
+	def static buildMethodSet(Slot slot, String param) {
+		slot.name.buildMethodSet(param)
+	}
+	
+	def static buildMethodSet(Entity entity, String param) {
+		entity.name.buildMethodSet(param)
+	}
+	
+	def static buildMethodSet(String name, String param) {
+		'set' + name.toFirstUpper + '(' + param + ')'
 	}
 	
 	def static toServiceName(Entity entity) {

@@ -2,6 +2,7 @@ package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Service
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class GeneratorExecutor {
 	
@@ -55,6 +56,14 @@ class GeneratorExecutor {
 	def String getPackagePath(Entity entity) {
 		val path = entity.package.replace('.', '/')
 		path
+	}
+	
+	def String getEntityImport(Entity entity) {
+		'import ' + entity.package + '.' + entity.toEntityName + ';'
+	}
+	
+	def String getEntityDTOImport(Entity entity) {
+		'import ' + entity.package + '.' + entity.toEntityDTOName + ';'
 	}
 	
 }

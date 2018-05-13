@@ -72,7 +72,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
-		if (slot.isEntity) {
+		if (slot.isEntity && !slot.isManyToOne) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
 		}
 		'''
@@ -80,6 +80,8 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSEIF slot.isManyToMany»
 		private java.util.Set<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
+		«ELSEIF slot.isManyToOne»
+		private «slot.asEntity.id.toJavaTypeDTO» «slot.name.toFirstLower»;
 		«ELSE»
 		private «slot.toJavaTypeDTO» «slot.name.toFirstLower»;
 		«ENDIF»
@@ -100,6 +102,8 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		public java.util.List<«slot.toJavaTypeDTO»> get«slot.name.toFirstUpper»() {
 		«ELSEIF slot.isManyToMany»
 		public java.util.Set<«slot.toJavaTypeDTO»> get«slot.name.toFirstUpper»() {
+		«ELSEIF slot.isManyToOne»
+		public «slot.asEntity.id.toJavaTypeDTO» get«slot.name.toFirstUpper»() {
 		«ELSE»
 		public «slot.toJavaTypeDTO» get«slot.name.toFirstUpper»() {
 		«ENDIF»
@@ -121,6 +125,8 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower») {
 		«ELSEIF slot.many && slot.isManyToMany»
 		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaTypeDTO»> «slot.name.toFirstLower») {
+		«ELSEIF slot.isManyToOne»
+		public void set«slot.name.toFirstUpper»(«slot.asEntity.id.toJavaTypeDTO» «slot.name.toFirstLower») {
 		«ELSE»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaTypeDTO» «slot.name.toFirstLower») {
 		«ENDIF»

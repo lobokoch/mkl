@@ -92,15 +92,18 @@ Relationship:
 ;
 
 OneToOne:
-	'oneToOne' RelationshipFeature
+{OneToOne}
+	'oneToOne' | 'oneToOne' RelationshipFeature
 ;
 
 OneToMany:
-	'oneToMany' RelationshipFeature
+{OneToMany}
+	'oneToMany' | 'oneToMany' RelationshipFeature
 ;
 
 ManyToOne:
-	'manyToOne' RelationshipFeature
+{ManyToOne}
+	'manyToOne' | 'manyToOne' RelationshipFeature
 ;
 
 ManyToMany:

@@ -89,9 +89,13 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ENDIF»
 		«slot.generateAnnotations(entity)»
 		«IF slot.isOneToMany»
-		private java.util.List<«slot.toJavaType»> «slot.name.toFirstLower»;
+		«entity.addImport('import java.util.List;')»
+		«entity.addImport('import java.util.ArrayList;')»
+		private List<«slot.toJavaType»> «slot.name.toFirstLower» = new ArrayList<>();
 		«ELSEIF slot.isManyToMany»
-		private java.util.Set<«slot.toJavaType»> «slot.name.toFirstLower»;
+		«entity.addImport('import java.util.Set;')»
+		«entity.addImport('import java.util.HashSet;')»
+		private Set<«slot.toJavaType»> «slot.name.toFirstLower» = new HashSet<>();
 		«ELSE»
 		private «slot.toJavaType» «slot.name.toFirstLower»;
 		«ENDIF»
@@ -211,7 +215,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		var cascade = slot.relationship.cascadeType
 		if (cascade === null || cascade.isEmpty) {
 			if (slot.isRelationContains && isBidirectional) {
-				cascade = ', cascade = CascadeType.ALL, '
+				cascade = ', cascade = CascadeType.ALL '
 			}
 			else if (slot.isRelationRefers && !isBidirectional) {
 				cascade = ', cascade = {CascadeType.PERSIST, CascadeType.MERGE}'
@@ -409,6 +413,11 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ELSE»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slot.name.toFirstLower») {
 		«ENDIF»
+			«IF slot.many»
+			if («slot.name.toFirstLower» != null) {
+				«slot.name.toFirstLower».forEach(this::add«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+			}
+			«ENDIF»
 			this.«slot.name.toFirstLower» = «slot.name.toFirstLower»;
 		}
 		«IF slot.isOneToMany || slot.isManyToMany»
