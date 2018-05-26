@@ -66,4 +66,8 @@ class GeneratorExecutor {
 		'import ' + entity.package + '.' + entity.toEntityDTOName + ';'
 	}
 	
+	def String getEntityDTOConverterImport(Entity entity) {
+		'import ' + entity.package + '.' + entity.toDTOConverterName + ';'
+	}
+	
 }

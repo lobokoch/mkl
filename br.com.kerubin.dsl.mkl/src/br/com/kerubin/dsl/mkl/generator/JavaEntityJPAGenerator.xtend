@@ -77,11 +77,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		val isOneToManyWithMapsId = slot.isOneToOne && slot.isRelationRefers
 		if (slot.isEntity) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityName + ';')
 		}
 		'''
-		«IF slot.isOneToOne && slot.isRelationRefers»
+		«IF isOneToManyWithMapsId»
 		@Id /* OneTone will be PK and FK pointing to «slot.asEntity.toEntityName» */
 		@Column(name="«slot.databaseName»")
 		private «slot.asEntity.id.toJavaType» «slot.asEntity.id.name.toFirstLower»;
@@ -94,8 +95,13 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		private List<«slot.toJavaType»> «slot.name.toFirstLower» = new ArrayList<>();
 		«ELSEIF slot.isManyToMany»
 		«entity.addImport('import java.util.Set;')»
+		«IF slot.isRelationContains»
+		«entity.addImport('import java.util.LinkedHashSet;')»
+		private Set<«slot.toJavaType»> «slot.name.toFirstLower» = new LinkedHashSet<>();
+		«ELSE»
 		«entity.addImport('import java.util.HashSet;')»
 		private Set<«slot.toJavaType»> «slot.name.toFirstLower» = new HashSet<>();
+		«ENDIF»
 		«ELSE»
 		private «slot.toJavaType» «slot.name.toFirstLower»;
 		«ENDIF»
@@ -163,7 +169,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		builder.append('fetch = FetchType.')
 		builder.append(slot.relationship.getFetchType)
 		
-		val cascade = slot.relationship.cascadeType
+		
+		var cascade = slot.relationship.cascadeType
+		if (cascade === null || cascade.isEmpty) {
+				cascade = ', cascade = CascadeType.ALL '
+		}
+		
 		if (cascade !== null && !cascade.isEmpty) {
 			entity.addImport('import javax.persistence.CascadeType;')
 			builder.append(cascade)			
@@ -172,7 +183,14 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		builder.append(')')
 		
 		if (slot.isRelationRefers) {
+			//https://vard-lokkur.blogspot.com.br/2014/05/onetoone-with-shared-primary-key.html
 			entity.addImport('import javax.persistence.MapsId;')
+			entity.addImport('import javax.persistence.JoinColumn;')
+			builder.newLine
+			builder.append('@JoinColumn(name = "')
+			builder.append(slot.databaseName)
+			builder.append('")')
+			
 			builder.newLine
 			builder.append('@MapsId')
 		}
@@ -282,7 +300,8 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		var cascade = slot.relationship.cascadeType
 		if ((cascade === null || cascade.isEmpty) && slot.isRelationOwner) {
-			cascade = ', cascade = {CascadeType.PERSIST, CascadeType.MERGE}'
+			//cascade = ', cascade = {CascadeType.PERSIST, CascadeType.MERGE}' // O CascadeType.PERSIST causa erro: org.hibernate.PersistentObjectException: detached entity passed to persist
+			cascade = ', cascade = {CascadeType.MERGE}'
 		}
 		
 		if (cascade !== null && !cascade.isEmpty) {
@@ -302,7 +321,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		builder.newLine
 		builder.append('\t')
 		builder.append('joinColumns = @JoinColumn(name = "')
-		builder.append(entity.getEntityIdAsKey)
+		builder.append(entity.id.getSlotAsOwnerEntityIdFK)
 		builder.append('"),')
 		builder.newLine
 		builder.append('\t')
@@ -405,22 +424,39 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateSetter(Slot slot) {
+		val slotName = slot.name.toFirstLower
 		'''
 		«IF slot.many && slot.isOneToMany»
-		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaType»> «slot.name.toFirstLower») {
-		«ELSEIF slot.many && slot.isManyToMany»
-		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaType»> «slot.name.toFirstLower») {
-		«ELSE»
-		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slot.name.toFirstLower») {
+		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaType»> «slotName») {
+		«ELSEIF slot.many && slot.isManyToMany && slot.isRelationContains»
+		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaType»> «slotName») {
+		«ELSEIF ! slot.isManyToMany»
+		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slotName») {
 		«ENDIF»
-			«IF slot.many»
-			if («slot.name.toFirstLower» != null) {
-				«slot.name.toFirstLower».forEach(this::add«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+			«IF slot.many && slot.isToMany && slot.isRelationContains»
+			if («slotName» != null) {
+				«slotName».forEach(this::add«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+			}
+			else if (this.«slotName» != null) {
+				this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+			}
+			«ELSEIF slot.isOneToOne && slot.relationContains && slot.isBidirectional»
+			if («slotName» == null) {
+				if (this.«slotName» != null) {
+			    	this.«slotName».set«slot.getRelationOppositeSlot.name.toFirstUpper»(null);
+			    }
+			}
+			else {
+				«slotName».set«slot.getRelationOppositeSlot.name.toFirstUpper»(this);
 			}
 			«ENDIF»
-			this.«slot.name.toFirstLower» = «slot.name.toFirstLower»;
+			«IF !slot.isToMany»
+			this.«slotName» = «slotName»;
+			«ENDIF»
+		«IF !(slot.isManyToMany && slot.isRelationRefers)»
 		}
-		«IF slot.isOneToMany || slot.isManyToMany»
+		«ENDIF»
+		«IF slot.isOneToMany || (slot.isManyToMany && slot.isRelationContains)»
 		
 		public void add«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»(«slot.toJavaType» «slot.relationFieldNameToAddRemoveMethod») {
 			this.«slot.name.toFirstLower».add(«slot.relationFieldNameToAddRemoveMethod»);

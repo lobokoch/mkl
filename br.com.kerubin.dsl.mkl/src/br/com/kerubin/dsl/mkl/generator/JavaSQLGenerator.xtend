@@ -75,7 +75,7 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		builder.newLine
 		
 		//Table fields
-		var slots = entity.slots.filter[!it.isEntity || it.isOneToOne || it.isManyToOne]
+		var slots = entity.slots.filter[!it.isEntity || (it.isOneToOne && it.isRelationRefers) || it.isManyToOne]
 		builder.append(slots.map[generateDatabaseField].join(',\n'))
 		
 		builder.newLine
@@ -202,7 +202,7 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence createFK(Entity entity) {
 		entity.slots
-			.filter[it.isOneToOne || 
+			.filter[(it.isOneToOne && it.isRelationRefers) || 
 					it.isManyToOne || 
 					(it.isManyToMany && it.isRelationOwner) || 
 					(it.isOneToMany && !it.isBidirectional)

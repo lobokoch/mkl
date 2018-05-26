@@ -32,6 +32,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val entityServiceVar = entity.toServiceName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		val toDTO = 'convertEntityToDto'
+		val toEntity = 'convertDtoToEntity'
 		
 		'''
 		package «entity.package»;
@@ -71,15 +73,15 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@PostMapping
 			public ResponseEntity<«entityDTOName»> create(@Valid @RequestBody «entityDTOName» «entityDTOVar») {
-				«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.convert(«entityDTOVar»));
-				return ResponseEntity.status(HttpStatus.CREATED).body(«entityDTOVar»DTOConverter.convert(«entityVar»));
+				«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
+				return ResponseEntity.status(HttpStatus.CREATED).body(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
 			}
 			
 			@GetMapping("/{«idVar»}")
 			public ResponseEntity<«entityDTOName»> read(@PathVariable «idType» «idVar») {
 				try {
 					«entityName» «entityVar» = «entityServiceVar».read(«idVar»);
-					return ResponseEntity.ok(«entityDTOVar»DTOConverter.convert(«entityVar»));
+					return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
 				}
 				catch(IllegalArgumentException e) {
 					return ResponseEntity.notFound().build();
@@ -89,8 +91,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			@PutMapping("/{«idVar»}")
 			public ResponseEntity<«entityDTOName»> update(@PathVariable «idType» «idVar», @Valid @RequestBody «entityDTOName» «entityDTOVar») {
 				try {
-					«entityName» «entityVar» = «entityServiceVar».update(«idVar», «entityDTOVar»DTOConverter.convert(«entityDTOVar»));
-					return ResponseEntity.ok(«entityDTOVar»DTOConverter.convert(«entityVar»));
+					«entityName» «entityVar» = «entityServiceVar».update(«idVar», «entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
+					return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
 				}
 				catch(IllegalArgumentException e) {
 					return ResponseEntity.notFound().build();
@@ -106,7 +108,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			@GetMapping
 			public PageResult<«entityDTOName»> list(Pageable pageable) {
 				Page<«entityName»> page = «entityServiceVar».list(pageable);
-				List<«entityDTOName»> content = page.getContent().stream().map(pe -> «entityDTOVar»DTOConverter.convert(pe)).collect(Collectors.toList());
+				List<«entityDTOName»> content = page.getContent().stream().map(pe -> «entityDTOVar»DTOConverter.«toDTO»(pe)).collect(Collectors.toList());
 				PageResult<«entityDTOName»> pageResult = new PageResult<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
 				return pageResult;
 			}

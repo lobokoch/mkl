@@ -47,7 +47,8 @@ Entity:
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
 		(baseRepository?='@baseRepository')? &
-		(audit?='@audit')? 
+		(audit?='@audit')? &
+		('@parent' '(' parent=[Entity] ')')?
 	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
 		Slots
@@ -74,14 +75,15 @@ fragment Slots returns Slotted:
 
 Slot:
 	Name ':' (associationType=AssociationType)? 
+		(parent ?= 'parent')?
 		slotType=TypeReference 
 		(optional?='?')? (many?='*')? 
 		(relationship = Relationship)? 
 		(
 			('stored' ':' enumType=EnumType)? &
 			(indexed?='indexed')? &
-			(find?='find')? &
-			(findResult?='findResult')? &
+			(lookupKey?='lookupKey')? &
+			(lookupResult?='lookupResult')? &
 			('label' ':' label=STRING)? &
 			('help' ':' help=STRING)?
 		)

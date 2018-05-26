@@ -13,7 +13,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -29,12 +29,13 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def generateDTO(Entity entity) {
 		val basePakage = clientGenSourceFolder
-		val entityFile = basePakage + entity.packagePath + '/' + entity.toEntityDTOName + '.java'
-		generateFile(entityFile, entity.generateEntityDTO)
+		val entityFile = basePakage + entity.packagePath + '/' + entity.toEntityLookupResultDTOName + '.java'
+		generateFile(entityFile, entity.generateEntityLookupResultDTO)
 	}
 	
-	def CharSequence generateEntityDTO(Entity entity) {
+	def CharSequence generateEntityLookupResultDTO(Entity entity) {
 		entity.initializeEntityImports
+		val slots = entity.slots.filter[it === entity.id || it.isLookupResult]
 		
 		val package = '''
 		package «entity.package»;
@@ -43,11 +44,11 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		val body = '''
 		
-		public class «entity.toEntityDTOName» {
+		public class «entity.toEntityLookupResultDTOName» {
 		
-			«entity.generateFields»
-			«entity.generateGetters»
-			«entity.generateSetters»
+			«slots.generateFields»
+			«slots.generateGetters»
+			«slots.generateSetters»
 			«entity.generateEquals»
 			«entity.generateHashCode»
 			«entity.generateToString»
@@ -63,22 +64,21 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	
-	
-	def CharSequence generateFields(Entity entity) {
+	def CharSequence generateFields(Iterable<Slot> slots) {
 		'''
-		«entity.slots.map[generateField(entity)].join('\r\n')»
+		«slots.map[generateField].join('\r\n')»
 		'''
 		
 	}
 	
-	def CharSequence generateField(Slot slot, Entity entity) {
+	def CharSequence generateField(Slot slot) {
+		val entity = slot.ownerEntity
 		if (slot.isDTOFull) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
 		}
 		else if (slot.isDTOLookupResult) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityLookupResultDTOName + ';')
 		}
-		
 		'''
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
@@ -88,10 +88,10 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 	}
 	
-	def CharSequence generateGetters(Entity entity) {
+	def CharSequence generateGetters(Iterable<Slot> slots) {
 		'''
 		
-		«entity.slots.map[generateGetter].join('\r\n')»
+		«slots.map[generateGetter].join('\r\n')»
 		'''
 		
 	}
@@ -109,10 +109,10 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 	}
 	
-	def CharSequence generateSetters(Entity entity) {
+	def CharSequence generateSetters(Iterable<Slot> slots) {
 		'''
 		
-		«entity.slots.map[generateSetter].join('\r\n')»
+		«slots.map[generateSetter].join('\r\n')»
 		'''
 	}
 	
@@ -144,7 +144,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			«entity.toEntityDTOName» other = («entity.toEntityDTOName») obj;
+			«entity.toEntityLookupResultDTOName» other = («entity.toEntityLookupResultDTOName») obj;
 			if («id» == null) {
 				if (other.«id» != null)
 					return false;

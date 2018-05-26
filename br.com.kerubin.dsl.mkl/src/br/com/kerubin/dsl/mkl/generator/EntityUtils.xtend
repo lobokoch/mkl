@@ -76,6 +76,9 @@ class EntityUtils {
 	}
 	
 	def static String toJavaTypeDTO(Slot slot) {
+		if (slot.isDTOLookupResult) {
+			return slot.asEntity.toEntityLookupResultDTOName
+		}
 		toJavaType(slot, false)
 	}
 	
@@ -122,6 +125,15 @@ class EntityUtils {
 		false
 	}
 	
+	def static boolean isDTOFull(Slot slot) {
+		slot.relationContains && 
+		(slot.isOneToOne || slot.isOneToMany) 
+	}
+	
+	def static boolean isDTOLookupResult(Slot slot) {
+		slot.isEntity && ! slot.isDTOFull
+	}
+	
 	def static boolean isOneToOne(Slot slot) {
 		slot?.relationship instanceof OneToOne
 	}
@@ -132,6 +144,18 @@ class EntityUtils {
 	
 	def static boolean isOneToMany(Slot slot) {
 		slot?.relationship instanceof OneToMany
+	}
+	
+	def static boolean isToMany(Slot slot) {
+		val relationship = slot?.relationship
+		relationship instanceof OneToMany || relationship instanceof ManyToMany
+		//slot?.relationship instanceof OneToMany || slot?.relationship instanceof ManyToMany
+	}
+	
+	def static boolean isToOne(Slot slot) {
+		val relationship = slot?.relationship
+		relationship instanceof OneToOne || relationship instanceof ManyToOne
+		//slot?.relationship instanceof OneToMany || slot?.relationship instanceof ManyToMany
 	}
 	
 	def static boolean isManyToMany(Slot slot) {
@@ -165,8 +189,20 @@ class EntityUtils {
 		entity.name.toFirstUpper
 	}
 	
+	def static toEntityLookupResultDTOName(Entity entity) {
+		entity.name.toFirstUpper + 'LookupResult'
+	}
+	
 	def static buildMethodGet(Slot slot) {
 		slot.name.buildMethodGet
+	}
+	
+	def static buildMethodGet(String obj, Slot slot) {
+		obj + '.' + slot.name.buildMethodGet
+	}
+	
+	def static buildMethodGetEntityId(String obj, Slot slot) {
+		obj.buildMethodGet(slot) + '.' + slot.asEntity.id.buildMethodGet
 	}
 	
 	def static buildMethodGet(Entity entity) {
@@ -179,6 +215,20 @@ class EntityUtils {
 	
 	def static buildMethodSet(Slot slot, String param) {
 		slot.name.buildMethodSet(param)
+	}
+	
+	def static buildMethodSet(String obj, Slot slot, String param) {
+		obj + '.' + slot.name.buildMethodSet(param)
+	}
+	
+	def static buildMethodConvertToDTO(Slot slot) {
+		//addressDTOConverter.convertToDTO(entity.getAddress())
+		slot.name.toFirstLower + 'DTOConverter.convertEntityToDto(entity.' + slot.buildMethodGet + ')' 
+	}
+	
+	def static buildMethodConvertToListDTO(Slot slot) {
+		//dto.setBenefits(benefitDTOConverter.convertListToDTO(entity.getBenefits()));
+		slot.asEntity.toDTOConverterVar + '.convertListToDTO(entity.' + slot.buildMethodGet + ')' 
 	}
 	
 	def static buildMethodSet(Entity entity, String param) {
@@ -199,6 +249,10 @@ class EntityUtils {
 	
 	def static toDTOConverterName(Entity entity) {
 		entity.name.toFirstUpper + "DTOConverter"
+	}
+	
+	def static toDTOConverterVar(Entity entity) {
+		entity.name.toFirstLower + "DTOConverter"
 	}
 	
 	def static toRepositoryName(Entity entity) {
