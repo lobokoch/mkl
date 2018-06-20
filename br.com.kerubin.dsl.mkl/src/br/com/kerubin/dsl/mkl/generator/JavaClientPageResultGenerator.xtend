@@ -43,7 +43,7 @@ class JavaClientPageResultGenerator extends GeneratorExecutor implements IGenera
 		                      @JsonProperty("size") int size,
 		                      @JsonProperty("totalElements") Long totalElements) {
 				
-		        super(content, new PageRequest(number, size), totalElements);
+		        super(content, PageRequest.of(number, size), totalElements);
 		        
 		    }
 		

@@ -13,21 +13,13 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	def generateJavaProjects() {
-		//val PROJECT_PARENT = projectParentName
 		val PROJECT_CLIENT = projectClientName
 		val PROJECT_SERVER = projectServerName
 		
-		
 		val MODULES_DIR = getModulesDir
-		//val projects = #[PROJECT_CLIENT, PROJECT_SERVER]
 		
 		//Parent first
-		//generateFile(MODULES_DIR + '.project', generateJavaProject(PROJECT_PARENT))	
 		generateFile(MODULES_DIR + 'pom.xml', generateParentPOM)
-		
-		/*projects.forEach[
-			generateFile(MODULES_DIR + it + '/.project', generateJavaProject)	
-		]*/
 		
 		generateFile(MODULES_DIR + PROJECT_CLIENT + '/pom.xml', generateClientPOM(PROJECT_CLIENT))
 		generateFile(MODULES_DIR + PROJECT_SERVER + '/pom.xml', generateServerPOM(PROJECT_SERVER, PROJECT_CLIENT))
@@ -36,29 +28,28 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	def private getApplicationName() {
-		getMainAppName.toLowerCase + '-' + service.domain.toLowerCase + '-' + service.name.toLowerCase
+		service.domain + '-' + service.name + '-' + projectApplicationName
 	}
 	
 	def private generateApplicationProject() {
 		val MODULES_DIR = getModulesDir
 		val PROJECT_APPLICATION = projectApplicationName
 		val PROJECT_SERVER = projectServerName
-		val mainClassName = mainAppName + service.domain.toFirstUpper + service.name.toFirstUpper + 'Application'
+		val mainClassName = service.domain.toFirstUpper + service.name.toFirstUpper + 'Application'
 		
-		generateFile(MODULES_DIR + PROJECT_APPLICATION + '/pom.xml', generateApplicationPOM(PROJECT_APPLICATION, PROJECT_SERVER))
+		generateFile(MODULES_DIR + PROJECT_APPLICATION + '/pom.xml', generateApplicationPOM(applicationName, PROJECT_SERVER))
 		
 		val appSourceFolder = applicationSourceFolder
 		val path = service.servicePackagePath
 		generateFile(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
 		generateFile(getApplicationResourcesFolder + 'bootstrap.yml', generateApplicationBootstrap())
-		
 	}
 	
 	def generateApplicationBootstrap() {
 		'''
 		spring:
 		  application:
-		    name: «getApplicationName»
+		    name: «applicationName»
 		  cloud:
 		    config:
 		      uri: «service.configuration.cloudConfigUri»
@@ -97,18 +88,18 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 			<modelVersion>4.0.0</modelVersion>
 		
-			<artifactId>«getApplicationName»</artifactId>
+			<artifactId>«applicationProjectName»</artifactId>
 			<packaging>jar</packaging>
 		
-			<name>«getApplicationName»</name>
-			<description>Kerubin «getApplicationName» Service</description>
+			<name>«applicationProjectName»</name>
+			<description>Kerubin «applicationProjectName» Service</description>
 		
 			«getPOMParentSectionFull»
 		
 			<dependencies>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
-					<artifactId>«service.name»-«serverProjectName»</artifactId>
+					<artifactId>«service.domain»-«service.name»-«serverProjectName»</artifactId>
 					<version>${project.version}</version>
 				</dependency>
 				<dependency>
@@ -191,13 +182,13 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 		    <modelVersion>4.0.0</modelVersion>
-		    <artifactId>«service.name»-«serverProjectName»</artifactId>
+		    <artifactId>«service.domain»-«service.name»-«serverProjectName»</artifactId>
 		    <packaging>jar</packaging>
 		    «getPOMParentSectionFull»
 		    <dependencies>
 		        <dependency>
 		            <groupId>${project.groupId}</groupId>
-		            <artifactId>«service.name»-«clientProjectName»</artifactId>
+		            <artifactId>«service.domain»-«service.name»-«clientProjectName»</artifactId>
 		            <version>${project.version}</version>
 		        </dependency>
 		        <dependency>
@@ -256,7 +247,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	def getPOMParentSection() {
 		'''
 		        <groupId>«configuration.groupId»</groupId>
-		        <artifactId>«service.name»-parent</artifactId>
+		        <artifactId>«service.domain»-«service.name»-parent</artifactId>
 		        <version>«configuration.version»</version>
 		'''
 	}
@@ -275,7 +266,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">    
 		    <modelVersion>4.0.0</modelVersion>
-		    <artifactId>«service.name»-«projectName»</artifactId>
+		    <artifactId>«service.domain»-«service.name»-«projectName»</artifactId>
 		    <packaging>jar</packaging>
 		    «getPOMParentSectionFull»
 		    <dependencies>
@@ -317,7 +308,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		'''
 		<?xml version="1.0" encoding="UTF-8"?>
 		<projectDescription>
-			<name>«service.name»-«projectName»</name>
+			<name>«service.domain»-«service.name»-«projectName»</name>
 			<comment></comment>
 			<projects>
 			</projects>
@@ -350,7 +341,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<modelVersion>4.0.0</modelVersion>
 			«getPOMParentSection»
 			<packaging>pom</packaging>
-			<name>«service.name»-parent</name>
+			<name>«service.domain»-«service.name»-parent</name>
 			<description>«service.name»</description>
 			<organization>
 				<name>Kerubin</name>

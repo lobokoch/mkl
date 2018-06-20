@@ -6,7 +6,7 @@ class Utils {
 	static val PROJECT_PARENT = 'parent'
 	static val PROJECT_CLIENT = 'client'
 	static val PROJECT_SERVER = 'server'
-	static val PROJECT_APPLICATION = 'application'
+	static val PROJECT_APPLICATION = 'app'
 	static val BASE_MODULES_DIR = 'modules/'
 	static val BASE_SERVER_DIR = BASE_MODULES_DIR + PROJECT_SERVER + '/'
 	static val BASE_CLIENT_DIR = BASE_MODULES_DIR + PROJECT_CLIENT + '/'
