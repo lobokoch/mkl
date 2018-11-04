@@ -3,8 +3,8 @@
  */
 package br.com.kerubin.dsl.mkl
 
-import org.eclipse.xtext.generator.IOutputConfigurationProvider
 import br.com.kerubin.dsl.mkl.generator.MklOutputConfigurationProvider
+import org.eclipse.xtext.generator.IOutputConfigurationProvider
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.

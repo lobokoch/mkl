@@ -81,6 +81,11 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		if (slot.isEntity) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityName + ';')
 		}
+		else if (slot.isEnum) { 
+			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
+		}
+		
+		
 		'''
 		«IF isOneToManyWithMapsId»
 		@Id /* OneTone will be PK and FK pointing to «slot.asEntity.toEntityName» */
@@ -113,7 +118,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		'''
 		«IF slot == entity.id»
-		«IF slot.isUUID && !isOneToOne»
+		«IF slot.isUUID && !isOneToOne && !entity.isExternal»
 		«entity.addImport('import javax.persistence.GeneratedValue;')»
 		«entity.addImport('import org.hibernate.annotations.GenericGenerator;')»
 		@GeneratedValue(generator = "uuid2")

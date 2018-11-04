@@ -1,0 +1,283 @@
+package br.com.kerubin.dsl.mkl.model
+
+import java.util.Set
+import java.util.LinkedHashSet
+
+abstract class Named {
+	String name
+	String _alias
+	
+	op String getAlias() {
+		if (_alias === null || _alias.trim.isEmpty) {
+			return name
+		}
+		return _alias
+	}
+}
+
+class DomainModel extends Named {
+	
+	op String domain() {
+		name
+	}
+	
+	contains Service service opposite domainModel
+}
+
+abstract class Element extends Named {
+	
+}
+
+
+class Service extends Element {
+	container DomainModel domainModel opposite service
+	op String domain() {
+		//(eContainer as DomainModel).domain
+		domainModel.domain
+	}
+	
+	/*resolving*/ 
+	contains Configuration configuration
+	contains ServiceElement[] elements opposite service
+	
+}
+
+class Configuration {
+	String groupId
+	String version
+	String cloudConfigUri
+	
+}
+
+/*class ParentModule {
+	String groupId
+	String artifactId
+	String version
+}*/
+
+abstract class ServiceElement extends Element {
+	container Service service opposite elements
+}
+
+abstract class TypeReference {
+	refers Slot ownerSlot opposite slotType
+}
+
+class ObjectTypeReference extends TypeReference {
+	refers ServiceElement referencedType
+}
+
+enum FetchType {
+	LAZY as 'lazy'
+	EAGER as 'eager' 
+}
+
+enum AssociationType {
+	CONTAINS as 'contains' 
+	REFERS as 'refers'
+}
+
+enum CascadeType {
+	ALL as 'all'
+	DETACH as'detach' 
+	MERGE as 'merge'
+	PERSIST as 'persist'
+	REFRESH as 'refresh'
+	REMOVE as 'remove'
+}
+
+class BasicTypeReference extends TypeReference {
+	contains BasicType basicType
+}
+
+abstract class ServiceObject extends ServiceElement {
+	
+}
+
+class ExternalObject {
+	boolean external
+	String externalDomain
+	String externalService
+}
+
+class Slot extends Element {
+	contains TypeReference slotType opposite ownerSlot
+	boolean optional
+	boolean parent
+	boolean many
+	boolean indexed
+	boolean lookupKey
+	boolean lookupResult
+	AssociationType associationType
+	EnumType enumType
+	String label
+	String help
+	contains Relationship relationship opposite ownerSlot
+	String[] annotations
+	container Slotted ownerObject opposite slots
+	
+	op boolean isRelationContains() {
+		return associationType === null || associationType == AssociationType.CONTAINS
+	}
+	
+	op boolean isRelationRefers() {
+		return associationType !== null && associationType == AssociationType.REFERS
+	}
+	
+	op boolean isRelationOwner() {
+		return relationship !== null && (relationship as RelationshipFeatured).owner
+	}
+	
+	op boolean isOrphanRemoval() {
+		return relationship !== null && (relationship as RelationshipFeatured).orphanRemoval
+	}
+	
+}
+
+abstract class Slotted extends Element {
+	contains Slot[] slots opposite ownerObject
+}
+
+class EnumTypeReference extends TypeReference {
+	refers ServiceElement referencedType
+}
+
+class Enumeration extends ServiceObject {
+	contains EnumItem[] items
+}
+
+class EnumItem {
+	String name
+	String valueStr
+	int valueInt
+}
+
+enum EnumType {
+	STRING as 'string' 
+	ORDINAL as 'ordinal'
+}
+
+abstract class Record extends Slotted {
+	refers PublicObject[0..1] superType
+}
+
+class PublicObject extends Record, ServiceObject {
+	contains ExternalObject externalObject
+	ESet<String> _imports
+	
+	op void addImport(String import_) {
+		imports.add(import_)
+	}
+		
+	op ESet<String> getImports() {
+		if (_imports === null) {
+			_imports = new LinkedHashSet()
+		}
+		return _imports
+	}
+	
+}
+
+class Entity extends PublicObject {
+	refers Entity parent
+	boolean secure
+	boolean audit
+	boolean mapped
+	boolean baseRepository
+	
+	op Slot getId() {
+		return slots.head
+	}
+	
+	op Slot[] getTailSlots() {
+		return slots.tail.asEList
+	}
+	
+	op boolean isExternal() {
+		return externalObject !== null && externalObject.external
+	}
+	
+}
+
+abstract class Relationship {
+	refers Slot ownerSlot opposite relationship	
+}
+
+class RelationshipFeatured extends Relationship {
+	refers Slot field
+	FetchType fetchType
+	CascadeType[] cascadeType
+	boolean owner
+	boolean orphanRemoval
+}
+
+class OneToOne extends RelationshipFeatured {
+	
+}
+
+class OneToMany extends RelationshipFeatured {
+	
+}
+
+class ManyToOne extends RelationshipFeatured {
+	
+}
+
+class ManyToMany extends RelationshipFeatured {
+	
+}
+
+abstract class BasicType extends Named {
+	op String getJavaType() {
+		return ""
+	}
+}
+
+abstract class generatedType extends BasicType {
+	boolean generated
+}
+
+class StringType extends generatedType {
+	int length = "255"
+}
+
+class IntegerType extends generatedType {
+	
+}
+
+class DoubleType extends BasicType {
+	
+}
+
+class MoneyType extends BasicType {
+	
+}
+
+class BooleanType extends BasicType {
+	
+}
+
+class DateType extends BasicType {
+	
+}
+
+class TimeType extends BasicType {
+	
+}
+
+class DateTimeType extends BasicType {
+	
+}
+
+class UUIDType extends generatedType {
+	
+}
+
+class ByteType extends BasicType {
+	
+}
+
+type ESet<T> wraps Set
+create {
+	
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+-->
+
+<plugin>
+
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated mkl -->
+      <package
+            uri="br.com.kerubin.dsl.mkl.model"
+            class="br.com.kerubin.dsl.mkl.model.ModelPackage"
+            genModel="model/mkl.xcore"/>
+   </extension>
+
+</plugin>

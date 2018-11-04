@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-	<feature id="br.com.kerubin.dsl.mkl.feature" version="0.0.0">
-		<category name="main"/>
-	</feature>
-	<feature id="br.com.kerubin.dsl.mkl.feature.source" version="0.0.0">
-		<category name="main.source"/>
-	</feature>
-	<category-def name="main" label="Mkl"/>
-	<category-def name="main.source" label="Mkl (Sources)"/>
+   <feature id="br.com.kerubin.dsl.mkl.feature" version="0.0.0">
+      <category name="main"/>
+   </feature>
+   <bundle id="br.com.kerubin.dsl.mkl.model" version="1.0.0.qualifier">
+      <category name="main"/>
+   </bundle>
+   <category-def name="main" label="Mkl">
+      <description>
+         Microservice definiton language.
+      </description>
+   </category-def>
 </site>

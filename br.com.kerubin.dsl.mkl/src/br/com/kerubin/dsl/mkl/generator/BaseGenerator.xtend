@@ -31,6 +31,12 @@ abstract class BaseGenerator {
 		fsa.generateFile(fileName, contents)
 	}
 	
+	def generateFile(String fileName, CharSequence contents, String outputConfigurationName) {
+		fsa.generateFile(fileName, outputConfigurationName, contents)
+	}
+	
+	
+	
 	abstract def void generate()
 	
 }

@@ -22,6 +22,7 @@ import br.com.kerubin.dsl.mkl.model.ManyToMany
 import br.com.kerubin.dsl.mkl.model.RelationshipFeatured
 import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.ManyToOne
+import java.util.List
 
 class EntityUtils {
 	
@@ -49,6 +50,11 @@ class EntityUtils {
 		entity.databaseName + '_' + entity.id.databaseName
 	}
 	
+	def public static mountName(List<String> values) {
+		val result = values.map[it.replace('_', '').splitByCharacterTypeCamelCase.map[toLowerCase].join('-')].join('-')
+		result
+	}
+	
 	def private static getDatabaseName(String name) {
 		name.replace('_', '').splitByCharacterTypeCamelCase.map[toLowerCase].join('_')
 	}
@@ -67,10 +73,23 @@ class EntityUtils {
 		reference.referencedType as Entity
 	}
 	
+	def static Enumeration asEnum(Slot slot) {
+		val reference = slot.slotType as ObjectTypeReference
+		reference.referencedType as Enumeration
+	}
+	
 	def static boolean isEntity(Slot slot) {
 		if (slot?.slotType instanceof ObjectTypeReference) {
 			val reference = (slot.slotType as ObjectTypeReference)
 			return reference.referencedType instanceof Entity
+		}
+		return false
+	}
+	
+	def static boolean isEnum(Slot slot) {
+		if (slot?.slotType instanceof ObjectTypeReference) {
+			val reference = (slot.slotType as ObjectTypeReference)
+			return reference.referencedType instanceof Enumeration
 		}
 		return false
 	}

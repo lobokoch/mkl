@@ -78,6 +78,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		else if (slot.isDTOLookupResult) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityLookupResultDTOName + ';')
 		}
+		else if (slot.isEnum) { 
+			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
+		}
 		
 		'''
 		«IF slot.isToMany»

@@ -10,7 +10,7 @@ class Utils {
 	static val BASE_MODULES_DIR = 'modules/'
 	static val BASE_SERVER_DIR = BASE_MODULES_DIR + PROJECT_SERVER + '/'
 	static val BASE_CLIENT_DIR = BASE_MODULES_DIR + PROJECT_CLIENT + '/'
-	static val BASE_APPLICATION_DIR = BASE_MODULES_DIR + PROJECT_APPLICATION + '/'
+	static val BASE_APPLICATION_DIR = ""//BASE_MODULES_DIR + PROJECT_APPLICATION + '/'
 	static val SOURCE_GEN_BASE_DIR = 'src-gen/'
 	//static val SOURCE_GEN_BASE_DIR = 'src/'
 	static val SOURCE_BASE_DIR = 'src/'

@@ -1,6 +1,7 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -27,29 +28,51 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		generateApplicationProject
 	}
 	
+	def private getArtifactId(String sufix) {
+		var id = service.domain.toLowerCase.replace("_", "") + "-" + service.name.toLowerCase.replace("_", "")
+		if (sufix !== null && !sufix.isEmpty) {
+			id += "-" + sufix.toLowerCase
+		}
+		id
+	}
+	
 	def private getApplicationName() {
-		service.domain + '-' + service.name + '-' + projectApplicationName
+		service.name.toLowerCase.replace("_", "-") + '-' + projectApplicationName
+	}
+	
+	def private getApplicationId() {
+		val result = mountName(newArrayList(service.domain, service.name, projectApplicationName))
+		result
+		//service.domain.toLowerCase.replace("_", "-") + '-' + service.name.toLowerCase.replace("_", "-") + '-' + projectApplicationName
 	}
 	
 	def private generateApplicationProject() {
-		val MODULES_DIR = getModulesDir
-		val PROJECT_APPLICATION = projectApplicationName
-		val PROJECT_SERVER = projectServerName
-		val mainClassName = service.domain.toFirstUpper + service.name.toFirstUpper + 'Application'
+		//val MODULES_DIR = getModulesDir
+		//val PROJECT_APPLICATION = projectApplicationName
 		
-		generateFile(MODULES_DIR + PROJECT_APPLICATION + '/pom.xml', generateApplicationPOM(applicationName, PROJECT_SERVER))
+		//val pomFileName = MODULES_DIR + PROJECT_APPLICATION + '/pom.xml'
+		val pomFileName = 'pom.xml'
+		
+		if (fsa.isFile(pomFileName, MklOutputConfigurationProvider.OUTPUT_KEEPED)) {
+			//return //Already exists and must not be generated again
+		}
+		
+		val PROJECT_SERVER = projectServerName
+		val mainClassName = /*service.domain.textUnderToTextCamel + */service.name.textUnderToTextCamel + 'Application'
+		
+		generateFileForApp(pomFileName, generateApplicationPOM(PROJECT_SERVER))
 		
 		val appSourceFolder = applicationSourceFolder
 		val path = service.servicePackagePath
-		generateFile(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
-		generateFile(getApplicationResourcesFolder + 'bootstrap.yml', generateApplicationBootstrap())
+		generateFileForApp(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
+		generateFileForApp(getApplicationResourcesFolder + 'bootstrap.yml', generateApplicationBootstrap())
 	}
 	
 	def generateApplicationBootstrap() {
 		'''
 		spring:
 		  application:
-		    name: «applicationName»
+		    name: «applicationId»
 		  cloud:
 		    config:
 		      uri: «service.configuration.cloudConfigUri»
@@ -80,8 +103,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		'''
 	}
 	
-	
-	def generateApplicationPOM(String applicationProjectName, String serverProjectName) {
+	def generateApplicationPOM(String serverProjectName) {
+		val applicationProjectName = getArtifactId(projectApplicationName)
 		'''
 		<?xml version="1.0" encoding="UTF-8"?>
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -99,7 +122,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<dependencies>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
-					<artifactId>«service.domain»-«service.name»-«serverProjectName»</artifactId>
+					<artifactId>«getArtifactId(serverProjectName)»</artifactId>
 					<version>${project.version}</version>
 				</dependency>
 				<dependency>
@@ -182,13 +205,13 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 		    <modelVersion>4.0.0</modelVersion>
-		    <artifactId>«service.domain»-«service.name»-«serverProjectName»</artifactId>
+		    <artifactId>«getArtifactId(serverProjectName)»</artifactId>
 		    <packaging>jar</packaging>
 		    «getPOMParentSectionFull»
 		    <dependencies>
 		        <dependency>
 		            <groupId>${project.groupId}</groupId>
-		            <artifactId>«service.domain»-«service.name»-«clientProjectName»</artifactId>
+		            <artifactId>«getArtifactId(clientProjectName)»</artifactId>
 		            <version>${project.version}</version>
 		        </dependency>
 		        <dependency>
@@ -209,11 +232,25 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		          <artifactId>modelmapper</artifactId>
 		          <version>1.1.0</version>
 		        </dependency>
+		        <dependency>
+		          <groupId>com.querydsl</groupId>
+		          <artifactId>querydsl-core</artifactId>
+		        </dependency>
+		        <dependency>
+		          <groupId>com.querydsl</groupId>
+		          <artifactId>querydsl-apt</artifactId>
+		        </dependency>
+		        <dependency>
+		          <groupId>com.querydsl</groupId>
+		          <artifactId>querydsl-jpa</artifactId>
+		        </dependency>
+		       
 		        
 		    </dependencies>
 		    <build>
 		        <plugins>
 		        	«getSourceFolderPlugin»
+		        	«getMySemaMavenPlugin»
 		        </plugins>
 		      </build>
 		</project>
@@ -244,10 +281,31 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		'''
 	}
 	
+	def static getMySemaMavenPlugin() {
+		'''
+          <plugin>
+            <groupId>com.mysema.maven</groupId>
+            <artifactId>apt-maven-plugin</artifactId>
+            <version>1.1.1</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>process</goal>
+                </goals>
+                <configuration>
+                    <outputDirectory>target/generated-sources/java</outputDirectory>
+                    <processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+		'''
+	}
+	
 	def getPOMParentSection() {
 		'''
 		        <groupId>«configuration.groupId»</groupId>
-		        <artifactId>«service.domain»-«service.name»-parent</artifactId>
+		        <artifactId>«getArtifactId("parent")»</artifactId>
 		        <version>«configuration.version»</version>
 		'''
 	}
@@ -261,12 +319,13 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	
+	
 	def generateClientPOM(String projectName) {
 		'''
 		<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">    
 		    <modelVersion>4.0.0</modelVersion>
-		    <artifactId>«service.domain»-«service.name»-«projectName»</artifactId>
+		    <artifactId>«getArtifactId(projectName)»</artifactId>
 		    <packaging>jar</packaging>
 		    «getPOMParentSectionFull»
 		    <dependencies>
@@ -308,7 +367,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		'''
 		<?xml version="1.0" encoding="UTF-8"?>
 		<projectDescription>
-			<name>«service.domain»-«service.name»-«projectName»</name>
+			<name>«getArtifactId(projectName)»</name>
 			<comment></comment>
 			<projects>
 			</projects>
@@ -341,7 +400,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<modelVersion>4.0.0</modelVersion>
 			«getPOMParentSection»
 			<packaging>pom</packaging>
-			<name>«service.domain»-«service.name»-parent</name>
+			<name>«getArtifactId("parent")»</name>
 			<description>«service.name»</description>
 			<organization>
 				<name>Kerubin</name>
@@ -362,6 +421,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<springframework.boot.version>2.0.1.RELEASE</springframework.boot.version>
 				<spring-cloud.version>Finchley.RC1</spring-cloud.version>			
 				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>			
+				<querydsl.version>4.2.1</querydsl.version>			
 			</properties>
 			<modules>
 				<module>«projectClientName»</module>
@@ -391,6 +451,21 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 						<version>${spring-cloud.version}</version>
 						<type>pom</type>
 						<scope>import</scope>
+					</dependency>
+					<dependency>
+		               <groupId>com.querydsl</groupId>
+		               <artifactId>querydsl-core</artifactId>
+		               <version>${querydsl.version}</version>
+		            </dependency>
+					<dependency>
+						<groupId>com.querydsl</groupId>
+						<artifactId>querydsl-jpa</artifactId>
+						<version>${querydsl.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>com.querydsl</groupId>
+						<artifactId>querydsl-apt</artifactId>
+						<version>${querydsl.version}</version>
 					</dependency>
 				</dependencies>
 			</dependencyManagement>
