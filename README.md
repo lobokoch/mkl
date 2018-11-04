@@ -1,2 +1,2 @@
 # mkl
-Language for micro-services
+Language for Spring Cloud micro-services generation.
