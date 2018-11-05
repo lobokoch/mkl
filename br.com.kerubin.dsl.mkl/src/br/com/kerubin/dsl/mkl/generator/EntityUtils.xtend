@@ -212,6 +212,10 @@ class EntityUtils {
 		entity.name.toFirstUpper + 'LookupResult'
 	}
 	
+	def static toEntityAutoCompleteName(Entity entity) {
+		entity.name.toFirstUpper + 'AutoComplete'
+	}
+	
 	def static buildMethodGet(Slot slot) {
 		slot.name.buildMethodGet
 	}

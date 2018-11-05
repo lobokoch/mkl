@@ -100,14 +100,21 @@ class ExternalObject {
 	String externalService
 }
 
+
+class AutoComplete {
+	boolean key
+	boolean result
+}
+
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
 	boolean optional
 	boolean parent
 	boolean many
 	boolean indexed
-	boolean lookupKey
-	boolean lookupResult
+	//boolean lookupKey
+	//boolean lookupResult
+	contains AutoComplete autoComplete
 	AssociationType associationType
 	EnumType enumType
 	String label
@@ -115,6 +122,18 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean isAutoComplete() {
+		return this.getAutoComplete !== null
+	}
+	
+	op boolean isAutoCompleteResult() {
+		return isAutoComplete() && (this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
+	}
+	
+	op boolean isAutoCompleteKey() {
+		return isAutoComplete() && (this.getAutoComplete.isKey || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
+	}
 	
 	op boolean isRelationContains() {
 		return associationType === null || associationType == AssociationType.CONTAINS

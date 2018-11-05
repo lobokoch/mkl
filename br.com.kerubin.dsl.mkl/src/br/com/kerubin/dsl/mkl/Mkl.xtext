@@ -80,13 +80,19 @@ Slot:
 		(optional?='?')? (many?='*')? 
 		(relationship = Relationship)? 
 		(
+			(autoComplete = AutoComplete)? &
 			('stored' ':' enumType=EnumType)? &
 			(indexed?='indexed')? &
-			(lookupKey?='lookupKey')? &
-			(lookupResult?='lookupResult')? &
+			//(lookupKey?='lookupKey')? &
+			//(lookupResult?='lookupResult')? &
 			('label' ':' label=STRING)? &
 			('help' ':' help=STRING)?
 		)
+;
+
+AutoComplete:
+{AutoComplete}	
+	'autoComplete' ('(' ((key?='key') | (result?='result') | (key?='key' ',' result?='result')) ')')?
 ;
 
 Relationship:
