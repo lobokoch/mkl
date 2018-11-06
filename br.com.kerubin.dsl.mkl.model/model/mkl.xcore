@@ -106,6 +106,23 @@ class AutoComplete {
 	boolean result
 }
 
+enum FilterOperatorEnum {
+	many as 'many' 
+	between as 'between'
+	isNotNull as 'isNotNull'
+	isNull as 'isNull'
+	isNotNull_isNull as 'isNotNull_isNull'
+}
+
+class FilterOperator {
+	FilterOperatorEnum filterOperatorEnum
+	String label
+}
+
+class ListFilter {
+	contains FilterOperator filterOperator
+}
+
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
 	boolean optional
@@ -115,6 +132,7 @@ class Slot extends Element {
 	//boolean lookupKey
 	//boolean lookupResult
 	contains AutoComplete autoComplete
+	contains ListFilter listFilter
 	AssociationType associationType
 	EnumType enumType
 	String label
@@ -203,6 +221,10 @@ class Entity extends PublicObject {
 	boolean audit
 	boolean mapped
 	boolean baseRepository
+	
+	op boolean hasAutoComplete() {
+		return !slots.filter[it.isAutoCompleteResult].empty
+	}
 	
 	op Slot getId() {
 		return slots.head

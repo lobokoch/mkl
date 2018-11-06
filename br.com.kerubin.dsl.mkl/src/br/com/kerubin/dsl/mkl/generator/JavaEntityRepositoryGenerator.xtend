@@ -49,8 +49,9 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		«ENDIF»
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
 			«IF hasAutoComplete»
+			
 			@Query("«entity.generateAutoCompleteSQL(autoCompleteKeySlots)»")
-			Collection<«entity.toEntityAutoCompleteName»> autoComplete(@Param("token") String token);
+			Collection<«entity.toEntityAutoCompleteName»> autoComplete(@Param("query") String query);
 			«ENDIF»
 			
 		}

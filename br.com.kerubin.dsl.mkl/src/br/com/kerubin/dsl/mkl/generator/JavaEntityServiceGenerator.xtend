@@ -37,12 +37,16 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		'''
 		package «entity.package»;
 		
-		import java.util.Optional;
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
 		import org.springframework.data.domain.Page;
 		import org.springframework.data.domain.Pageable;
 		import org.springframework.stereotype.Service;
+		
+		import java.util.Optional;
+		«IF entity.hasAutoComplete»
+		import java.util.Collection;
+		«ENDIF»
 		
 		@Service
 		public class «entity.toServiceName» {
@@ -80,6 +84,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				}
 				return «entityVar».get();
 			}
+			
+			«IF entity.hasAutoComplete»
+			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(String query) {
+				Collection<«entity.toEntityAutoCompleteName»> result = «repositoryVar».autoComplete(query);
+				return result;
+			}
+			«ENDIF»
 		}
 		'''
 	}

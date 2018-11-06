@@ -38,6 +38,10 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		'''
 		package «entity.package»;
 		
+		«IF entity.hasAutoComplete»
+		import java.util.Collection;
+		import org.springframework.web.bind.annotation.RequestParam;
+		«ENDIF»
 		import java.util.List;
 		import java.util.stream.Collectors;
 		
@@ -113,6 +117,13 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				return pageResult;
 			}
 			
+			«IF entity.hasAutoComplete»
+			@GetMapping("/autoComplete")
+			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(@RequestParam("query") String query) {
+				Collection<«entity.toEntityAutoCompleteName»> result = «entityServiceVar».autoComplete(query);
+				return result;
+			}
+			«ENDIF»
 		}
 		'''
 	}

@@ -81,6 +81,7 @@ Slot:
 		(relationship = Relationship)? 
 		(
 			(autoComplete = AutoComplete)? &
+			(listFilter = ListFilter)? &
 			('stored' ':' enumType=EnumType)? &
 			(indexed?='indexed')? &
 			//(lookupKey?='lookupKey')? &
@@ -88,6 +89,21 @@ Slot:
 			('label' ':' label=STRING)? &
 			('help' ':' help=STRING)?
 		)
+;
+
+ListFilter:
+{ListFilter}
+	'listFilter' '(' 
+		filterOperator = FilterOperator
+	')'	
+;
+
+FilterOperator:
+	filterOperatorEnum = FilterOperatorEnum ':' label = STRING
+;
+
+enum FilterOperatorEnum:
+	 many='many' | between='between' | isNotNull='isNotNull' | isNull='isNull' | isNotNull_isNull='isNotNull_isNull'
 ;
 
 AutoComplete:
