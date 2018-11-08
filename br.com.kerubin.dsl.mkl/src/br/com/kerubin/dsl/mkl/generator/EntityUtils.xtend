@@ -208,8 +208,13 @@ class EntityUtils {
 		entity.name.toFirstUpper
 	}
 	
-	def static toEntityLookupResultDTOName(Entity entity) {
-		entity.name.toFirstUpper + 'LookupResult'
+	
+    def static toEntityLookupResultDTOName(Entity entity) {
+        entity.name.toFirstUpper + 'LookupResult'
+	}
+	
+	def static toEntityListFilterName(Entity entity) {
+		entity.name.toFirstUpper + 'ListFilter'
 	}
 	
 	def static toEntityAutoCompleteName(Entity entity) {

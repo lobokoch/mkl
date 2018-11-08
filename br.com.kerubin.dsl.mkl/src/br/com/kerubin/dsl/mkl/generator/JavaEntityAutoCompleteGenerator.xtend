@@ -7,7 +7,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class JavaEntityAutoComplete extends GeneratorExecutor implements IGeneratorExecutor {
+class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)

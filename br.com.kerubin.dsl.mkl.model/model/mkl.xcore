@@ -129,8 +129,6 @@ class Slot extends Element {
 	boolean parent
 	boolean many
 	boolean indexed
-	//boolean lookupKey
-	//boolean lookupResult
 	contains AutoComplete autoComplete
 	contains ListFilter listFilter
 	AssociationType associationType
@@ -141,16 +139,38 @@ class Slot extends Element {
 	String[] annotations
 	container Slotted ownerObject opposite slots
 	
-	op boolean isAutoComplete() {
+	op boolean isUUID() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof UUIDType
+		}
+		
+		false
+	}
+	
+	op boolean isDate() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof DateType
+		}
+		
+		false
+	}
+	
+	op boolean hasListFilter() {
+		return this.listFilter !== null
+	}
+	
+	op boolean hasAutoComplete() {
 		return this.getAutoComplete !== null
 	}
 	
 	op boolean isAutoCompleteResult() {
-		return isAutoComplete() && (this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
+		return hasAutoComplete() && (this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
 	}
 	
 	op boolean isAutoCompleteKey() {
-		return isAutoComplete() && (this.getAutoComplete.isKey || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
+		return hasAutoComplete() && (this.getAutoComplete.isKey || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
 	}
 	
 	op boolean isRelationContains() {
@@ -224,6 +244,10 @@ class Entity extends PublicObject {
 	
 	op boolean hasAutoComplete() {
 		return !slots.filter[it.isAutoCompleteResult].empty
+	}
+	
+	op boolean hasListFilter() {
+		return !slots.filter[it.hasListFilter].empty
 	}
 	
 	op Slot getId() {
