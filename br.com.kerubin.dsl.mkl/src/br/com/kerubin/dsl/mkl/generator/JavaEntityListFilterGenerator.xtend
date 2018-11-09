@@ -2,10 +2,6 @@ package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
-import br.com.kerubin.dsl.mkl.model.ManyToMany
-import br.com.kerubin.dsl.mkl.model.ManyToOne
-import br.com.kerubin.dsl.mkl.model.OneToMany
-import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.Slot
 
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
@@ -14,8 +10,8 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
-	private val final BETWEEN_START = 'Start'
-	private val final BETWEEN_END = 'End'
+	private val final BETWEEN_FROM = 'From'
+	private val final BETWEEN_TO = 'To'
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -66,30 +62,44 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	def CharSequence generateFields(Iterable<Slot> slots) {
 		'''
 		«slots.map[generateField].join('\r\n')»
+		
+		«slots.map[generateGetterAndSetter].join('\r\n')»
 		'''
 		
 	}
 	
+	private def boolean isNotNull(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL) ||
+			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+	} 
+	
+	private def boolean isNull(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NULL) ||
+			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+	} 
+	
+	private def boolean isMany(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.MANY)
+	} 
+	
+	private def boolean isBetween(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.BETWEEN)
+	} 
+	
 	def CharSequence generateField(Slot slot) {
 		val entity = slot.ownerEntity
-		/*if (slot.isUUID) {
-			entity.addImport("import java.util.UUID;")
-		}*/
 		
 		if (slot.isDate) {
-			//entity.addImport("import java.time.LocalDate;")
 			entity.addImport("import org.springframework.format.annotation.DateTimeFormat;")
 		}
 		
-		val isNotNull = slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL) ||
-			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+		val isNotNull = slot.isNotNull
 			
-		val isNull = slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NULL) ||
-			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+		val isNull = slot.isNull
 			
-		val isMany = slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.MANY)
+		val isMany = isMany(slot)
 		
-		val isBetween = slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.BETWEEN) 
+		val isBetween = slot.isBetween 
 		
 		'''
 		«IF isMany»
@@ -109,106 +119,57 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
 		«ENDIF»
-		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_START»;
+		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_FROM»;
 		
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
 		«ENDIF»
-		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_END»;
+		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_TO»;
 		«ENDIF»
 		'''
 	}
 	
-	def CharSequence generateGetters(Iterable<Slot> slots) {
-		'''
+	def CharSequence generateGetterAndSetter(Slot slot) {
 		
-		«slots.map[generateGetter].join('\r\n')»
-		'''
-		
-	}
-	
-	def CharSequence generateGetter(Slot slot) {
-		
-		'''
-		«IF slot.isToMany»
-		public java.util.List<«slot.toJavaTypeDTO»> get«slot.name.toFirstUpper»() {
-		«ELSE»
-		public «slot.toJavaTypeDTO» get«slot.name.toFirstUpper»() {
-		«ENDIF»
-			return «slot.name.toFirstLower»;
-		}
-		'''
-	}
-	
-	def CharSequence generateSetters(Iterable<Slot> slots) {
-		'''
-		
-		«slots.map[generateSetter].join('\r\n')»
-		'''
-	}
-	
-	def CharSequence generateSetter(Slot slot) {
-		
-		'''
-		«IF slot.many && slot.isToMany»
-		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower») {
-		«ELSE»
-		public void set«slot.name.toFirstUpper»(«slot.toJavaTypeDTO» «slot.name.toFirstLower») {
-		«ENDIF»
-			this.«slot.name.toFirstLower» = «slot.name.toFirstLower»;
-		}
-		'''
-	}
-	
-	//From https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
-	def CharSequence generateEquals(Entity entity) {
-		val isOneToManyWithMapsId = entity.id.isOneToOne && entity.id.isRelationRefers
-		val id = if (!isOneToManyWithMapsId && entity.id.isEntity) entity.id.asEntity.name + '.get' + entity.id.asEntity.id.name.toFirstUpper + '()' else entity.id.name
-		
-		'''
-		
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			«entity.toEntityLookupResultDTOName» other = («entity.toEntityLookupResultDTOName») obj;
-			if («id» == null) {
-				if (other.«id» != null)
-					return false;
-			} else if (!«id».equals(other.«id»))
-				return false;
+		val isNotNull = slot.isNotNull
 			
-			return true;
-		}
-		'''
+		val isNull = slot.isNull
+			
+		val isMany = isMany(slot)
 		
-	}
-	
-	//From: https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
-	def CharSequence generateHashCode(Entity entity) {
-		'''
+		val isBetween = slot.isBetween 
 		
-		@Override
-		public int hashCode() {
-			return 31;
-		}
 		'''
+		«IF isMany»
+		«slot.getListMethod»
 		
-	}
-	
-	def CharSequence generateToString(Entity entity) {
-		'''
+		«slot.getSetListMethod»
+		«ELSEIF isNotNull && isNull»
+		«slot.getGetMethodAsBoolean(FilterOperatorEnum.IS_NOT_NULL.getName())»
 		
-		/* 
-		@Override
-		public String toString() {
-			// Enabling toString for JPA entities will implicitly trigger lazy loading on all fields.
-		}
-		*/
+		«slot.getSetMethodAsBoolean(FilterOperatorEnum.IS_NOT_NULL.getName())»
+		
+		«slot.getGetMethodAsBoolean(FilterOperatorEnum.IS_NULL.getName())»
+		
+		«slot.getSetMethodAsBoolean(FilterOperatorEnum.IS_NULL.getName())»
+		
+		«ELSEIF isNotNull»
+		«slot.getGetMethodAsBoolean(FilterOperatorEnum.IS_NOT_NULL.getName())»
+				
+		«slot.getSetMethodAsBoolean(FilterOperatorEnum.IS_NOT_NULL.getName())»
+		«ELSEIF isNull»
+		«slot.getGetMethodAsBoolean(FilterOperatorEnum.IS_NULL.getName())»
+				
+		«slot.getSetMethodAsBoolean(FilterOperatorEnum.IS_NULL.getName())»
+		«ELSEIF isBetween»
+		«slot.getGetMethod(BETWEEN_FROM)»
+		
+		«slot.getSetMethod(BETWEEN_FROM)»
+		
+		«slot.getGetMethod(BETWEEN_TO)»
+		
+		«slot.getSetMethod(BETWEEN_TO)»
+		«ENDIF»
 		'''
 	}
 	
@@ -225,44 +186,6 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		'''
 	}
 	
-	def boolean hasRelationship(Slot slot) {
-		if (slot.isEntity) {
-			return slot.relationship !== null
-		}
-		false
-	}
 	
-	def boolean existsRelationOneToOne(Entity entity) {
-		val exists = entity.slots.exists[it.relationship instanceof OneToOne]
-		exists
-	}
-	
-	def boolean existsRelationManyToOne(Entity entity) {
-		val exists = entity.slots.exists[it.relationship instanceof ManyToOne]
-		exists
-	}
-	
-	def boolean existsRelationOneToMany(Entity entity) {
-		val exists = entity.slots.exists[it.relationship instanceof OneToMany]
-		exists
-	}
-	
-	def boolean existsRelationManyToMany(Entity entity) {
-		val exists = entity.slots.exists[it.relationship instanceof ManyToMany]
-		exists
-	}
-	
-	def boolean existsRelation(Entity entity) {
-		entity.slots.exists[it.isEntity]
-	}
-	
-	/*def boolean isUUID(Slot slot) {
-		if (slot.slotType instanceof BasicTypeReference) {
-			val basicType = (slot.slotType as BasicTypeReference).basicType
-			return basicType instanceof UUIDType
-		}
-		
-		false
-	}*/
 	
 }

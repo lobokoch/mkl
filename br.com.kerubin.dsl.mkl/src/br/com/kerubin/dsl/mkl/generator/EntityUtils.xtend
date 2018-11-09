@@ -237,6 +237,69 @@ class EntityUtils {
 		entity.name.buildMethodGet
 	}
 	
+	def static CharSequence getGetMethod(Slot slot) {
+		slot.getGetMethod(null)
+	}
+	
+	def static CharSequence getGetMethod(Slot slot, String suffix) {
+		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		'''
+		public «slot.toJavaType» get«name»() {
+			return «name.toFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getGetMethodAsBoolean(Slot slot, String suffix) {
+		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		'''
+		public Boolean is«name»() {
+			return «name.toFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getSetMethodAsBoolean(Slot slot, String suffix) {
+		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		val nameFirstLower = name.toFirstLower
+		'''
+		public void set«name»(Boolean «nameFirstLower») {
+			this.«nameFirstLower» = «nameFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getGetListMethod(Slot slot) {
+		'''
+		public java.util.List<«slot.toJavaType»> get«slot.name.toFirstUpper»() {
+			return «slot.name.toFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getSetMethod(Slot slot) {
+		slot.getSetMethod(null)
+	}
+	
+	def static CharSequence getSetMethod(Slot slot, String suffix) {
+		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		val nameFirstLower = name.toFirstLower
+		'''
+		public void set«name»(«slot.toJavaType» «nameFirstLower») {
+			this.«nameFirstLower» = «nameFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getSetListMethod(Slot slot) {
+		val nameFirstLower = slot.name.toFirstLower
+		'''
+		public void set«nameFirstLower.toFirstUpper»(java.util.List<«slot.toJavaType»> «nameFirstLower») {
+			this.«nameFirstLower» = «nameFirstLower»;
+		}
+		''' 
+	}
+	
 	def static buildMethodGet(String name) {
 		'get' + name.toFirstUpper + '(' + ')'
 	}
