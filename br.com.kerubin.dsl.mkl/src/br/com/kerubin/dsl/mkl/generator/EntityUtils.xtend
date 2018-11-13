@@ -217,8 +217,20 @@ class EntityUtils {
 		entity.name.toFirstUpper + 'ListFilter'
 	}
 	
+	def static toEntityListFilterPredicateName(Entity entity) {
+		entity.name.toFirstUpper + 'ListFilterPredicate'
+	}
+	
+	def static toEntityListFilterPredicateImplName(Entity entity) {
+		entity.name.toFirstUpper + 'ListFilterPredicateImpl'
+	}
+	
 	def static toEntityAutoCompleteName(Entity entity) {
 		entity.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static getFieldName(Slot slot) {
+		slot.name.toFirstLower
 	}
 	
 	def static buildMethodGet(Slot slot) {
@@ -298,6 +310,10 @@ class EntityUtils {
 			this.«nameFirstLower» = «nameFirstLower»;
 		}
 		''' 
+	}
+	
+	def static buildMethodGet(Slot slot, String prefix, String suffix) {
+		(prefix + '.' ?: '') + 'get' + slot.name.toFirstUpper + (suffix ?: '') + '(' + ')'
 	}
 	
 	def static buildMethodGet(String name) {
