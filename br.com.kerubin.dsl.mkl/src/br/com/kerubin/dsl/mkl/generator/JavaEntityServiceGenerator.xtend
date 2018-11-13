@@ -15,16 +15,60 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateRepository]
+		entities.forEach[it |
+			generateServiceInterface
+			generateServiceInterfaceImpl
+		]
 	}
 	
-	def generateRepository(Entity entity) {
+	def generateServiceInterface(Entity entity) {
 		val basePakage = serverGenSourceFolder
 		val fileName = basePakage + entity.packagePath + '/' + entity.toServiceName + '.java'
-		generateFile(fileName, entity.generateEntityRepository)
+		generateFile(fileName, entity.generateEntityServiceInterface)
 	}
 	
-	def CharSequence generateEntityRepository(Entity entity) {
+	def generateServiceInterfaceImpl(Entity entity) {
+		val basePakage = serverGenSourceFolder
+		val fileName = basePakage + entity.packagePath + '/' + entity.toServiceImplName + '.java'
+		generateFile(fileName, entity.generateEntityServiceInterfaceImpl)
+	}
+	
+	def CharSequence generateEntityServiceInterface(Entity entity) {
+		val entityName = entity.toEntityName
+		val entityVar = entity.toEntityName.toFirstLower
+		val idVar = entity.id.name.toFirstLower
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		
+		'''
+		package «entity.package»;
+		
+		import org.springframework.data.domain.Page;
+		import org.springframework.data.domain.Pageable;
+		
+		«IF entity.hasAutoComplete»
+		import java.util.Collection;
+		«ENDIF»
+		
+		public interface «entity.toServiceName» {
+			
+			public «entityName» create(«entityName» «entityVar»);
+			
+			public «entityName» read(«idType» «idVar»);
+			
+			public «entityName» update(«idType» «idVar», «entityName» «entityVar»);
+			
+			public void delete(«idType» «idVar»);
+			
+			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable);
+			
+			«IF entity.hasAutoComplete»
+			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(String query);
+			«ENDIF»
+		}
+		'''
+	}
+	
+	def CharSequence generateEntityServiceInterfaceImpl(Entity entity) {
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
 		val entityDTOName = entity.toEntityDTOName
@@ -43,16 +87,21 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import org.springframework.data.domain.Pageable;
 		import org.springframework.stereotype.Service;
 		
+		import com.querydsl.core.types.Predicate;
+		
 		import java.util.Optional;
 		«IF entity.hasAutoComplete»
 		import java.util.Collection;
 		«ENDIF»
 		
 		@Service
-		public class «entity.toServiceName» {
+		public class «entity.toServiceImplName» implements «entity.toServiceName» {
 			
 			@Autowired
 			private «entity.toRepositoryName» «repositoryVar»;
+			
+			@Autowired
+			private «entity.toEntityListFilterPredicateName» «entity.toEntityListFilterPredicateName.toFirstLower»;
 			
 			public «entityName» create(«entityName» «entityVar») {
 				return «repositoryVar».save(«entityVar»);
@@ -72,8 +121,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«repositoryVar».deleteById(«idVar»);
 			}
 			
-			public Page<«entityName»> list(Pageable pageable) {
-				Page<«entityName»> resultPage = «repositoryVar».findAll(pageable);
+			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
+				Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName.toFirstLower»);
+				
+				Page<«entityName»> resultPage = «repositoryVar».findAll(predicate, pageable);
 				return resultPage;
 			}
 			

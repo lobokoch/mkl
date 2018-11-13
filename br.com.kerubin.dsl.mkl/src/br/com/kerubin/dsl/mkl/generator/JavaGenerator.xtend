@@ -22,7 +22,7 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityServiceGenerator(this),
 			new JavaEntityDTOGenerator(this),			
 			new JavaEnumGenerator(this),
-			//new JavaEntityLookupResultDTOGenerator(this),
+			new JavaEntityLookupResultDTOGenerator(this),
 			new JavaEntityListFilterGenerator(this),
 			new JavaEntityAutoCompleteGenerator(this),
 			new JavaEntityDTOConverterGenerator(this),

@@ -110,8 +110,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			}
 			
 			@GetMapping
-			public PageResult<«entityDTOName»> list(Pageable pageable) {
-				Page<«entityName»> page = «entityServiceVar».list(pageable);
+			public PageResult<«entityDTOName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
+				Page<«entityName»> page = «entityServiceVar».list(«entity.toEntityListFilterName.toFirstLower», pageable);
 				List<«entityDTOName»> content = page.getContent().stream().map(pe -> «entityDTOVar»DTOConverter.«toDTO»(pe)).collect(Collectors.toList());
 				PageResult<«entityDTOName»> pageResult = new PageResult<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
 				return pageResult;

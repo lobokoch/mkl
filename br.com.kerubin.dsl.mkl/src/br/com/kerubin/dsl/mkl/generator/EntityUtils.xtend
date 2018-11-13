@@ -350,6 +350,10 @@ class EntityUtils {
 		entity.name.toFirstUpper + "Service"
 	}
 	
+	def static toServiceImplName(Entity entity) {
+		entity.name.toFirstUpper + "ServiceImpl"
+	}
+	
 	def static toControllerName(Entity entity) {
 		entity.name.toFirstUpper + "Controller"
 	}

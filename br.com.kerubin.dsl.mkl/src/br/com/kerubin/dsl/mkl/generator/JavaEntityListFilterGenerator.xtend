@@ -23,11 +23,11 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	
 	def generateFiles() {
 		entities.forEach[ entity |
-			if (entity.hasListFilter) {
+			//if (entity.hasListFilter) {
 				entity.generateListFilter
 				entity.generateListFilterPredicate
 				entity.generateListFilterPredicateImpl
-			}
+			//}
 		]
 	}
 	
@@ -169,7 +169,18 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		//slot.ownerEntity.addImport("import org.springframework.util.CollectionUtils;")
 		val fieldFrom = 'fieldFrom'
 		val fieldTo = 'fieldTo'
-		val String[] labels = slot.listFilter.filterOperator?.label?.split(';')
+		var String[] labels = slot.listFilter.filterOperator?.label?.split(';')
+		if (labels !== null) {
+			if (labels.size == 0) {
+				labels = #[slot.name + ' inicial', slot.name + ' final']
+			}
+			else if (labels.size == 1) {
+				labels = #[labels.get(0), slot.name + ' final']
+			}
+		}
+		else {
+			labels = #[slot.name + ' inicial', slot.name + ' final']
+		}
 		
 		'''
 		«slot.toJavaType» «fieldFrom» = «slot.buildMethodGet(varFilter, BETWEEN_FROM)»;
