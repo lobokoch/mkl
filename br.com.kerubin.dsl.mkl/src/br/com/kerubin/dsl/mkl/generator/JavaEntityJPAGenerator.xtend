@@ -53,6 +53,8 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			«entity.generateFields»
 			«entity.generateGetters»
 			«entity.generateSetters»
+			«entity.generateAssignMethod»
+			«entity.generateCloneMethod»
 			«entity.generateEquals»
 			«entity.generateHashCode»
 			«entity.generateToString»
@@ -418,6 +420,41 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ENDIF»
 			return «slot.name.toFirstLower»;
 		}
+		'''
+	}
+	
+	def CharSequence generateCloneMethod(Entity entity) {
+		'''
+		
+		public «entity.toEntityName» clone() {
+			«entity.toEntityName» theClone = new «entity.toEntityName»();
+			«entity.slots.map[generateCloneSlot].join»
+			
+			return theClone;
+		}
+		'''
+	}
+	
+	def CharSequence generateCloneSlot(Slot slot) {
+		'''
+		«slot.buildMethodSet('theClone', slot.buildMethodGet('this'))»;
+		'''
+	}
+	
+	def CharSequence generateAssignMethod(Entity entity) {
+		'''
+		
+		public void assign(«entity.toEntityName» source) {
+			if (source != null) {
+				«entity.slots.map[generateAssignSlot].join»
+			}
+		}
+		'''
+	}
+	
+	def CharSequence generateAssignSlot(Slot slot) {
+		'''
+		«slot.buildMethodSet('this', slot.buildMethodGet('source'))»;
 		'''
 	}
 	

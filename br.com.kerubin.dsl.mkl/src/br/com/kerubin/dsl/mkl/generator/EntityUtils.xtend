@@ -241,6 +241,10 @@ class EntityUtils {
 		obj + '.' + slot.name.buildMethodGet
 	}
 	
+	def static buildMethodGet(Slot slot, String obj) {
+		obj + '.' + slot.name.buildMethodGet
+	}
+	
 	def static buildMethodGetEntityId(String obj, Slot slot) {
 		obj.buildMethodGet(slot) + '.' + slot.asEntity.id.buildMethodGet
 	}
@@ -324,7 +328,7 @@ class EntityUtils {
 		slot.name.buildMethodSet(param)
 	}
 	
-	def static buildMethodSet(String obj, Slot slot, String param) {
+	def static buildMethodSet(Slot slot, String obj, String param) {
 		obj + '.' + slot.name.buildMethodSet(param)
 	}
 	

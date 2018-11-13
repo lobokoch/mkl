@@ -120,7 +120,7 @@ class JavaEntityDTOConverterGenerator_SetNaMao extends GeneratorExecutor impleme
 		«IF slot.isEntity»
 		«slot.generateEntityAssign(source, destination)»
 		«ELSE»
-		«destination.buildMethodSet(slot, source.buildMethodGet(slot))»;
+		«slot.buildMethodSet(destination, source.buildMethodGet(slot))»;
 		«ENDIF»
 		'''
 	}
@@ -130,12 +130,12 @@ class JavaEntityDTOConverterGenerator_SetNaMao extends GeneratorExecutor impleme
 		
 		if («ENTITY.buildMethodGet(slot)» != null) {
 			«IF slot.isRelationRefers && !slot.isMany»
-			«DTO.buildMethodSet(slot, ENTITY.buildMethodGetEntityId(slot))»;
+			«slot.buildMethodSet(DTO, ENTITY.buildMethodGetEntityId(slot))»;
 			«ELSEIF slot.isRelationContains»
 			«IF slot.isMany»
-			«DTO.buildMethodSet(slot, slot.buildMethodConvertToListDTO)»;
+			«slot.buildMethodSet(DTO, slot.buildMethodConvertToListDTO)»;
 			«ELSE»
-			«DTO.buildMethodSet(slot, slot.buildMethodConvertToDTO)»;
+			«slot.buildMethodSet(DTO, slot.buildMethodConvertToDTO)»;
 			«ENDIF»
 			«ENDIF»
 		}
