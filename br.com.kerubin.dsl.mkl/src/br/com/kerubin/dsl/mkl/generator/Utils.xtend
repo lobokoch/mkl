@@ -2,6 +2,7 @@ package br.com.kerubin.dsl.mkl.generator
 
 class Utils {
 	
+	// JAVA
 	static val MAIN_APP_NAME = 'Kerubin'
 	static val PROJECT_PARENT = 'parent'
 	static val PROJECT_CLIENT = 'client'
@@ -26,6 +27,20 @@ class Utils {
 	static val SERVER_SOURCE_DIR = BASE_SERVER_DIR + SOURCE_BASE_DIR
 	static val CLIENT_SOURCE_DIR = BASE_CLIENT_DIR + SOURCE_BASE_DIR
 	
+	// WEB
+	static val WEB_BASE_DIR = 'web/'
+	static val WEB_SOURCE_GEN_BASE_DIR = 'src-gen/'
+	static val WEB_PROJECT_APPLICATION = 'app/'
+	static val WEB_MODEL_DIR = 'model/'
+	
+	def static getWebSourceGenDir() {
+		WEB_SOURCE_GEN_BASE_DIR
+	}
+	
+	def static getWebModelDir(String path) {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path + WEB_MODEL_DIR
+	}
+	// WEB
 	
 	def static getMainAppName() {
 		MAIN_APP_NAME
@@ -91,4 +106,12 @@ class Utils {
 		CLIENT_SOURCE_DIR + JAVA_BASE_DIR
 	}
 	
+	def static getWebGenSourceFolder() {
+		CLIENT_SOURCE_GEN_DIR + JAVA_BASE_DIR
+	}
+	
+	def static String removeUnderline(String str) {
+		var result = str.replace('_', '')
+		result
+	}
 }

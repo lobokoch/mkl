@@ -66,7 +66,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		sql.append(" from ").append(entity.toEntityName).append(" ").append(alias)
 		sql.append(" where ")
 		val keyFields = slots.filter[it.isAutoCompleteKey].map[it | 
-			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :token, '%')) )"
+			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :query, '%')) )"
 		].join(" or ")
 		sql.append(keyFields)
 		sql.append(" order by 1 asc")

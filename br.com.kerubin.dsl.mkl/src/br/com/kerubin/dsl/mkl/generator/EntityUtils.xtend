@@ -24,6 +24,8 @@ import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.ManyToOne
 import java.util.List
 
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+
 class EntityUtils {
 	
 	def static generateEntityImports(Entity entity) {
@@ -94,6 +96,13 @@ class EntityUtils {
 		return false
 	}
 	
+	def static String toWebTypeDTO(Slot slot) {
+		if (slot.isDTOLookupResult) {
+			return slot.asEntity.toEntityLookupResultDTOName
+		}
+		toWebType(slot, false)
+	}
+	
 	def static String toJavaTypeDTO(Slot slot) {
 		if (slot.isDTOLookupResult) {
 			return slot.asEntity.toEntityLookupResultDTOName
@@ -103,6 +112,24 @@ class EntityUtils {
 	
 	def static String toJavaType(Slot slot) {
 		toJavaType(slot, true)
+	}
+	
+	def static String toWebType(Slot slot) {
+		toWebType(slot, true)
+	}
+	
+	def static private String toWebType(Slot slot, boolean isEntity) {
+		if (slot.slotType instanceof BasicTypeReference) {
+			val webBasicType = (slot.slotType as BasicTypeReference).toWebBasicType
+			return webBasicType
+		}
+		
+		if (slot.slotType instanceof ObjectTypeReference) {
+			val webObjectType = (slot.slotType as ObjectTypeReference).toWebObjectType(isEntity)
+			return webObjectType
+		}
+		
+		"<WEB_UNKNOWN1>"
 	}
 	
 	def static private String toJavaType(Slot slot, boolean isEntity) {
@@ -181,6 +208,11 @@ class EntityUtils {
 		slot?.relationship instanceof ManyToMany
 	}
 	
+	def static String toWebObjectType(ObjectTypeReference otr, boolean isEntity) {
+		val webObjectType = toJavaObjectType(otr, isEntity)
+		webObjectType
+	}
+	
 	def static String toJavaObjectType(ObjectTypeReference otr, boolean isEntity) {
 		val refType = otr.referencedType
 		if (refType instanceof Entity) {
@@ -198,6 +230,10 @@ class EntityUtils {
 		}
 		
 		"<UNKNOWN2>"
+	}
+	
+	def static toEntityWebModelName(Entity entity) {
+		entity.name.toLowerCase.removeUnderline + '-model'
 	}
 	
 	def static toEntityName(Entity entity) {
@@ -270,7 +306,7 @@ class EntityUtils {
 		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
 		'''
 		public Boolean is«name»() {
-			return «name.toFirstLower»;
+			return «name.toFirstLower» != null && «name.toFirstLower»;
 		}
 		''' 
 	}
@@ -410,6 +446,44 @@ class EntityUtils {
 		}
 		else if (basicType instanceof ByteType) {
 			"byte[]"
+		}
+		else {
+			"<UNKNOWN3>"
+		}
+		
+	}
+	
+	def static String getToWebBasicType(BasicTypeReference btr) {
+		val basicType = btr.basicType
+		if (basicType instanceof StringType) {
+			"string"
+		}
+		else if (basicType instanceof IntegerType) {
+			"number"
+		}
+		else if (basicType instanceof DoubleType) {
+			"number"
+		}
+		else if (basicType instanceof MoneyType) {
+			"number"
+		}
+		else if (basicType instanceof BooleanType) {
+			"boolean"
+		}
+		else if (basicType instanceof DateType) {
+			"Date"
+		}
+		else if (basicType instanceof TimeType) {
+			"Date"
+		}
+		else if (basicType instanceof DateTimeType) {
+			"Date"
+		}
+		else if (basicType instanceof UUIDType) {
+			"string"
+		}
+		else if (basicType instanceof ByteType) {
+			"any"
 		}
 		else {
 			"<UNKNOWN3>"

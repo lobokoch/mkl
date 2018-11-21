@@ -22,8 +22,11 @@ class MklGenerator extends AbstractGenerator {
 	}
 	
 	def generate(Resource resource, IFileSystemAccess2 fsa) {
-		val javaGenerator = new JavaGenerator(resource, fsa);
+		val javaGenerator = new JavaGenerator(resource, fsa)
 		javaGenerator.generate
+		
+		val webGenerator = new WebGenerator(resource, fsa)
+		webGenerator.generate 
 	}
 
 	

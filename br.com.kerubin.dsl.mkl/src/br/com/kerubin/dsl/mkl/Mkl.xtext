@@ -84,8 +84,8 @@ Slot:
 			(listFilter = ListFilter)? &
 			('stored' ':' enumType=EnumType)? &
 			(indexed?='indexed')? &
-			//(lookupKey?='lookupKey')? &
-			//(lookupResult?='lookupResult')? &
+			(lookupKey?='lookupKey')? &
+			(lookupResult?='lookupResult')? &
 			('label' ':' label=STRING)? &
 			('help' ':' help=STRING)?
 		)

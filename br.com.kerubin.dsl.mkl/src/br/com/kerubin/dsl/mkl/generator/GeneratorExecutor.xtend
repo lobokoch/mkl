@@ -3,6 +3,7 @@ package br.com.kerubin.dsl.mkl.generator
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Service
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import br.com.kerubin.dsl.mkl.model.Enumeration
 
@@ -52,9 +53,13 @@ class GeneratorExecutor {
 		result		
 	}
 	
-	def String removeUnderline(String str) {
-		var result = str.replace('_', '')
-		result
+	def String getServicePath(Entity entity) {
+		entity.service.servicePath
+	}
+	
+	def String getServicePath(Service service) {
+		val path = service.domain.removeUnderline + '/' + service.name.removeUnderline + '/'
+		path
 	}
 	
 	

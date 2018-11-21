@@ -129,6 +129,10 @@ class Slot extends Element {
 	boolean parent
 	boolean many
 	boolean indexed
+	
+	boolean lookupKey
+    boolean lookupResult
+	
 	contains AutoComplete autoComplete
 	contains ListFilter listFilter
 	AssociationType associationType
@@ -138,6 +142,15 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean isString() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof StringType
+		}
+		
+		false
+	}
 	
 	op boolean isUUID() {
 		if (this.slotType instanceof BasicTypeReference) {
@@ -193,6 +206,7 @@ class Slot extends Element {
 
 abstract class Slotted extends Element {
 	contains Slot[] slots opposite ownerObject
+	
 }
 
 class EnumTypeReference extends TypeReference {

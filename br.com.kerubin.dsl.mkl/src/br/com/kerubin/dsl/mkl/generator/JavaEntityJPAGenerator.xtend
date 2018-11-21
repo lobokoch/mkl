@@ -493,7 +493,11 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			}
 			«ENDIF»
 			«IF !slot.isToMany»
+			«IF slot.isString»
+			this.«slotName» = «slotName» != null ? «slotName».trim() : «slotName»; // Chamadas REST fazem trim.
+			«ELSE»
 			this.«slotName» = «slotName»;
+			«ENDIF»
 			«ENDIF»
 		«IF !(slot.isManyToMany && slot.isRelationRefers)»
 		}
