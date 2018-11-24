@@ -47,9 +47,15 @@ class StringConcatenationExt extends StringConcatenation {
 	
 	def StringConcatenationExt addImport(String import_) {
 		imports.newLine
-		imports.append('import ')
+		if (!import_.startsWith('import')) {
+			imports.append('import ')			
+		}
+		
 		imports.append(import_)
-		imports.append(';')
+		
+		if (!import_.endsWith(';')) {
+			imports.append(';')			
+		}
 		
 		this
 	}

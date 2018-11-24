@@ -289,7 +289,19 @@ class EntityUtils {
 		entity.name.toFirstUpper + "Entity"
 	}
 	
+	def static toVarName(Entity entity) {
+		entity.name.toFirstLower
+	}
+	
 	def static toEntityDTOName(Entity entity) {
+		entity.toDtoName
+	}
+	
+	def static toWebEntityServiceName(Entity entity) {
+		entity.toDtoName + 'Service'
+	}
+	
+	def static toDtoName(Entity entity) {
 		entity.name.toFirstUpper
 	}
 	

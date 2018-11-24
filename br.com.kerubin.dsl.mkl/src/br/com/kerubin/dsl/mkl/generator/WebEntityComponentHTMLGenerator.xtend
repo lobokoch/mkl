@@ -17,7 +17,7 @@ import br.com.kerubin.dsl.mkl.model.DateTimeType
 import br.com.kerubin.dsl.mkl.model.UUIDType
 import br.com.kerubin.dsl.mkl.model.ByteType
 
-class WebEntityComponentGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class WebEntityComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -28,10 +28,10 @@ class WebEntityComponentGenerator extends GeneratorExecutor implements IGenerato
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateEntityComponentGenerator]
+		entities.forEach[generateComponent]
 	}
 	
-	def generateEntityComponentGenerator(Entity entity) {
+	def generateComponent(Entity entity) {
 		val path = entity.getWebComponentPath.webComponentDir
 		val entityFile = path + entity.toEntityWebComponentName + '.html'
 		generateFile(entityFile, entity.doGenerateEntityComponentGenerator)
