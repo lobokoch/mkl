@@ -44,6 +44,8 @@ EnumItem:
 Entity:
 	(
 		(externalObject=ExternalObject)? & 
+		(externalObject=ExternalObject)? & 
+		(enableReplication?='@enableReplication')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
 		(baseRepository?='@baseRepository')? &
@@ -86,10 +88,20 @@ Slot:
 			(indexed?='indexed')? &
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
-			('label' ':' label=STRING)? &
-			('help' ':' help=STRING)?
+			('help' ':' help=STRING)? &
+			(web = Web)?
 		)
 ;
+
+Web:
+	'web' '('
+		(
+			('class' ':' webClass = STRING) &
+			('label' ':' label = STRING)?
+		)
+	')'
+;
+
 
 ListFilter:
 {ListFilter}

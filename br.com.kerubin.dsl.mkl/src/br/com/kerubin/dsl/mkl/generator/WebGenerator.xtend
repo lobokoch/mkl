@@ -15,8 +15,8 @@ class WebGenerator extends BaseGenerator {
 	
 	def generateFiles() {
 		val IGeneratorExecutor[] generators = #[
-			new WebEntityModelGenerator(this)/*,
-			new JavaServerConfigGenerator(this),
+			new WebEntityModelGenerator(this),
+			new WebEntityComponentGenerator(this)/*,
 			new JavaEntityJPAGenerator(this),
 			new JavaEntityRepositoryGenerator(this),
 			new JavaEntityServiceGenerator(this),

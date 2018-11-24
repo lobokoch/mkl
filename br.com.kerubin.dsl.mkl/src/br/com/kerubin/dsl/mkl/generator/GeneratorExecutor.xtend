@@ -53,6 +53,10 @@ class GeneratorExecutor {
 		result		
 	}
 	
+	def String getWebComponentPath(Entity entity) {
+		entity.service.servicePath + '/' + entity.name.toLowerCase.removeUnderline + '/'
+	}
+	
 	def String getServicePath(Entity entity) {
 		entity.service.servicePath
 	}
@@ -61,7 +65,6 @@ class GeneratorExecutor {
 		val path = service.domain.removeUnderline + '/' + service.name.removeUnderline + '/'
 		path
 	}
-	
 	
 	def String getServicePackage(Service service) {
 		basePackage + '.' + service.domain.removeUnderline + '.' + service.name.removeUnderline

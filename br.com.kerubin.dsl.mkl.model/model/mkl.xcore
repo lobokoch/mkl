@@ -123,6 +123,11 @@ class ListFilter {
 	contains FilterOperator filterOperator
 }
 
+class Web {
+	String webClass
+	String label
+}
+
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
 	boolean optional
@@ -135,13 +140,27 @@ class Slot extends Element {
 	
 	contains AutoComplete autoComplete
 	contains ListFilter listFilter
+	contains Web web
 	AssociationType associationType
 	EnumType enumType
-	String label
+	
 	String help
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasWeb() {
+		return web !== null
+	}
+	
+	op boolean hasWebClass() {
+		return web !== null && web.webClass !== null
+	}
+	
+	op boolean hasWebLabel() {
+		return web !== null && web.label !== null
+	}
+	
 	
 	op boolean isString() {
 		if (this.slotType instanceof BasicTypeReference) {
@@ -255,6 +274,7 @@ class Entity extends PublicObject {
 	boolean audit
 	boolean mapped
 	boolean baseRepository
+	boolean enableReplication
 	
 	op boolean hasAutoComplete() {
 		return !slots.filter[it.isAutoCompleteResult].empty

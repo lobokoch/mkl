@@ -1,30 +1,32 @@
 package br.com.kerubin.dsl.mkl.generator
 
-import static extension org.apache.commons.lang3.StringUtils.*
-import br.com.kerubin.dsl.mkl.model.Slot
-import br.com.kerubin.dsl.mkl.model.Entity
-import br.com.kerubin.dsl.mkl.model.ObjectTypeReference
+import br.com.kerubin.dsl.mkl.model.BasicType
 import br.com.kerubin.dsl.mkl.model.BasicTypeReference
-import br.com.kerubin.dsl.mkl.model.StringType
-import br.com.kerubin.dsl.mkl.model.IntegerType
-import br.com.kerubin.dsl.mkl.model.DoubleType
-import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.BooleanType
-import br.com.kerubin.dsl.mkl.model.DateType
-import br.com.kerubin.dsl.mkl.model.TimeType
-import br.com.kerubin.dsl.mkl.model.DateTimeType
-import br.com.kerubin.dsl.mkl.model.UUIDType
 import br.com.kerubin.dsl.mkl.model.ByteType
+import br.com.kerubin.dsl.mkl.model.DateTimeType
+import br.com.kerubin.dsl.mkl.model.DateType
+import br.com.kerubin.dsl.mkl.model.DoubleType
+import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Enumeration
-import br.com.kerubin.dsl.mkl.model.PublicObject
-import br.com.kerubin.dsl.mkl.model.OneToMany
+import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.ManyToMany
-import br.com.kerubin.dsl.mkl.model.RelationshipFeatured
-import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.ManyToOne
+import br.com.kerubin.dsl.mkl.model.MoneyType
+import br.com.kerubin.dsl.mkl.model.ObjectTypeReference
+import br.com.kerubin.dsl.mkl.model.OneToMany
+import br.com.kerubin.dsl.mkl.model.OneToOne
+import br.com.kerubin.dsl.mkl.model.PublicObject
+import br.com.kerubin.dsl.mkl.model.RelationshipFeatured
+import br.com.kerubin.dsl.mkl.model.Service
+import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.StringType
+import br.com.kerubin.dsl.mkl.model.TimeType
+import br.com.kerubin.dsl.mkl.model.UUIDType
 import java.util.List
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension org.apache.commons.lang3.StringUtils.*
 
 class EntityUtils {
 	
@@ -132,6 +134,14 @@ class EntityUtils {
 		"<WEB_UNKNOWN1>"
 	}
 	
+	def static BasicType getBasicType(Slot slot) {
+		if (slot.slotType instanceof BasicTypeReference) {
+			val basicType = (slot.slotType as BasicTypeReference).basicType
+			return basicType
+		}
+		null
+	}
+	
 	def static private String toJavaType(Slot slot, boolean isEntity) {
 		if (slot.slotType instanceof BasicTypeReference) {
 			val javaBasicType = (slot.slotType as BasicTypeReference).toJavaBasicType
@@ -232,8 +242,47 @@ class EntityUtils {
 		"<UNKNOWN2>"
 	}
 	
+	def static String getWebClass(Slot slot) {
+		var class = 'ui-g-12 ui-fluid'
+		if (slot.hasWebClass) 
+			class += ' ' + slot.web.webClass
+		class
+	}
+	
+	def static String getWebLabel(Slot slot) {
+		var label = if (slot.hasWebLabel) slot.web.label else slot.translationKey.transpationKeyFunc.toString
+		label
+	}
+	
+	def static String getTranslationKey(Slot slot) {
+		slot.ownerEntity.translationKey + '.' + slot.name.toFirstLower
+	}
+	
+	def static String getTranslationKey(Entity entity) {
+		val key = entity.service.translationKey + '.' + entity.name.toFirstLower
+		key
+	}
+	
+	
+	def static String getTranslationKey(Service service) {
+		val key = service.domain.toFirstLower + '.' + service.name.toFirstLower
+		key
+	}
+	
+	def static CharSequence getTranspationKeyFunc(String key) {
+		'''{{ getTranslation('«key»') }}'''
+	}
+	
+	def static toEntityWebComponentName(Entity entity) {
+		entity.name.toLowerCase.removeUnderline + '.component'
+	}
+	
 	def static toEntityWebModelName(Entity entity) {
-		entity.name.toLowerCase.removeUnderline + '-model'
+		entity.name.toLowerCase.removeUnderline + '.model'
+	}
+	
+	def static toWebName(Entity entity) {
+		entity.name.toLowerCase.removeUnderline
 	}
 	
 	def static toEntityName(Entity entity) {
@@ -267,6 +316,34 @@ class EntityUtils {
 	
 	def static getFieldName(Slot slot) {
 		slot.name.toFirstLower
+	}
+	
+	def static getWebDropdownOptions(Slot slot) {
+		slot.fieldName + 'Options'
+	}
+	
+	def static getWebAutoCompleteSuggestions(Slot slot) {
+		slot.fieldName + 'AutoCompleteSuggestions'
+	}
+	
+	def static getWebAutoComplete(Slot slot) {
+		slot.fieldName + 'AutoComplete'
+	}
+	
+	def static getEntityReplicationQuantity(Entity entity) {
+		entity.fieldName + 'ReplicationQuantity'
+	}
+	
+	def static getEntityReplicationMethod(Entity entity) {
+		entity.fieldName + 'Replication()'
+	}
+	
+	def static getFieldName(Entity entity) {
+		entity.name.toFirstLower
+	}
+	
+	def static getWebTitle(Entity entity) {
+		entity.webTitle
 	}
 	
 	def static buildMethodGet(Slot slot) {
