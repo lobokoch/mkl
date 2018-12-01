@@ -44,6 +44,10 @@ class Utils {
 	def static getWebComponentDir(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
 	}
+	
+	def static getWebDir(String path) {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
+	}
 	// WEB
 	
 	def static getMainAppName() {

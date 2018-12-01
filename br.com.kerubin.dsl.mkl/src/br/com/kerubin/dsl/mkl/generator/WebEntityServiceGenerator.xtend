@@ -6,6 +6,7 @@ import br.com.kerubin.dsl.mkl.model.DateTimeType
 import br.com.kerubin.dsl.mkl.model.DateType
 import br.com.kerubin.dsl.mkl.model.DoubleType
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.Slot
@@ -16,7 +17,9 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+	
+	private static val VAR_FILTER = 'filter'
 	
 	StringConcatenationExt imports
 	
@@ -29,140 +32,305 @@ class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateComponent]
+		entities.forEach[generateService]
 	}
 	
-	def generateComponent(Entity entity) {
-		val path = entity.getWebEntityPath
-		val entityFile = path + entity.toEntityWebComponentName + '.ts'
-		generateFile(entityFile, entity.doGenerateEntityTSComponent)
+	def generateService(Entity entity) {
+		val path = entity.webEntityPath
+		val entityFile = path + entity.toEntityWebServiceName + '.ts'
+		generateFile(entityFile, entity.doGenerateEntityWebService)
 	}
 	
-	def CharSequence doGenerateEntityTSComponent(Entity entity) {
+	def CharSequence doGenerateEntityWebService(Entity entity) {
 		imports = new StringConcatenationExt()
 		entity.initializeImports()
 		
 		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
-		val fieldName = entity.fieldName
+		val varName = dtoName.toFirstLower
 		val serviceName = entity.toWebEntityServiceName
-		val serviceVar = serviceName.toFirstLower
 		
 		imports.add('''import { «dtoName» } from './../model/«webName»-model';''')
-		imports.add('''import { «serviceName» } from './../model/«webName».service';''')
 		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './../model/«it.asEntity.toWebName».service';''')
+			imports.add('''import { «it.asEntity.toDtoName» } from './../model/«it.asEntity.toWebName»-model';''')
 		]
 		
 		val body = '''
 		
-		@Component({
-		  selector: 'app-«webName»',
-		  templateUrl: './«webName».component.html',
-		  styleUrls: ['./«webName».component.css']
-		})
-		
-		export class «dtoName»Component implements OnInit {
+		@Injectable()
+		export class «serviceName» {
 			
-			«fieldName» = new «dtoName»();
-			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
-			«IF entity.isEnableReplication»«entity.entityReplicationQuantity» = 1;«ENDIF»
+			// TODO: Provisório
+			url = 'http://localhost:9101/entities/«varName»';
 			
-			constructor(
-			    private «serviceVar»: «serviceName»,
-			    «entity.slots.filter[isEntity].map[mountServiceConstructorInject].join('\n\r')»
-			    private route: ActivatedRoute,
-			    private messageService: MessageService
-			) { }
+			constructor(private http: Http) { }
 			
-			ngOnInit() {
-			    const id = this.route.snapshot.params['id'];
-			    if (id) {
-			      this.get«dtoName»ById(id);
-			    }
+			// TODO: Provisório
+			private getHeaders(): Headers {
+			    const headers = this.getHeaders();
+			    headers.append('Content-Type', 'application/json');
+			    return headers;
 			}
 			
-			begin(form: FormControl) {
-			    form.reset();
-			    setTimeout(function() {
-			      this.«fieldName» = new «dtoName»();
-			    }.bind(this), 1);
-			}
+			create(«varName»: «dtoName»): Promise<«dtoName»> {
+			    const headers = new Headers();
 			
-			save(form: FormControl) {
-			    if (this.isEditing) {
-			      this.update(form);
-			    } else {
-			      this.create(form);
-			    }
-			}
-			
-			create(form: FormControl) {
-			    this.«serviceVar».create(this.«fieldName»)
-			    .then((«fieldName») => {
-			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro criado com sucesso!');
-			    }).
-			    catch(erro => {
-			      this.showError('Erro ao criar registro: ' + erro);
+			    return this.http.post(this.url, JSON.stringify(«varName»), { headers })
+			    .toPromise()
+			    .then(response => {
+			      const created = response.json() as «dtoName»;
+			      «IF entity.hasEntitySlots»adjustNullEntitySlots([created]);«ENDIF»
+			      «IF entity.hasDate»adjustEntityDates([created]);«ENDIF»
+			      return created;
 			    });
 			}
 			
-			update(form: FormControl) {
-			    this.«serviceVar».update(this.«fieldName»)
-			    .then((«fieldName») => {
-			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro alterado!');
-			    })
-			    .catch(erro => {
-			      this.showError('Erro ao atualizar registro: ' + erro);
+			update(«varName»: «dtoName»): Promise<«dtoName»> {
+			    const headers = new Headers();
+			
+			    return this.http.put(`${this.url}/${«varName».«entity.id.fieldName»}`, JSON.stringify(«varName»), { headers })
+			    .toPromise()
+			    .then(response => {
+			      const updated = response.json() as «dtoName»;
+			      «IF entity.hasEntitySlots»adjustNullEntitySlots([updated]);«ENDIF»
+			      «IF entity.hasDate»adjustEntityDates([updated]);«ENDIF»
+			      return updated;
 			    });
 			}
 			
-			get«dtoName»ById(id: string) {
-			    this.«serviceVar».retrieve(id)
-			    .then((«fieldName») => this.«fieldName» = «fieldName»)
-			    .catch(erro => {
-			      this.showError('Erro ao buscar registro: ' + id);
+			delete(id: string): Promise<void> {
+			    return this.http.delete(`${this.url}/${id}`)
+			    .toPromise()
+			    .then(() => null);
+			}
+			
+			retrieve(id: string): Promise<«dtoName»> {
+			    const headers = this.getHeaders();
+			    return this.http.get(`${this.url}/${id}`, { headers })
+			    .toPromise()
+			    .then(response => {
+			      const «varName» = response.json() as «dtoName»;
+			      «IF entity.hasEntitySlots»adjustNullEntitySlots([«varName»]);«ENDIF»
+			      «IF entity.hasDate»adjustEntityDates([«varName»]);«ENDIF»
+			      return «varName»;
 			    });
 			}
 			
-			get isEditing() {
-			    return Boolean(this.«fieldName».id);
+			«IF entity.hasDate»
+			private adjustEntityDates(entityList: «dtoName»[]) {
+				entityList.forEach(«varName» => {
+				      «entity.slots.filter[it.isDate].map[it |
+				      '''
+				      if («varName».«it.fieldName») {
+				        «varName».«it.fieldName» = moment(«varName».«it.fieldName», 'YYYY-MM-DD').toDate();
+				      }
+				      	
+				      '''
+				      ].join('\r\n')»
+				});
 			}
-			«IF entity.isEnableReplication»
-			
-			replicar«dtoName»() {
-			    this.«serviceVar».replicar«dtoName»(this.«fieldName».id, this.«fieldName».agrupador, this.«entity.entityReplicationQuantity»)
-			    .then((result) => {
-			      if (result === true) {
-			        this.showSuccess('Os registros foram criados com sucesso.');
-			      } else {
-			        this.showError('Não foi possível criar os registros.');
-			      }
-			    })
-			    .catch(erro => {
-			      this.showError('Ocorreu um erro ao criar os registros: ' + erro);
-			    });
-			  }
 			«ENDIF»
 			
-			«entity.slots.filter[isEntity].map[mountAutoComplete].join('\n\r')»
+			«IF entity.hasEntitySlots»
+			private adjustNullEntitySlots(entityList: «dtoName»[]) {
+				entityList.forEach(«varName» => {
+				      «entity.slots.filter[it.isEntity].map[it |
+				      '''
+				      if (!«varName».«it.fieldName») {
+				        «varName».«it.fieldName» = new «it.asEntity.toDtoName»();
+				      }
+				      	
+				      '''
+				      ].join('\r\n')»
+				});
+			}
+			«ENDIF»
 			
-			public showSuccess(msg: string) {
-			    this.messageService.add({severity: 'success', summary: 'Successo', detail: msg});
+			autoComplete(query: string): Promise<any> {
+			    const headers = this.getHeaders();
+			
+			    const searchParams = new URLSearchParams();
+			    searchParams.set('query', query);
+			
+			    return this.http.get(`${this.url}/autoComplete`, { headers, search: searchParams })
+			      .toPromise()
+			      .then(response => {
+			        const resultArray = response.json() as «dtoName»AutoComplete[];
+			        return resultArray;
+			      });
+			
 			}
 			
-			public showError(msg: string) {
-			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
+			«varName»List(«varName»ListFilter: «dtoName»ListFilter): Promise<any> {
+			    const headers = this.getHeaders();
+			
+			    const searchParams = this.mountAndGetSearchParams(«varName»ListFilter);
+			
+			    return this.http.get(this.url, { headers, search: searchParams })
+			      .toPromise()
+			      .then(response => {
+			        const data = response.json();
+			        const items = data.content; /* array of «dtoName» */
+			        const totalElements = data.totalElements;
+			
+			        «IF entity.hasEntitySlots»adjustNullEntitySlots(items);«ENDIF»
+			        «IF entity.hasDate»adjustEntityDates(items);«ENDIF»
+			
+			        const result = {
+			          items,
+			          totalElements
+			        };
+			
+			        return result;
+			      })
+			      .catch(error => {
+			        console.log(`Error in «varName»PagarList: ${error}`);
+			      });
 			}
+			
+			mountAndGetSearchParams(«VAR_FILTER»: «dtoName»ListFilter): URLSearchParams {
+			    const params = new URLSearchParams();
+			    if («VAR_FILTER».pageNumber) {
+			      params.set('page', «VAR_FILTER».pageNumber.toString());
+			    }
+			
+			    if («VAR_FILTER».pageSize) {
+			      params.set('size', «VAR_FILTER».pageSize.toString());
+			    }
+				
+				«entity.slots.filter[it.hasListFilter].generateSlotsFilters»
+			
+			    // Sort
+			    if (filtro.sortField) {
+			      // search/nameStartsWith?name=K&sort=name,desc
+			      const sortField = filtro.sortField;
+			      const sortValue = `${sortField.field},${sortField.order === 0 ? 'asc' : 'desc'}`;
+			      params.set('sort', sortValue);
+			    }
+			
+			    return params;
+			  }
 			
 		}
+			
+			
+			
+		dateToStr(data: Date): string {
+		    return moment(data).format('YYYY-MM-DD');
+		}
+		
+		replicate«dtoName»(id: string, groupId: string, quantity: number): Promise<boolean> {
+		    const headers = this.getHeaders();
+		
+		    const payload = new Replicate«dtoName»Payload(id, quantity, groupId);
+		    return this.http.post(`${this.url}/replicate«dtoName»`, JSON.stringify(payload), { headers } )
+		    .toPromise()
+		    .then(response => {
+		      return response.json() === true;
+		    });
+		}
+			
+		getTotais«VAR_FILTER»«dtoName»(«VAR_FILTER»: «dtoName»rListFilter): Promise<Totais«VAR_FILTER»«dtoName»> {
+		    const headers = this.getHeaders();
+		
+		    const searchParams = this.mountAndGetSearchParams(«VAR_FILTER»);
+		    return this.http.get(`${this.url}/getTotais«VAR_FILTER»«dtoName»`, { headers, search: searchParams })
+		    .toPromise()
+		    .then(response => {
+		      const result = response.json() as Totais«VAR_FILTER»«dtoName»;
+		      return result;
+		    });
+		}
+		
 		'''
 		
 		val source = imports.ln.toString + body
 		source
 	}
+	
+	def CharSequence generateSlotsFilters(Iterable<Slot> slots) {
+		'''
+		«slots.map[generateSlotFilter].join('\r\n')»
+		'''
+	}
+	
+	def CharSequence generateSlotFilter(Slot slot) {
+		val isNotNull = slot.isNotNull
+			
+		val isNull = slot.isNull
+			
+		val isMany = isMany(slot)
+		
+		val isBetween = slot.isBetween 
+		var fieldName = '<unknown>'
+		
+		'''
+		«IF isMany»
+		«fieldName = slot.fieldName»
+		if («VAR_FILTER».«fieldName») {
+			const «fieldName» = «VAR_FILTER».«fieldName».map(item => item.«fieldName»).join(',');
+			params.set('«fieldName»', «fieldName»);
+		}
+		«ELSEIF isNotNull && isNull»
+		«fieldName = slot.fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»
+		
+		if («VAR_FILTER».«fieldName») {
+			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
+			params.set('«fieldName»', value);
+		}
+		
+		«fieldName = slot.fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper»
+		if («VAR_FILTER».«fieldName») {
+			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
+			params.set('«fieldName»', value);
+		}
+		«ELSEIF isNotNull»
+		«fieldName = slot.fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»
+				
+		if («VAR_FILTER».«fieldName») {
+			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
+			params.set('«fieldName»', value);
+		}
+		«ELSEIF isNull»
+		«fieldName = slot.fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper»
+		if («VAR_FILTER».«fieldName») {
+			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
+			params.set('«fieldName»', value);
+		}
+		«ELSEIF isBetween»
+		«fieldName = slot.fieldName + BETWEEN_FROM»
+		if («VAR_FILTER».«fieldName») {
+		«IF slot.isDate»
+			const value = this.dateToStr(«VAR_FILTER».«fieldName»);
+		«ELSE»
+			const value = «VAR_FILTER».«fieldName»;
+		«ENDIF»
+			params.set('«fieldName»', value);
+		}
+		
+		«fieldName = slot.fieldName + BETWEEN_TO»
+		if («VAR_FILTER».«fieldName») {
+		«IF slot.isDate»
+			const value = this.dateToStr(«VAR_FILTER».«fieldName»);
+		«ELSE»
+			const value = «VAR_FILTER».«fieldName»;
+		«ENDIF»
+			params.set('«fieldName»', value);
+		}
+		«ENDIF»
+		'''
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -201,10 +369,10 @@ class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGenera
 	
 	def void initializeImports(Entity entity) {
 		imports.add('''
-		import { Component, OnInit } from '@angular/core';
-		import { FormControl } from '@angular/forms';
-		import { ActivatedRoute, Router } from '@angular/router';
-		import {MessageService} from 'primeng/api';
+		import { Http, Headers, URLSearchParams } from '@angular/http';
+		import { Injectable } from '@angular/core';
+		import * as moment from 'moment';
+		import { Observable } from 'rxjs';
 		''')
 	}
 	

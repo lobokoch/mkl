@@ -44,7 +44,6 @@ EnumItem:
 Entity:
 	(
 		(externalObject=ExternalObject)? & 
-		(externalObject=ExternalObject)? & 
 		(enableReplication?='@enableReplication')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &

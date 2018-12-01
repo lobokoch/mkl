@@ -10,9 +10,6 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
-	private val final BETWEEN_FROM = 'From'
-	private val final BETWEEN_TO = 'To'
-	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
 	}
@@ -269,24 +266,6 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		'''
 		
 	}
-	
-	private def boolean isNotNull(Slot slot) {
-		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL) ||
-			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
-	} 
-	
-	private def boolean isNull(Slot slot) {
-		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NULL) ||
-			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
-	} 
-	
-	private def boolean isMany(Slot slot) {
-		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.MANY)
-	} 
-	
-	private def boolean isBetween(Slot slot) {
-		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.BETWEEN)
-	} 
 	
 	def CharSequence generateField(Slot slot) {
 		val entity = slot.ownerEntity

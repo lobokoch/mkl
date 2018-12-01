@@ -70,9 +70,9 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF slot.isToMany»
-		private «slot.name.toFirstLower»: «slot.toWebTypeDTO»[];
+		private «slot.fieldNameWeb»: «slot.toWebTypeDTO»[];
 		«ELSE»
-		private «slot.name.toFirstLower»: «slot.toWebType»;
+		private «slot.fieldNameWeb»: «slot.toWebType»;
 		«ENDIF»
 		'''
 	}
@@ -89,11 +89,11 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF slot.isToMany»
-		get «slot.name.toFirstUpper»(): «slot.toWebTypeDTO»[] {
+		get «slot.fieldName»(): «slot.toWebTypeDTO»[] {
 		«ELSE»
-		get «slot.name.toFirstUpper»(): «slot.toWebTypeDTO» {
+		get «slot.fieldName»(): «slot.toWebTypeDTO» {
 		«ENDIF»
-			return this.«slot.name.toFirstLower»;
+			return this.«slot.fieldNameWeb»;
 		}
 		'''
 	}
@@ -109,11 +109,11 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF slot.many && slot.isToMany»
-		set «slot.name.toFirstUpper»(value: «slot.toWebTypeDTO»[]) {
+		set «slot.fieldName»(value: «slot.toWebTypeDTO»[]) {
 		«ELSE»
-		set «slot.name.toFirstUpper»(value: «slot.toWebTypeDTO») {
+		set «slot.fieldName»(value: «slot.toWebTypeDTO») {
 		«ENDIF»
-			this.«slot.name.toFirstLower» = value;
+			this.«slot.fieldName» = value;
 		}
 		'''
 	}

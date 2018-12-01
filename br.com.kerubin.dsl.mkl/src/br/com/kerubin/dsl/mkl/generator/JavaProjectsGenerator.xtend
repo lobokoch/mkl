@@ -36,9 +36,9 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		id
 	}
 	
-	def private getApplicationName() {
+	/*def private getApplicationName() {
 		service.name.toLowerCase.replace("_", "-") + '-' + projectApplicationName
-	}
+	}*/
 	
 	def private getApplicationId() {
 		val result = mountName(newArrayList(service.domain, service.name, projectApplicationName))

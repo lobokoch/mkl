@@ -32,7 +32,7 @@ class WebEntityComponentHTMLGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def generateComponent(Entity entity) {
-		val path = entity.getWebComponentPath.webComponentDir
+		val path = entity.getWebEntityPath
 		val entityFile = path + entity.toEntityWebComponentName + '.html'
 		generateFile(entityFile, entity.doGenerateEntityComponentGenerator)
 	}

@@ -27,8 +27,12 @@ import java.util.List
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
+import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 
 class EntityUtils {
+	
+	public static val BETWEEN_FROM = 'From'
+	public static val BETWEEN_TO = 'To'
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -80,6 +84,14 @@ class EntityUtils {
 	def static Enumeration asEnum(Slot slot) {
 		val reference = slot.slotType as ObjectTypeReference
 		reference.referencedType as Enumeration
+	}
+	
+	def static boolean hasEntitySlots(Entity entity) {
+		entity.slots.exists[it.isEntity]
+	}
+	
+	def static boolean hasDate(Entity entity) {
+		entity.slots.exists[it.isDate]
 	}
 	
 	def static boolean isEntity(Slot slot) {
@@ -255,7 +267,7 @@ class EntityUtils {
 	}
 	
 	def static String getTranslationKey(Slot slot) {
-		slot.ownerEntity.translationKey + '.' + slot.name.toFirstLower
+		slot.ownerEntity.translationKey + '_' + slot.name.toFirstLower
 	}
 	
 	def static String getTranslationKey(Entity entity) {
@@ -271,6 +283,10 @@ class EntityUtils {
 	
 	def static CharSequence getTranspationKeyFunc(String key) {
 		'''{{ getTranslation('«key»') }}'''
+	}
+	
+	def static toEntityWebServiceName(Entity entity) {
+		entity.name.toLowerCase.removeUnderline + '.service'
 	}
 	
 	def static toEntityWebComponentName(Entity entity) {
@@ -330,6 +346,10 @@ class EntityUtils {
 		slot.name.toFirstLower
 	}
 	
+	def static getFieldNameWeb(Slot slot) {
+		'_' + slot.name.toFirstLower
+	}
+	
 	def static getWebDropdownOptions(Slot slot) {
 		slot.fieldName + 'Options'
 	}
@@ -352,10 +372,6 @@ class EntityUtils {
 	
 	def static getFieldName(Entity entity) {
 		entity.name.toFirstLower
-	}
-	
-	def static getWebTitle(Entity entity) {
-		entity.webTitle
 	}
 	
 	def static buildMethodGet(Slot slot) {
@@ -579,4 +595,23 @@ class EntityUtils {
 		}
 		
 	}
+	
+	
+	public static def boolean isNotNull(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL) ||
+			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+	} 
+	
+	public static def boolean isNull(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NULL) ||
+			slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.IS_NOT_NULL_IS_NULL)
+	} 
+	
+	public static def boolean isMany(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.MANY)
+	} 
+	
+	public static def boolean isBetween(Slot slot) {
+		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.BETWEEN)
+	} 
 }

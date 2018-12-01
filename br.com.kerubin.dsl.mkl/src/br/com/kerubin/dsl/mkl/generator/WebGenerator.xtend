@@ -17,19 +17,9 @@ class WebGenerator extends BaseGenerator {
 		val IGeneratorExecutor[] generators = #[
 			new WebEntityModelGenerator(this),
 			new WebEntityComponentHTMLGenerator(this),
-			new WebEntityComponentTSGenerator(this)/*,
-			new JavaEntityJPAGenerator(this),
-			new JavaEntityRepositoryGenerator(this),
-			new JavaEntityServiceGenerator(this),
-			new JavaEntityDTOGenerator(this),			
-			new JavaEnumGenerator(this),
-			new JavaEntityLookupResultDTOGenerator(this),
-			new JavaEntityListFilterGenerator(this),
-			new JavaEntityAutoCompleteGenerator(this),
-			new JavaEntityDTOConverterGenerator(this),
-			new JavaClientPageResultGenerator(this),
-			new JavaEntityControllerGenerator(this),
-			new JavaPostgreSQLGenerator(this)*/
+			new WebEntityComponentTSGenerator(this),
+			new WebEntityComponentCSSGenerator(this),
+			new WebEntityServiceGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 
