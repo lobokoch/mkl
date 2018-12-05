@@ -33,7 +33,7 @@ class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def generateComponent(Entity entity) {
-		val path = entity.getWebEntityPath
+		val path = entity.webEntityPath
 		val entityFile = path + entity.toEntityWebComponentName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityTSComponent)
 	}
@@ -48,10 +48,10 @@ class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGenera
 		val serviceName = entity.toWebEntityServiceName
 		val serviceVar = serviceName.toFirstLower
 		
-		imports.add('''import { «dtoName» } from './../model/«webName»-model';''')
-		imports.add('''import { «serviceName» } from './../model/«webName».service';''')
+		imports.add('''import { «dtoName» } from './«webName»-model';''')
+		imports.add('''import { «serviceName» } from './«webName».service';''')
 		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './../model/«it.asEntity.toWebName».service';''')
+			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './«it.asEntity.toWebName».service';''')
 		]
 		
 		val body = '''

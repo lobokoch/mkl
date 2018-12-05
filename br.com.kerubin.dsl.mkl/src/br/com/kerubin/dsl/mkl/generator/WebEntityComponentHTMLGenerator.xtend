@@ -1,21 +1,20 @@
 package br.com.kerubin.dsl.mkl.generator
 
+import br.com.kerubin.dsl.mkl.model.BooleanType
+import br.com.kerubin.dsl.mkl.model.ByteType
+import br.com.kerubin.dsl.mkl.model.DateTimeType
+import br.com.kerubin.dsl.mkl.model.DateType
+import br.com.kerubin.dsl.mkl.model.DoubleType
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.IntegerType
+import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.StringType
+import br.com.kerubin.dsl.mkl.model.TimeType
+import br.com.kerubin.dsl.mkl.model.UUIDType
+import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
-import br.com.kerubin.dsl.mkl.model.StringType
-import br.com.kerubin.dsl.mkl.model.IntegerType
-import br.com.kerubin.dsl.mkl.model.DoubleType
-import br.com.kerubin.dsl.mkl.model.MoneyType
-import br.com.kerubin.dsl.mkl.model.BooleanType
-import br.com.kerubin.dsl.mkl.model.DateType
-import br.com.kerubin.dsl.mkl.model.TimeType
-import br.com.kerubin.dsl.mkl.model.DateTimeType
-import br.com.kerubin.dsl.mkl.model.UUIDType
-import br.com.kerubin.dsl.mkl.model.ByteType
 
 class WebEntityComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -32,7 +31,7 @@ class WebEntityComponentHTMLGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def generateComponent(Entity entity) {
-		val path = entity.getWebEntityPath
+		val path = entity.webEntityPath
 		val entityFile = path + entity.toEntityWebComponentName + '.html'
 		generateFile(entityFile, entity.doGenerateEntityComponentGenerator)
 	}

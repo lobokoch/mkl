@@ -50,9 +50,9 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val varName = dtoName.toFirstLower
 		val serviceName = entity.toWebEntityServiceName
 		
-		imports.add('''import { «dtoName» } from './../model/«webName»-model';''')
+		imports.add('''import { «dtoName» } from './«webName»-model';''')
 		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toDtoName» } from './../model/«it.asEntity.toWebName»-model';''')
+			imports.add('''import { «it.asEntity.toDtoName» } from './«it.asEntity.toWebName»-model';''')
 		]
 		
 		val body = '''

@@ -4,7 +4,6 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Slot
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 
 class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -21,7 +20,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def generateEntityModel(Entity entity) {
-		val modelDir = entity.servicePath.getWebModelDir()
+		val modelDir = entity.webEntityPath
 		val entityFile = modelDir + entity.toEntityWebModelName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityModel)
 	}
