@@ -51,7 +51,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			«IF hasAutoComplete»
 			
 			@Query("«entity.generateAutoCompleteSQL(autoCompleteKeySlots)»")
-			Collection<«entity.toEntityAutoCompleteName»> autoComplete(@Param("query") String query);
+			Collection<«entity.toAutoCompleteName»> autoComplete(@Param("query") String query);
 			«ENDIF»
 			
 		}

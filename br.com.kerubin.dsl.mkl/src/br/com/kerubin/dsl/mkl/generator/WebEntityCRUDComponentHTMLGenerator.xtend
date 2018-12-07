@@ -16,9 +16,7 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
-	
-	StringConcatenationExt imports
+class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -34,178 +32,25 @@ class WebEntityComponentTSGenerator extends GeneratorExecutor implements IGenera
 	
 	def generateComponent(Entity entity) {
 		val path = entity.webEntityPath
-		val entityFile = path + entity.toEntityWebComponentName + '.ts'
-		generateFile(entityFile, entity.doGenerateEntityTSComponent)
+		val entityFile = path + entity.toEntityWebCRUDComponentName + '.html'
+		generateFile(entityFile, entity.doGenerateEntityComponentGenerator)
 	}
 	
-	def CharSequence doGenerateEntityTSComponent(Entity entity) {
-		imports = new StringConcatenationExt()
-		entity.initializeImports()
-		
-		val webName = entity.toWebName
-		val dtoName = entity.toDtoName
-		val fieldName = entity.fieldName
-		val serviceName = entity.toWebEntityServiceName
-		val serviceVar = serviceName.toFirstLower
-		
-		imports.add('''import { «dtoName» } from './«webName»-model';''')
-		imports.add('''import { «serviceName» } from './«webName».service';''')
-		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './«it.asEntity.toWebName».service';''')
-		]
-		
-		val body = '''
-		
-		@Component({
-		  selector: 'app-«webName»',
-		  templateUrl: './«webName».component.html',
-		  styleUrls: ['./«webName».component.css']
-		})
-		
-		export class «dtoName»Component implements OnInit {
-			
-			«fieldName» = new «dtoName»();
-			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
-			«IF entity.isEnableReplication»«entity.entityReplicationQuantity» = 1;«ENDIF»
-			
-			constructor(
-			    private «serviceVar»: «serviceName»,
-			    «entity.slots.filter[isEntity].map[mountServiceConstructorInject].join('\n\r')»
-			    private route: ActivatedRoute,
-			    private messageService: MessageService
-			) { }
-			
-			ngOnInit() {
-			    const id = this.route.snapshot.params['id'];
-			    if (id) {
-			      this.get«dtoName»ById(id);
-			    }
-			}
-			
-			begin(form: FormControl) {
-			    form.reset();
-			    setTimeout(function() {
-			      this.«fieldName» = new «dtoName»();
-			    }.bind(this), 1);
-			}
-			
-			save(form: FormControl) {
-			    if (this.isEditing) {
-			      this.update(form);
-			    } else {
-			      this.create(form);
-			    }
-			}
-			
-			create(form: FormControl) {
-			    this.«serviceVar».create(this.«fieldName»)
-			    .then((«fieldName») => {
-			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro criado com sucesso!');
-			    }).
-			    catch(erro => {
-			      this.showError('Erro ao criar registro: ' + erro);
-			    });
-			}
-			
-			update(form: FormControl) {
-			    this.«serviceVar».update(this.«fieldName»)
-			    .then((«fieldName») => {
-			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro alterado!');
-			    })
-			    .catch(erro => {
-			      this.showError('Erro ao atualizar registro: ' + erro);
-			    });
-			}
-			
-			get«dtoName»ById(id: string) {
-			    this.«serviceVar».retrieve(id)
-			    .then((«fieldName») => this.«fieldName» = «fieldName»)
-			    .catch(erro => {
-			      this.showError('Erro ao buscar registro: ' + id);
-			    });
-			}
-			
-			get isEditing() {
-			    return Boolean(this.«fieldName».id);
-			}
-			«IF entity.isEnableReplication»
-			
-			replicar«dtoName»() {
-			    this.«serviceVar».replicar«dtoName»(this.«fieldName».id, this.«fieldName».agrupador, this.«entity.entityReplicationQuantity»)
-			    .then((result) => {
-			      if (result === true) {
-			        this.showSuccess('Os registros foram criados com sucesso.');
-			      } else {
-			        this.showError('Não foi possível criar os registros.');
-			      }
-			    })
-			    .catch(erro => {
-			      this.showError('Ocorreu um erro ao criar os registros: ' + erro);
-			    });
-			  }
-			«ENDIF»
-			
-			«entity.slots.filter[isEntity].map[mountAutoComplete].join('\n\r')»
-			
-			public showSuccess(msg: string) {
-			    this.messageService.add({severity: 'success', summary: 'Successo', detail: msg});
-			}
-			
-			public showError(msg: string) {
-			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
-			}
-			
-		}
+	def CharSequence doGenerateEntityComponentGenerator(Entity entity) {
 		'''
+		<div class="container">
 		
-		val source = imports.ln.toString + body
-		source
-	}
-	
-	
-	
-	def CharSequence mountAutoCompleteSuggestionsVar(Slot slot) {
-		val entity = slot.asEntity
+		  <form #form1="ngForm" (ngSubmit)="save(form1)">
+		  	<div class="ui-g">
+				«entity.generateEntityTitle»
+				«entity.generateEntityFields»
+				«IF entity.enableReplication»«entity.generateEntityReplication»«ENDIF»
+				«entity.generateButtons»
+			</div>
+		  </form>
+		  
+		</div>
 		'''
-		«slot.webAutoCompleteSuggestions»: «entity.toDtoName»[];
-		'''
-	}
-	
-	def CharSequence mountAutoComplete(Slot slot) {
-		val entity = slot.asEntity
-		val serviceName = entity.toWebEntityServiceName
-		
-		'''
-		«entity.toEntityAutoCompleteName»(event) {
-		    const query = event.query;
-		    this.«serviceName.toFirstLower»
-		      .autoComplete(query)
-		      .then((result) => {
-		        this.«slot.webAutoCompleteSuggestions» = result as «entity.toDtoName»[];
-		      })
-		      .catch(error => {
-		        this.showError('Erro ao buscar Fornecedor com o termo: ' + query);
-		      });
-		}
-		'''
-	}
-	
-	def CharSequence mountServiceConstructorInject(Slot slot) {
-		val serviceName = slot.asEntity.toWebEntityServiceName
-		'''
-		private «serviceName.toFirstLower»: «serviceName»,
-		'''
-	}
-	
-	def void initializeImports(Entity entity) {
-		imports.add('''
-		import { Component, OnInit } from '@angular/core';
-		import { FormControl } from '@angular/forms';
-		import { ActivatedRoute, Router } from '@angular/router';
-		import {MessageService} from 'primeng/api';
-		''')
 	}
 	
 	def CharSequence generateEntityReplication(Entity entity) {

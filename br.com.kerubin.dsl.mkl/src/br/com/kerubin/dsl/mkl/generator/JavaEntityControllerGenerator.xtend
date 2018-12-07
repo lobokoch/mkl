@@ -119,8 +119,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			«IF entity.hasAutoComplete»
 			@GetMapping("/autoComplete")
-			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(@RequestParam("query") String query) {
-				Collection<«entity.toEntityAutoCompleteName»> result = «entityServiceVar».autoComplete(query);
+			public Collection<«entity.toAutoCompleteName»> autoComplete(@RequestParam("query") String query) {
+				Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».autoComplete(query);
 				return result;
 			}
 			«ENDIF»

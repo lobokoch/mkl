@@ -88,14 +88,26 @@ Slot:
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
-			(web = Web)?
+			(grid = Grid)? &
+			(web = Web)? 
 		)
+;
+
+Grid:
+{Grid}
+	'grid' '('
+		(
+			(slotIsUnordered ?= 'unordered')? &
+			(slotIsHidden ?= 'hidden')? &
+			('styleClass' ':' styleClass = STRING)?
+		)
+	')'
 ;
 
 Web:
 	'web' '('
 		(
-			('class' ':' webClass = STRING) &
+			('styleClass' ':' styleClass = STRING) &
 			('label' ':' label = STRING)?
 		)
 	')'

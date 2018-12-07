@@ -19,7 +19,6 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
-	private static val VAR_FILTER = 'filter'
 	
 	StringConcatenationExt imports
 	
@@ -346,7 +345,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val serviceName = entity.toWebEntityServiceName
 		
 		'''
-		«entity.toEntityAutoCompleteName»(event) {
+		«entity.toAutoCompleteName»(event) {
 		    const query = event.query;
 		    this.«serviceName.toFirstLower»
 		      .autoComplete(query)

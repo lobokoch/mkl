@@ -123,8 +123,14 @@ class ListFilter {
 	contains FilterOperator filterOperator
 }
 
+class Grid {
+	boolean slotIsHidden
+	boolean slotIsUnordered
+	String styleClass
+}
+
 class Web {
-	String webClass
+	String styleClass
 	String label
 }
 
@@ -141,6 +147,7 @@ class Slot extends Element {
 	contains AutoComplete autoComplete
 	contains ListFilter listFilter
 	contains Web web
+	contains Grid grid
 	AssociationType associationType
 	EnumType enumType
 	
@@ -149,12 +156,28 @@ class Slot extends Element {
 	String[] annotations
 	container Slotted ownerObject opposite slots
 	
+	op boolean isShowOnGrid() {
+		return !hasGrid || !grid.isSlotIsHidden 
+	}
+	
+	op boolean hasGridStyleClass() {
+		return hasGrid && grid.styleClass !== null && !grid.styleClass.trim.isEmpty 
+	}
+	
+	op boolean isOrderedOnGrid() {
+		return !hasGrid || !grid.isSlotIsUnordered
+	}
+	
+	op boolean hasGrid() {
+		return grid !== null
+	}
+	
 	op boolean hasWeb() {
 		return web !== null
 	}
 	
 	op boolean hasWebClass() {
-		return web !== null && web.webClass !== null
+		return web !== null && web.getStyleClass !== null
 	}
 	
 	op boolean hasWebLabel() {
@@ -184,6 +207,24 @@ class Slot extends Element {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
 			return basicType instanceof DateType
+		}
+		
+		false
+	}
+	
+	op boolean isMoney() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof MoneyType
+		}
+		
+		false
+	}
+	
+	op boolean isBoolean() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof BooleanType
 		}
 		
 		false

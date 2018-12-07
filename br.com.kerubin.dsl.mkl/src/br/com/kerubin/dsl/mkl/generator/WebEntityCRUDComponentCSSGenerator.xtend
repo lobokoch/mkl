@@ -4,7 +4,7 @@ import br.com.kerubin.dsl.mkl.model.Entity
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class WebEntityComponentCSSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class WebEntityCRUDComponentCSSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -20,7 +20,7 @@ class WebEntityComponentCSSGenerator extends GeneratorExecutor implements IGener
 	
 	def generateComponent(Entity entity) {
 		val path = entity.getWebEntityPath
-		val entityFile = path + entity.toEntityWebComponentName + '.css'
+		val entityFile = path + entity.toEntityWebCRUDComponentName + '.css'
 		generateFile(entityFile, entity.doGenerateEntityCssComponent)
 	}
 	

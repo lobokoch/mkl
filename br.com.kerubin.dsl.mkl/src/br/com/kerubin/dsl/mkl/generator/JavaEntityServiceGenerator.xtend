@@ -62,7 +62,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable);
 			
 			«IF entity.hasAutoComplete»
-			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(String query);
+			public Collection<«entity.toAutoCompleteName»> autoComplete(String query);
 			«ENDIF»
 		}
 		'''
@@ -137,8 +137,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			«IF entity.hasAutoComplete»
-			public Collection<«entity.toEntityAutoCompleteName»> autoComplete(String query) {
-				Collection<«entity.toEntityAutoCompleteName»> result = «repositoryVar».autoComplete(query);
+			public Collection<«entity.toAutoCompleteName»> autoComplete(String query) {
+				Collection<«entity.toAutoCompleteName»> result = «repositoryVar».autoComplete(query);
 				return result;
 			}
 			«ENDIF»

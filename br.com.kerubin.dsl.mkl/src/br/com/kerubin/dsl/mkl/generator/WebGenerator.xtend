@@ -16,10 +16,11 @@ class WebGenerator extends BaseGenerator {
 	def generateFiles() {
 		val IGeneratorExecutor[] generators = #[
 			new WebEntityModelGenerator(this),
-			new WebEntityComponentHTMLGenerator(this),
-			new WebEntityComponentTSGenerator(this),
-			new WebEntityComponentCSSGenerator(this),
-			new WebEntityServiceGenerator(this)
+			new WebEntityCRUDComponentHTMLGenerator(this),
+			new WebEntityCRUDComponentTSGenerator(this),
+			new WebEntityCRUDComponentCSSGenerator(this),
+			new WebEntityServiceGenerator(this),
+			new WebEntityListGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

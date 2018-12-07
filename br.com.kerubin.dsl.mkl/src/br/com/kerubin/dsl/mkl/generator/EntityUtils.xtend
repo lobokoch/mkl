@@ -33,6 +33,9 @@ class EntityUtils {
 	
 	public static val BETWEEN_FROM = 'From'
 	public static val BETWEEN_TO = 'To'
+	public static val VAR_FILTER = 'filter'
+	public static val LIST_FILTER_PAGE_SIZE = 'pageSize'
+	public static val UNKNOWN = '<UNKNOWN>'
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -257,7 +260,7 @@ class EntityUtils {
 	def static String getWebClass(Slot slot) {
 		var class = 'ui-g-12 ui-fluid'
 		if (slot.hasWebClass) 
-			class += ' ' + slot.web.webClass
+			class += ' ' + slot.web.getStyleClass
 		class
 	}
 	
@@ -285,12 +288,21 @@ class EntityUtils {
 		'''{{ getTranslation('«key»') }}'''
 	}
 	
+	def static CharSequence getTranspationKeyFunc(Slot slot) {
+		val key = slot.translationKey
+		'''{{ getTranslation('«key»') }}'''
+	}
+	
 	def static toEntityWebServiceName(Entity entity) {
 		entity.name.toLowerCase.removeUnderline + '.service'
 	}
 	
-	def static toEntityWebComponentName(Entity entity) {
-		entity.name.toLowerCase.removeUnderline + '.component'
+	def static toEntityWebCRUDComponentName(Entity entity) {
+		'crud-' + entity.name.toLowerCase.removeUnderline + '.component'
+	}
+	
+	def static toEntityWebListComponentName(Entity entity) {
+		'list-' + entity.name.toLowerCase.removeUnderline + '.component'
 	}
 	
 	def static toEntityWebModelName(Entity entity) {
@@ -327,23 +339,39 @@ class EntityUtils {
 	}
 	
 	def static toEntityListFilterName(Entity entity) {
-		entity.name.toFirstUpper + 'ListFilter'
+		entity.fieldName + 'ListFilter'
+	}
+	
+	def static toEntityWebListItems(Entity entity) {
+		entity.fieldName + 'ListItems'
+	}
+	
+	def static toEntityWebListItemsTotalElements(Entity entity) {
+		entity.fieldName + 'ListTotalElements'
 	}
 	
 	def static toEntityListFilterPredicateName(Entity entity) {
 		entity.name.toFirstUpper + 'ListFilterPredicate'
 	}
 	
+	def static toEntityListOnLazyLoadMethod(Entity entity) {
+		entity.fieldName + 'ListOnLazyLoad'
+	}
+	
 	def static toEntityListFilterPredicateImplName(Entity entity) {
 		entity.name.toFirstUpper + 'ListFilterPredicateImpl'
 	}
 	
-	def static toEntityAutoCompleteName(Entity entity) {
-		entity.name.toFirstUpper + 'AutoComplete'
+	def static toWebEntityListDeleteItem(Entity entity) {
+		'delete' + entity.name.toFirstUpper
 	}
 	
 	def static getFieldName(Slot slot) {
 		slot.name.toFirstLower
+	}
+	
+	def static getEntityFieldName(Slot slot) {
+		slot.ownerEntity.fieldName + '.' + slot.fieldName
 	}
 	
 	def static getFieldNameWeb(Slot slot) {
@@ -354,8 +382,76 @@ class EntityUtils {
 		slot.fieldName + 'Options'
 	}
 	
+	def static getIsNotNull_isNullLabel(Slot slot, int index) {
+		var label = slot?.listFilter?.filterOperator?.label
+		label = getLabelValueByIndex(label, slot.name.toFirstUpper, index)
+		label
+	}
+	
+	def static getFilterIsBetweenLabel(Slot slot, int index) {
+		var label = slot?.listFilter?.filterOperator?.label
+		label = getLabelValueByIndex(label, slot.name.toFirstUpper, index)
+		label
+	}
+	
+	def static getLabelValueByIndex(String text, String defText, int index) {
+		val label = text ?: defText ?: UNKNOWN
+		val labelList = label.split(';')
+		var result = defText
+		if (labelList.size > index) {
+			result = labelList.get(index)
+		}
+		result
+	}
+	
+	def static getIsNotNullFieldName(Slot slot) {
+		val fieldName = slot.fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper
+		fieldName
+	}
+	
+	def static getIsNullFieldName(Slot slot) {
+		val fieldName = slot.fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper
+		fieldName
+	}
+	
 	def static getWebAutoCompleteSuggestions(Slot slot) {
-		slot.fieldName + 'AutoCompleteSuggestions'
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoCompleteSuggestions'
+	}
+	
+	def static getWebAutoCompleteMethod(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static toAutoCompleteName(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static toIsBetweenOptionsVarName(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'IsBetweenOptions'
+	}
+	
+	def static toIsBetweenOptionsSelected(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'IsBetweenOptionsSelected'
+	}
+	
+	def static toIsBetweenFromName(Slot slot) {
+		slot.fieldName + BETWEEN_FROM
+	}
+	
+	def static toIsBetweenToName(Slot slot) {
+		slot.fieldName + BETWEEN_TO
+	}
+	
+	def static toIsBetweenOptionsOnClickMethod(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'IsBetweenOptionsOnClick'
+	}
+	
+	def static toAutoCompleteName(Entity entity) {
+		entity.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static toWebEntityFilterSearchMethod(Entity entity) {
+		entity.fieldName + 'FilterSearch()'
 	}
 	
 	def static getWebAutoComplete(Slot slot) {
