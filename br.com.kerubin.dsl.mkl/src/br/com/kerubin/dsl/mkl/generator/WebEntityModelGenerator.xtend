@@ -25,18 +25,19 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		generateFile(entityFile, entity.doGenerateEntityModel)
 	}
 	
+	
 	def CharSequence doGenerateEntityModel(Entity entity) {
 		entity.initializeEntityImports
 		
 		val body = '''
+		«generateSortFieldModel»
+		«generatePaginationFilterModel»
+		«entity.generateEntityListFilterModel»
+		«IF entity.hasListFilterMany»
+		«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteModel].join»
+		«entity.doGenerateEntityDTOModel»
+		«ENDIF»
 		
-		export class «entity.toEntityDTOName» {
-		
-			«entity.generateFields»
-			«entity.generateGetters»
-			«entity.generateSetters»
-		
-		}
 		'''
 		
 		val imports = '''
@@ -46,6 +47,29 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		imports + body 
 	}
 	
+	def CharSequence generateListFilterAutoCompleteModel(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		
+		'''
+		
+		export class «autoComplateName» {
+			«slot.fieldName»: «slot.toWebType»;
+		}
+		'''
+	}
+	
+	// Begin DTO Model
+	def CharSequence doGenerateEntityDTOModel(Entity entity) {
+		'''
+		
+		export class «entity.toEntityDTOName» {
+				
+			«entity.generateFields»
+			«/*entity.generateGetters*/»
+			«/*entity.generateSetters*/»
+		}
+		'''
+	}
 	
 	
 	def CharSequence generateFields(Entity entity) {
@@ -59,7 +83,8 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		if (slot.isDTOFull) {
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + slot.asEntity.toEntityWebModelName + "';")
 		}
-		else if (slot.isDTOLookupResult) {
+		//else if (slot.isDTOLookupResult) {
+		else if (slot.isEntity) {
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + slot.asEntity.toEntityWebModelName + "';")
 		}
 		else if (slot.isEnum) { 
@@ -68,10 +93,10 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		}
 		
 		'''
-		«IF slot.isToMany»
-		private «slot.fieldNameWeb»: «slot.toWebTypeDTO»[];
+		«IF slot.isEntity»
+		«slot.fieldName»: «slot.asEntity.toEntityDTOName»;
 		«ELSE»
-		private «slot.fieldNameWeb»: «slot.toWebType»;
+		«slot.fieldName»: «slot.toWebType»;
 		«ENDIF»
 		'''
 	}
@@ -130,5 +155,86 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		'''
 	}
 	
+	// End DTO entity model
+	
+	// End DTO entity model
+	
+	def CharSequence generateSortFieldModel() {
+		'''
+		
+		export class SortField {
+		  field: string;
+		  order: number;
+		
+		  constructor(field: string, order: number) {
+		    this.field = field;
+		    this.order = order = 0;
+		  }
+		}
+		'''
+	}
+	
+	def CharSequence generatePaginationFilterModel() {
+		'''
+		
+		export class PaginationFilter {
+		  pageNumber: number;
+		  pageSize: number;
+		  sortField: SortField;
+		
+		  constructor() {
+		    this.pageNumber = 0;
+		    this.pageSize = 10;
+		  }
+		}
+		'''
+	}
+	
+	def CharSequence generateEntityListFilterModel(Entity entity) {
+		'''
+		
+		export class «entity.toEntityListFilterName» extends PaginationFilter {
+				
+			«entity.generateListFilterFields»
+		
+		}
+		'''
+	}
+	
+	def CharSequence generateListFilterFields(Entity entity) {
+		val slots = entity.slots.filter[it.hasListFilter]
+		
+		'''
+		«slots.map[generateListFilterField].join('\r\n')»
+		'''
+	}
+	
+	def CharSequence generateListFilterField(Slot slot) {
+		var fieldName = slot.fieldName
+		
+		val isNotNull = slot.isNotNull
+			
+		val isNull = slot.isNull
+		
+		val isMany = slot.isListFilterMany
+		
+		val isBetween = slot.isBetween 
+		
+		'''
+		«IF isMany»
+		«fieldName»: «slot.toAutoCompleteDTOName»[];
+		«ELSEIF isNotNull && isNull»
+		«slot.isNotNullFieldName»: «slot.toWebType»;
+		«slot.isNullFieldName»: «slot.toWebType»;
+		«ELSEIF isNotNull»
+		«slot.isNotNullFieldName»: «slot.toWebType»;
+		«ELSEIF isNull»
+		«slot.isNullFieldName»: «slot.toWebType»;
+		«ELSEIF isBetween»
+		«slot.toIsBetweenFromName»: «slot.toWebType»;
+		«slot.toIsBetweenToName»: «slot.toWebType»;
+		«ENDIF»
+		'''
+	}
 	
 }

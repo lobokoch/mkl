@@ -25,6 +25,7 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityLookupResultDTOGenerator(this),
 			new JavaEntityListFilterGenerator(this),
 			new JavaEntityAutoCompleteGenerator(this),
+			new JavaEntityListFilterAutoCompleteGenerator(this),
 			new JavaEntityDTOConverterGenerator(this),
 			new JavaClientPageResultGenerator(this),
 			new JavaEntityControllerGenerator(this),

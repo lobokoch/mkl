@@ -3,6 +3,7 @@ package br.com.kerubin.dsl.mkl.generator
 import br.com.kerubin.dsl.mkl.model.Entity
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class JavaEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -64,7 +65,18 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«IF entity.hasAutoComplete»
 			public Collection<«entity.toAutoCompleteName»> autoComplete(String query);
 			«ENDIF»
+			«IF entity.hasListFilterMany»
+			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
+			«ENDIF»
 		}
+		'''
+	}
+	
+	def CharSequence generateListFilterAutoComplete(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		'''
+		
+		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(String query);
 		'''
 	}
 	
@@ -142,6 +154,22 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				return result;
 			}
 			«ENDIF»
+			«IF entity.hasListFilterMany»
+			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteImpl].join»
+			«ENDIF»
+		}
+		'''
+	}
+	
+	def CharSequence generateListFilterAutoCompleteImpl(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		val repositoryVar = slot.ownerEntity.toRepositoryName.toFirstLower
+		
+		'''
+		
+		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(String query) {
+			Collection<«autoComplateName.toFirstUpper»> result = «repositoryVar».«autoComplateName»(query);
+			return result;
 		}
 		'''
 	}

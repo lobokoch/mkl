@@ -3,6 +3,7 @@ package br.com.kerubin.dsl.mkl.generator
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class JavaEntityControllerGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -124,6 +125,22 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				return result;
 			}
 			«ENDIF»
+			
+			«IF entity.hasListFilterMany»
+			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
+			«ENDIF»
+		}
+		'''
+	}
+	
+	def CharSequence generateListFilterAutoComplete(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		'''
+		
+		@GetMapping("/«autoComplateName»")
+		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(@RequestParam("query") String query) {
+			Collection<«autoComplateName.toFirstUpper»> result = «slot.ownerEntity.toServiceName.toFirstLower».«autoComplateName»(query);
+			return result;
 		}
 		'''
 	}

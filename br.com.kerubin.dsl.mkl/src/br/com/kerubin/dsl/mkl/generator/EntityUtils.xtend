@@ -305,8 +305,13 @@ class EntityUtils {
 		'list-' + entity.name.toLowerCase.removeUnderline + '.component'
 	}
 	
+	def static toEntityWebListClassName(Entity entity) {
+		entity.toDtoName + 'ListComponent'
+	}
+	
 	def static toEntityWebModelName(Entity entity) {
-		entity.name.toLowerCase.removeUnderline + '.model'
+		val webName = entity.toWebName 
+		 '../' + webName + '/' + webName + '.model'
 	}
 	
 	def static toWebName(Entity entity) {
@@ -352,6 +357,14 @@ class EntityUtils {
 	
 	def static toEntityListFilterPredicateName(Entity entity) {
 		entity.name.toFirstUpper + 'ListFilterPredicate'
+	}
+	
+	def static toEntityListListMethod(Entity entity) {
+		entity.fieldName + 'List'
+	}
+	
+	def static toWebEntityListSearchMethod(Entity entity) {
+		entity.fieldName + 'Search'
 	}
 	
 	def static toEntityListOnLazyLoadMethod(Entity entity) {
@@ -422,8 +435,17 @@ class EntityUtils {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
 	}
 	
+	def static toAutoCompleteName(Entity entity) {
+		entity.name.toFirstUpper + 'AutoComplete'
+	}
+	
 	def static toAutoCompleteName(Slot slot) {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static toAutoCompleteDTOName(Slot slot) {
+		val name = slot.toAutoCompleteName.toFirstUpper
+		name
 	}
 	
 	def static toIsBetweenOptionsVarName(Slot slot) {
@@ -444,10 +466,6 @@ class EntityUtils {
 	
 	def static toIsBetweenOptionsOnClickMethod(Slot slot) {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'IsBetweenOptionsOnClick'
-	}
-	
-	def static toAutoCompleteName(Entity entity) {
-		entity.name.toFirstUpper + 'AutoComplete'
 	}
 	
 	def static toWebEntityFilterSearchMethod(Entity entity) {

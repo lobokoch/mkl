@@ -5,7 +5,7 @@ import br.com.kerubin.dsl.mkl.model.Slot
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -17,35 +17,14 @@ class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def generateFiles() {
 		entities.forEach[ entity |
-			entity.generateComponentCSS
 			entity.generateComponentHTML
-			entity.generateComponentTS
 		]
-	}
-	
-	def generateComponentCSS(Entity entity) {
-		val path = entity.webEntityPath
-		val entityFile = path + entity.toEntityWebListComponentName + '.css'
-		generateFile(entityFile, entity.doGenerateEntityComponentCSS)
 	}
 	
 	def generateComponentHTML(Entity entity) {
 		val path = entity.webEntityPath
 		val entityFile = path + entity.toEntityWebListComponentName + '.html'
 		generateFile(entityFile, entity.doGenerateEntityComponentHTML)
-	}
-	
-	def generateComponentTS(Entity entity) {
-		val path = entity.webEntityPath
-		val entityFile = path + entity.toEntityWebListComponentName + '.ts'
-		generateFile(entityFile, entity.doGenerateEntityComponentTS)
-	}
-	
-	def CharSequence doGenerateEntityComponentCSS(Entity entity) {
-		'''
-		/* Write your CSS here. */
-		
-		'''
 	}
 	
 	def CharSequence doGenerateEntityComponentHTML(Entity entity) {
@@ -59,17 +38,6 @@ class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExec
 				«entity.generateHTMLGrid»
 				«entity.generateHTMLButtons»
 				«entity.generateHTMLExtras»
-			</div>
-		  
-		</div>
-		'''
-	}
-	
-	def CharSequence doGenerateEntityComponentTS(Entity entity) {
-		'''
-		<div class="container">
-		
-		  	<div class="ui-g">
 			</div>
 		  
 		</div>
@@ -277,7 +245,7 @@ class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExec
 		    <div class="ui-g-12 ui-md-2 ui-fluid">
 		        <label style="display: block">«slot.getFilterIsBetweenLabel(2)»</label>
 		        <p-dropdown #«slot.toIsBetweenOptionsVarName» 
-			        [options]="«slot.toIsBetweenOptionsVarName»" 
+			        [options]="dateFilterIntervalDropdownItems" 
 			        [(ngModel)]="«slot.toIsBetweenOptionsSelected»"
 			        optionLabel="label" (click)="«slot.toIsBetweenOptionsOnClickMethod»(«slot.toIsBetweenOptionsVarName»)">
 		        </p-dropdown>
@@ -353,7 +321,8 @@ class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		<div class="ui-g-12 ui-md-12 ui-fluid">
 			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
-			<p-autoComplete name="«slot.toAutoCompleteName»" [(ngModel)]="«entity.toEntityListFilterName».«slot.fieldName»" [multiple]="true"
+			<p-autoComplete name="«slot.toAutoCompleteName»" 
+			[(ngModel)]="«entity.toEntityListFilterName».«slot.fieldName»" [multiple]="true"
 			[suggestions]="«slot.webAutoCompleteSuggestions»"
 			(completeMethod)="«slot.webAutoCompleteMethod»($event)"
 			field="«slot.fieldName»"></p-autoComplete>
@@ -361,28 +330,11 @@ class WebEntityListGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 	}
 	
-	
-	
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
 		<div>
 			<h1>«entity.translationKey.transpationKeyFunc»</h1>
 		</div>
-		'''
-	}
-	
-	
-	
-	def void initializeEntityImports(Entity entity) {
-		entity.imports.clear
-	}
-	
-	def CharSequence getSlotsEntityImports(Entity entity) {
-		'''
-		«entity.slots.filter[it.isEntity].map[it | 
-			val slotEntity = it.asEntity
-			return "import " + slotEntity.package + "." + slotEntity.toEntityName + ";"
-			].join('\r\n')»
 		'''
 	}
 	

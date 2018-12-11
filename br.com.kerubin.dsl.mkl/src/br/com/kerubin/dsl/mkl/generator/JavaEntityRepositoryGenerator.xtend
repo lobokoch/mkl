@@ -50,15 +50,44 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
 			«IF hasAutoComplete»
 			
-			@Query("«entity.generateAutoCompleteSQL(autoCompleteKeySlots)»")
+			@Query("«entity.generateAutoCompleteSQL(autoCompleteKeySlots.filter[it.isAutoCompleteResult], autoCompleteKeySlots.filter[it.isAutoCompleteKey])»")
 			Collection<«entity.toAutoCompleteName»> autoComplete(@Param("query") String query);
+			«ENDIF»
+			«IF entity.hasListFilterMany»
+			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
 			«ENDIF»
 			
 		}
 		'''
 	}
 	
-	def String generateAutoCompleteSQL(Entity entity, Iterable<Slot> slots) {
+	def CharSequence generateListFilterAutoComplete(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		val slots = #[slot]
+		
+		'''
+		
+		@Query("«slot.ownerEntity.generateAutoCompleteSQL(slots, slots)»")
+		Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(@Param("query") String query);
+		'''
+	}
+	
+	def String generateAutoCompleteSQL(Entity entity, Iterable<Slot> slotResultFields, Iterable<Slot> slotKeyFields) {
+		val alias = "ac"
+		val sql = new StringBuilder("select distinct ")
+		val resultFields = slotResultFields.map[it | alias + "." + it.name.toFirstLower + " as " + it.name.toFirstLower].join(", ")
+		sql.append(resultFields)
+		sql.append(" from ").append(entity.toEntityName).append(" ").append(alias)
+		sql.append(" where ")
+		val keyFields = slotKeyFields.map[it | 
+			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :query, '%')) )"
+		].join(" or ")
+		sql.append(keyFields)
+		sql.append(" order by 1 asc")
+		sql.toString
+	}
+	
+	/*def String generateAutoCompleteSQL_(Entity entity, Iterable<Slot> slots) {
 		val alias = "ac"
 		val sql = new StringBuilder("select distinct ")
 		val resultFields = slots.filter[it.isAutoCompleteResult].map[it | alias + "." + it.name.toFirstLower + " as " + it.name.toFirstLower].join(", ")
@@ -71,6 +100,6 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		sql.append(keyFields)
 		sql.append(" order by 1 asc")
 		sql.toString
-	}
+	}*/
 	
 }

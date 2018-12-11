@@ -230,6 +230,10 @@ class Slot extends Element {
 		false
 	}
 	
+	op boolean isListFilterMany() {
+		hasListFilter() && this.listFilter.filterOperator.filterOperatorEnum == FilterOperatorEnum.MANY
+	}
+	
 	op boolean hasListFilter() {
 		return this.listFilter !== null
 	}
@@ -323,6 +327,10 @@ class Entity extends PublicObject {
 	
 	op boolean hasListFilter() {
 		return !slots.filter[it.hasListFilter].empty
+	}
+	
+	op boolean hasListFilterMany() {
+		return hasListFilter() && !slots.filter[it.isListFilterMany].empty
 	}
 	
 	op Slot getId() {
