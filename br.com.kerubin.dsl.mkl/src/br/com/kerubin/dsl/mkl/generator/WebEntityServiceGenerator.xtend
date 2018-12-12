@@ -47,7 +47,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val varName = dtoName.toFirstLower
-		val serviceName = entity.toWebEntityServiceName
+		val serviceName = entity.toEntityWebServiceClassName
 		
 		imports.add('''import { «dtoName» } from './«webName»-model';''')
 		entity.slots.filter[it.isEntity].forEach[
@@ -342,7 +342,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def CharSequence mountAutoComplete(Slot slot) {
 		val entity = slot.asEntity
-		val serviceName = entity.toWebEntityServiceName
+		val serviceName = entity.toEntityWebServiceClassName
 		
 		'''
 		«entity.toAutoCompleteName»(event) {
@@ -360,7 +360,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	}
 	
 	def CharSequence mountServiceConstructorInject(Slot slot) {
-		val serviceName = slot.asEntity.toWebEntityServiceName
+		val serviceName = slot.asEntity.toEntityWebServiceClassName
 		'''
 		private «serviceName.toFirstLower»: «serviceName»,
 		'''

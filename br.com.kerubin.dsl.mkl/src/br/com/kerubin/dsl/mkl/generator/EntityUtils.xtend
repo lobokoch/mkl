@@ -298,15 +298,35 @@ class EntityUtils {
 	}
 	
 	def static toEntityWebCRUDComponentName(Entity entity) {
-		'crud-' + entity.name.toLowerCase.removeUnderline + '.component'
+		'crud-' + entity.toEntityWebComponentName
 	}
 	
 	def static toEntityWebListComponentName(Entity entity) {
-		'list-' + entity.name.toLowerCase.removeUnderline + '.component'
+		'list-' + entity.toEntityWebComponentName
+	}
+	
+	def static toWebAppComponentName() {
+		'app.component'
+	}
+	
+	def static toWebAppModuleName() {
+		'app.module'
+	}
+	
+	def static toEntityWebComponentName(Entity entity) {
+		entity.name.toLowerCase.removeUnderline + '.component'
 	}
 	
 	def static toEntityWebListClassName(Entity entity) {
 		entity.toDtoName + 'ListComponent'
+	}
+	
+	def static toEntityWebServiceClassName(Entity entity) {
+		entity.toDtoName + 'Service'
+	}
+	
+	def static toEntityWebComponentClassName(Entity entity) {
+		entity.toDtoName + 'Component'
 	}
 	
 	def static toEntityWebModelName(Entity entity) {
@@ -328,10 +348,6 @@ class EntityUtils {
 	
 	def static toEntityDTOName(Entity entity) {
 		entity.toDtoName
-	}
-	
-	def static toWebEntityServiceName(Entity entity) {
-		entity.toDtoName + 'Service'
 	}
 	
 	def static toDtoName(Entity entity) {

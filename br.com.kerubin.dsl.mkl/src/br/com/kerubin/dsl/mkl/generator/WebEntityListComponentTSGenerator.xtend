@@ -37,7 +37,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val fieldName = entity.fieldName
-		val serviceName = entity.toWebEntityServiceName
+		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
 		val listFilterNameVar = entity.toEntityListFilterName
 		
@@ -52,7 +52,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «dtoName» } from './«webName»-model';''')
 		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './«it.asEntity.toWebName».service';''')
+			imports.add('''import { «it.asEntity.toEntityWebServiceClassName» } from './«it.asEntity.toWebName».service';''')
 		]
 		
 		val body = '''
@@ -172,7 +172,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 		«slot.webAutoCompleteMethod»(event) {
 		    const query = event.query;
-		    this.«entity.toWebEntityServiceName.toFirstLower».«slot.webAutoCompleteMethod»(query)
+		    this.«entity.toEntityWebServiceClassName.toFirstLower».«slot.webAutoCompleteMethod»(query)
 		    .then((result) => {
 		      this.«slot.webAutoCompleteSuggestions» = result;
 		    })

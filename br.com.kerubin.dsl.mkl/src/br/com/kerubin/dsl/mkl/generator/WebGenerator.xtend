@@ -22,7 +22,11 @@ class WebGenerator extends BaseGenerator {
 			new WebEntityServiceGenerator(this),
 			new WebEntityListComponentCSSGenerator(this),
 			new WebEntityListComponentHTMLGenerator(this),
-			new WebEntityListComponentTSGenerator(this)
+			new WebEntityListComponentTSGenerator(this),
+			new WebAppComponentCSSGenerator(this),
+			new WebAppComponentHTMLGenerator(this),
+			new WebAppComponentTSGenerator(this),
+			new WebAppModuleTSGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

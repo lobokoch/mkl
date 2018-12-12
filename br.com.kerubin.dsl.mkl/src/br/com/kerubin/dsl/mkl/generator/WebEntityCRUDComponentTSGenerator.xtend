@@ -45,13 +45,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val fieldName = entity.fieldName
-		val serviceName = entity.toWebEntityServiceName
+		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
 		
 		imports.add('''import { «dtoName» } from './«webName»-model';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toWebEntityServiceName» } from './«it.asEntity.toWebName».service';''')
+			imports.add('''import { «it.asEntity.toEntityWebServiceClassName» } from './«it.asEntity.toWebName».service';''')
 		]
 		
 		val body = '''
@@ -62,7 +62,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		  styleUrls: ['./«webName».component.css']
 		})
 		
-		export class «dtoName»Component implements OnInit {
+		export class «entity.toEntityWebComponentClassName» implements OnInit {
 			
 			«fieldName» = new «dtoName»();
 			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
@@ -175,7 +175,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence mountAutoComplete(Slot slot) {
 		val entity = slot.asEntity
-		val serviceName = entity.toWebEntityServiceName
+		val serviceName = entity.toEntityWebServiceClassName
 		
 		'''
 		«entity.toAutoCompleteName»(event) {
@@ -193,7 +193,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	}
 	
 	def CharSequence mountServiceConstructorInject(Slot slot) {
-		val serviceName = slot.asEntity.toWebEntityServiceName
+		val serviceName = slot.asEntity.toEntityWebServiceClassName
 		'''
 		private «serviceName.toFirstLower»: «serviceName»,
 		'''

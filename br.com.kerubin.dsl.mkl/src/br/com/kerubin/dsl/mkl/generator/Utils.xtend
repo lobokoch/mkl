@@ -48,6 +48,10 @@ class Utils {
 	def static getWebDir(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
 	}
+	
+	def static getWebAppDir() {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION
+	}
 	// WEB
 	
 	def static getMainAppName() {
