@@ -17,7 +17,9 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
-	
+	val closedHTMLTags = #['p-', 'textarea']
+	var webComponentType = ''
+	 
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
 	}
@@ -42,10 +44,12 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		  <form #form1="ngForm" (ngSubmit)="save(form1)">
 		  	<div class="ui-g">
+		  	
 				«entity.generateEntityTitle»
 				«entity.generateEntityFields»
 				«IF entity.enableReplication»«entity.generateEntityReplication»«ENDIF»
 				«entity.generateButtons»
+			
 			</div>
 		  </form>
 		  
@@ -85,7 +89,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			<div class="ui-g-12 ui-md-4">
 				<button [disabled]="!form1.valid" class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
 				<button pButton (click)="begin(form1)" type="button" label="Novo" class="botao-margem-direita ui-button-info"></button>
-				<button pButton (click)="begin(form1)" type="button" label="Novo" class="botao-margem-direita ui-button-info"></button>
 				<a routerLink="/«entity.toWebName»" pButton label="Pesquisar"></a>
 			</div>
 		</div>
@@ -95,7 +98,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
-		<div>
+		<div class="ui-g-12">
 			<h1>«entity.translationKey.transpationKeyFunc»</h1>
 		</div>
 		'''
@@ -129,10 +132,16 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateWebComponent(Slot slot) {
+		webComponentType = '';
 		val builder = new StringConcatenationExt()
 		builder.concat('<')
 		slot.decoreWebComponent(builder)
-		builder.concat(' />')
+		builder.concat('>')
+		
+		// It must close the HTML tag?
+		if (closedHTMLTags.exists[webComponentType.startsWith(it)]) {
+			builder.concat('</').concat(webComponentType).concat('>')			
+		}
 		
 		slot.generateComponentMessages(builder)
 		
@@ -141,7 +150,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateComponentMessages(Slot slot, StringConcatenationExt builder) {
-		if (!slot.optional) {
+		if (!slot.UUID && !slot.optional) {
 			builder.add('''<div class="invalid-message" *ngIf="«slot.fieldName».invalid && «slot.fieldName».dirty">Campo obrigatório.</div>''')
 		}
 	}
@@ -154,7 +163,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def void decorateWebComponentRules(Slot slot, StringConcatenationExt builder) {
-		if (!slot.optional) {
+		if (!slot.UUID && !slot.optional) {
 			builder.concat(' required')
 		}
 		
@@ -168,19 +177,21 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def void decorateWebComponentNgModel(Slot slot, StringConcatenationExt builder) {
-			builder.concat(''' ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
+			builder.concat(''' #«slot.fieldName»="ngModel" ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
 	}
 	
 	def void decorateWebComponentType(Slot slot, StringConcatenationExt builder) {
 		if (slot.isEntity) {
 			val entity = slot.asEntity
-			val fieldName = entity.slots.findFirst[it.autoCompleteResult]?.fieldName ?: entity.id.fieldName
-			
-			builder.concat('''p-autoComplete [forceSelection]="true" [suggestions]="«slot.webAutoCompleteSuggestions»" (completeMethod)="«slot.webAutoComplete»($event)" field="«fieldName»"''')
+			// Pega como resultado o primeiro campo de resultado que não seja o id da entidade, caso não tenha nenhum, ai traz o id da entidade como campo de resultado.
+			val fieldName = entity.slots.findFirst[it.autoCompleteResult && it !== entity.id]?.fieldName ?: entity.id.fieldName
+			webComponentType = 'p-autoComplete'
+			builder.concat('''«webComponentType» [forceSelection]="true" [suggestions]="«slot.webAutoCompleteSuggestions»" (completeMethod)="«slot.toAutoCompleteName»($event)" field="«fieldName»"''')
 			return
 		}
 		else if (slot.isEnum){
-			builder.concat('''p-dropdown [options]="«slot.webDropdownOptions»" placeholder="Selecione"''')
+			webComponentType = 'p-dropdown'
+			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" placeholder="Selecione"''')
 			return
 		}
 		
@@ -191,38 +202,49 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			val stringType = basicType as StringType
 			// Must be a TextArea?
 			if (stringType.length > 255) {
-				builder.concat('textarea pInputTextarea rows="3"')			
+				webComponentType = 'textarea'
+				builder.concat('''«webComponentType» pInputTextarea rows="3"''')			
 			}
 			else { // Input Text
-				builder.concat('input type="text" pInputText')				
+				webComponentType = 'input'
+				builder.concat('''«webComponentType» type="text" pInputText''')				
 			}
 		}
 		else if (basicType instanceof IntegerType) {
-			builder.concat('input type="text" pInputText')
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» type="text" pInputText''')
 		}
 		else if (basicType instanceof DoubleType) {
-			builder.concat('input type="text" pInputText')
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» type="text" pInputText''')
 		}
 		else if (basicType instanceof MoneyType) {
-			builder.concat('input currencyMask [options]="{prefix: \'\', thousands: \'.\', decimal: \',\', allowNegative: false}" placeholder="0,00"')
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» pInputText type="text" currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"''')
 		}
 		else if (basicType instanceof BooleanType) {
-			builder.concat('p-inputSwitch')
+			webComponentType = 'p-inputSwitch'
+			builder.concat(webComponentType)
 		}
 		else if (basicType instanceof DateType) {
-			builder.concat('p-calendar dateFormat="dd/mm/yy"')
+			webComponentType = 'p-calendar'
+			builder.concat('''«webComponentType» dateFormat="dd/mm/yy"''')
 		}
 		else if (basicType instanceof TimeType) {
-			builder.concat('p-calendar dateFormat="hh:MM:ss"')
+			webComponentType = 'p-calendar'
+			builder.concat('''«webComponentType» dateFormat="hh:MM:ss"''')
 		}
 		else if (basicType instanceof DateTimeType) {
-			builder.concat('p-calendar dateFormat="dd/mm/yy hh:MM:ss"')
+			webComponentType = 'p-calendar'
+			builder.concat('''«webComponentType» dateFormat="dd/mm/yy hh:MM:ss"''')
 		}
 		else if (basicType instanceof UUIDType) {
-			builder.concat('input type="text" pInputText')
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» type="text" pInputText''')
 		}
 		else if (basicType instanceof ByteType) {
-			builder.concat('input type="text" pInputText')
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» type="text" pInputText''')
 		}
 		
 	}

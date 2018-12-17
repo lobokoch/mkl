@@ -14,6 +14,8 @@ abstract class BaseGenerator {
 	protected Configuration configuration
 	protected Iterable<Entity> entities
 	
+	ServiceBooster serviceBooster
+	
 	new(Resource resource, IFileSystemAccess2 fsa) {
 		this.resource = resource
 		this.fsa = fsa
@@ -21,7 +23,16 @@ abstract class BaseGenerator {
 		service = resource.allContents.filter(Service).head
 		configuration = service.configuration
 		entities = service.elements.filter(Entity)
+		
+		injectServiteBooster();
+		serviceBooster.augmentService(service)
 	}
+	
+	private def void injectServiteBooster() {
+		serviceBooster = new ServiceBoosterImpl();
+	}
+	
+	
 	
 	def generateFile(String fileName, CharSequence contents) {
 		/*if (outputConfig === null) {

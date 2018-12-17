@@ -64,15 +64,9 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		// Rotas
 		import { Routes, RouterModule } from '@angular/router';
 		
-		// Kerubin
-		Begin Gerado
+		// Kerubin begin
 		«generateAppImports»
-		End Gerado
-		
-		import { CadContaspagarComponent } from './contas/contaspagar/cad-contaspagar/cad-contaspagar.component';
-		import { ListContaspagarComponent } from './contas/contaspagar/list-contaspagar/list-contaspagar.component';
-		import { FornecedorService } from './contas/contaspagar/fornecedor.service';
-		import { ContasPagarService } from './contas/contaspagar/contaspagar.service';
+		// Kerubin end
 		
 		registerLocaleData(localePt, 'pt', localeExtraPT);
 		
@@ -87,26 +81,23 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		  thousands: '.'
 		};
 		
-		«generateRoutes»
 		const routes: Routes = [
-		  { path: '', redirectTo: 'contaspagar', pathMatch: 'full' },
+		  { path: '', redirectTo: 'mainmenu', pathMatch: 'full' },
 		  
-		  { path: 'contaspagar/novo', component: CadContaspagarComponent },
-		  { path: 'contaspagar/:id', component: CadContaspagarComponent },
+			// Kerubin Begin
+			«generateRoutes»
+			// Kerubin Begin
 		  
-		  { path: 'contaspagar', component: ListContaspagarComponent }
+		  { path: 'mainmenu', component: MainMenuComponent }
 		];
 		
 		
 		
 		@NgModule({
 		  declarations: [
-		    // Begin Gerado
+		    // Kerubin Begin
 		    «generateEntitiesNgModuleDeclarations»
-		    // End Gerado
-		    
-		    CadContaspagarComponent,
-		    ListContaspagarComponent,
+		    // Kerubin Begin
 		    AppComponent
 		  ],
 		  imports: [
@@ -137,9 +128,10 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    DropdownModule
 		  ],
 		  providers: [
+		  	// Kerubin Begin
 		  	«generateEntitiesServiceProvidersDeclaration»
-		    ContasPagarService,
-		    FornecedorService,
+		  	«service.toTranslationServiceClassName»,
+		  	// Kerubin End
 		    MessageService,
 		    ConfirmationService,
 		    { provide: LOCALE_ID, useValue: 'pt' },
@@ -162,7 +154,6 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 	
 	def CharSequence generateEntityServiceProviderDeclaration(Entity entity) {
 		'''
-		
 		«entity.toEntityWebServiceClassName»,
 		'''
 	}
@@ -182,13 +173,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 	
 	def CharSequence generateRoutes() {
 		val source = '''
-		const routes: Routes = [
-		  { path: '', redirectTo: 'mainmenu', pathMatch: 'full' },
-		  
 		  «generateAllEntityRoutes»
-		  
-		  { path: 'mainmenu', component: MainMenuComponent }
-		];
 		'''
 		
 		source
@@ -200,9 +185,8 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def CharSequence generateEntityRoutes(Entity entity) {
-		val path = entity.webEntityPath
-		val crudComponent = path + entity.toEntityWebComponentName
-		val listComponent = path + entity.toEntityWebListComponentName
+		val crudComponent = entity.toEntityWebComponentClassName
+		val listComponent = entity.toEntityWebListClassName
 		
 		val entityWebName = entity.toWebName
 		
@@ -210,18 +194,22 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		{ path: '«entityWebName»/novo', component: «crudComponent» },
 		{ path: '«entityWebName»/:id', component: «crudComponent» },
-		{ path: '«entityWebName»/list', component: «listComponent» },
+		{ path: '«entityWebName»', component: «listComponent» },
 		'''
 	}
 	
 	def CharSequence generateAppImports() {
 		val source = entities.map[generateEntityAppImport].join
-		source
+		
+		'''
+		«source»
+		import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationPathName»';
+		'''
 	}
 	
 	def CharSequence generateEntityAppImport(Entity entity) {
-		val path = entity.webEntityPath
-		val crudComponent = path + entity.toEntityWebComponentName
+		val path = entity.webEntityPathShort
+		val crudComponent = path + entity.toEntityWebCRUDComponentName
 		val listComponent = path + entity.toEntityWebListComponentName
 		val serviceComponent = path + entity.toEntityWebServiceName
 		

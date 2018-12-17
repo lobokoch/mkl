@@ -34,7 +34,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	def CharSequence doGenerateEntityComponentTS(Entity entity) {
 		imports = new StringConcatenationExt()
 		
-		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val fieldName = entity.fieldName
 		val serviceName = entity.toEntityWebServiceClassName
@@ -46,21 +45,36 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
 		import {MessageService, ConfirmationService, LazyLoadEvent, SelectItem} from 'primeng/api';
+		import { Dropdown } from 'primeng/dropdown';
 		import * as moment from 'moment';
 		''')
 		
-		imports.add('''import { «serviceName» } from './«webName».service';''')
-		imports.add('''import { «dtoName» } from './«webName»-model';''')
-		entity.slots.filter[it.isEntity].forEach[
-			imports.add('''import { «it.asEntity.toEntityWebServiceClassName» } from './«it.asEntity.toWebName».service';''')
+		imports.add('''import { «serviceName» } from './«entity.toEntityWebServiceName»';''')
+		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
+		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
+		imports.add('''import { «entity.toEntityListFilterClassName» } from './«entity.toEntityWebModelName»';''')
+		imports.add('''import { SortField } from './«entity.toEntityWebModelName»';''')
+		
+		entity.slots.filter[it.isListFilterMany].forEach[
+			imports.add('''import { «it.toAutoCompleteClassName» } from './«entity.toEntityWebModelName»';''')
 		]
+		
+		/*entity.slots.filter[it.isEntity].forEach[
+			val slotAsEntity = it.asEntity
+			imports.newLine
+			imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
+			imports.add('''import { «slotAsEntity.toDtoName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+			imports.add('''import { «slotAsEntity.toAutoCompleteName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+		]*/
+		
+		val component = entity.toEntityWebListComponentName
 		
 		val body = '''
 		
 		@Component({
-		  selector: 'app-«entity.toEntityWebListComponentName»',
-		  templateUrl: './«entity.toEntityWebListComponentName».html',
-		  styleUrls: ['./list-«entity.toEntityWebListComponentName».css']
+		  selector: 'app-«component»',
+		  templateUrl: './«component».html',
+		  styleUrls: ['./«component».css']
 		})
 		
 		export class «entity.toEntityWebListClassName» implements OnInit {
@@ -72,7 +86,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !filterSlots.empty»
 			«filterSlots.generateFilterSlotsInitialization»
 			dateFilterIntervalDropdownItems: SelectItem[];
-			this.initializeDateFilterIntervalDropdownItems();
 			«ENDIF»
 			
 			/*
@@ -83,15 +96,21 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			constructor(
 			    private «serviceVar»: «serviceName»,
+			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    private confirmation: ConfirmationService,
 			    private messageService: MessageService
 			) { }
 			
 			ngOnInit() {
-			    this.«fieldName» = new «dtoName»();
-		        this.«listFilterNameVar».sortField = new SortField('dataVencimento', 1); // desc
+		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // desc
+				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
+					this.initializeDateFilterIntervalDropdownItems();
+				«filterSlots.filter[it.isBetween && it.isDate].map[
+					'''	this.«it.toIsBetweenOptionsOnClickMethod»(null);'''
+				].join('\r\n')»
+				«ENDIF»
+			    // this.«fieldName» = new «dtoName»();
 		        // this.contaPagar.dataPagamento = moment().toDate();
-		        this.selecionarIntervaloTempo(null);
 			}
 			
 			«entity.toEntityListListMethod»(pageNumber = 0) {
@@ -99,14 +118,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar»
 			    .«entity.toEntityListListMethod»(this.«listFilterNameVar»)
 			    .then(result => {
-			      this.«entity.toEntityWebListItems» = result.contaPagarItems;
+			      this.«entity.toEntityWebListItems» = result.items;
 			      this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
 			    });
 			
-			    this.getTotaisFiltroContaPagar();
+			    // this.getTotaisFiltroContaPagar();
 			}
 			
-			«entity.toWebEntityListSearchMethod»() {
+			«entity.toWebEntityFilterSearchMethod» {
 			    this.«entity.toEntityListListMethod»(0);
 			}
 			
@@ -126,9 +145,19 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    });
 			}
 			
+			«entity.toEntityListOnLazyLoadMethod»(event: LazyLoadEvent) {
+			    if (event.sortField) {
+			      this.«listFilterNameVar».sortField = new SortField(event.sortField, event.sortOrder);
+			    } else {
+			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', -1);
+			    }
+			    const pageNumber = event.first / event.rows;
+			    this.«entity.toEntityListListMethod»(pageNumber);
+			}
+			
 			«filterSlots.filter[isListFilterMany].map[generateAutoCompleteMethod].join»
 			
-			«IF !filterSlots.filter[isDate].empty»
+			«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 			private initializeDateFilterIntervalDropdownItems() {
 				this.dateFilterIntervalDropdownItems = [
 				    {label: 'Hoje', value: '0'},
@@ -148,7 +177,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 				  ];
 			}
 			
-			«filterSlots.filter[isDate].map[generatePeriodIntervalSelectMethod].join»
+			«filterSlots.filter[isBetween].map[generatePeriodIntervalSelectMethod].join»
 			«ENDIF»
 			
 			public showSuccess(msg: string) {
@@ -158,6 +187,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			public showError(msg: string) {
 			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
 			}
+			
+			«buildTranslationMethod(service)»
 			
 			«addExtras()»
 		}
@@ -270,7 +301,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			if (dateFrom != null && dateTo != null) {
-			  this.contaPagarList(0);
+			  this.«entity.toEntityListListMethod»(0);
 			}
 		}
 		'''
@@ -293,7 +324,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 		'''
 		«IF isMany»
-		«slot.webAutoCompleteSuggestions»: «slot.toAutoCompleteName»[];
+		«slot.webAutoCompleteSuggestions»: «slot.toAutoCompleteClassName»[];
 		«ELSEIF isNotNull || isNull»
 		
 		«IF isNotNull»

@@ -55,6 +55,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		val qEntity = 'Q' + entity.toEntityName.toFirstUpper
 		val varQEntity = 'qEntity'
 		val slots = entity.slots.filter[it.hasListFilter]
+		val hasListFilter = !slots.empty
 		
 		val package = '''
 		package «entity.package»;
@@ -65,7 +66,9 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		import org.springframework.stereotype.Component;
 		import com.querydsl.core.types.Predicate;
 		import com.querydsl.core.BooleanBuilder;
+		«IF hasListFilter»
 		import com.querydsl.core.types.dsl.BooleanExpression;
+		«ENDIF»
 		
 		@Component
 		public class «entity.toEntityListFilterPredicateImplName» implements «entity.toEntityListFilterPredicateName» {
@@ -76,7 +79,9 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 					return null;
 				}
 				
+				«IF hasListFilter»
 				«qEntity» «varQEntity» = «qEntity».«entity.toEntityName.toFirstLower»;
+				«ENDIF»
 				BooleanBuilder where = new BooleanBuilder();
 				
 				«slots.map[generateFieldPredicate(varFilter, varQEntity)].join('\r\n')»

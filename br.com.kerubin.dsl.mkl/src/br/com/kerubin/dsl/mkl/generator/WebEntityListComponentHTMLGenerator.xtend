@@ -70,7 +70,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 		
 		<!-- Begin GRID -->
-		<div class="ui-g-12 name="data-grid">
+		<div class="ui-g-12" name="data-grid">
 			<p-table [loading]="loading" [responsive]="true" [customSort]="true" [paginator]="true" 
 				[value]="«entity.toEntityWebListItems»"
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
@@ -96,16 +96,16 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            <tr>
 		            	«slots.map[generateHTMLGridDataRow].join»
 		              	<td>
-		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="fa fa-pencil" pTooltip="Editar" tooltipPosition="top"></a>
-		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="fa fa-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
-		              		<button (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="fa fa-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
+		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
+		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="pi pi-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
+		              		<button (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
 		              	</td>
 		            </tr>
 		        </ng-template>
 		        
 		        <ng-template pTemplate="emptymessage" let-columns>
 				    <tr>
-				        <td [attr.colspan]="8">
+				        <td [attr.colspan]="«slots.size + 1»">
 				            Nenhum registro encontrado.
 				        </td>
 				    </tr>

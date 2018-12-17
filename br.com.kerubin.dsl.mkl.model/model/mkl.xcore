@@ -152,6 +152,7 @@ class Slot extends Element {
 	EnumType enumType
 	
 	String help
+	String label
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
@@ -320,6 +321,12 @@ class Entity extends PublicObject {
 	boolean mapped
 	boolean baseRepository
 	boolean enableReplication
+	String label
+	
+	op Slot getFirstSlot() {
+		val slot = slots.tail.head ?: slots.head
+		slot
+	}
 	
 	op boolean hasAutoComplete() {
 		return !slots.filter[it.isAutoCompleteResult].empty

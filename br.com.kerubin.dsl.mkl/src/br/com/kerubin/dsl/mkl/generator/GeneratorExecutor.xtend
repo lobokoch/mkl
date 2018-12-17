@@ -53,15 +53,32 @@ class GeneratorExecutor {
 		result		
 	}
 	
-	def String getWebEntityPath(Entity entity) {
-		val path = entity.service.servicePath + '/' + entity.name.toLowerCase.removeUnderline + '/'
+	def String getWebServicePath(Service service) {
+		val path = service.servicePath
 		val fullPath = path.webDir
 		fullPath
 	}
 	
-	def String getWebServicePath(Entity entity) {
-		entity.service.servicePath + '/service/'
+	def String getWebServiceI18nPath(Service service) {
+		val path = service.servicePath + 'i18n/'
+		val fullPath = path.webDir
+		fullPath
 	}
+	
+	def String getWebEntityPath(Entity entity) {
+		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
+		val fullPath = path.webDir
+		fullPath
+	}
+	
+	def String getWebEntityPathShort(Entity entity) {
+		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
+		path
+	}
+	
+	/*def String getWebServicePath(Entity entity) {
+		entity.service.servicePath + '/service/'
+	}*/
 	
 	def String getServicePath(Entity entity) {
 		entity.service.servicePath
@@ -69,6 +86,26 @@ class GeneratorExecutor {
 	
 	def String getServicePath(Service service) {
 		val path = service.domain.removeUnderline + '/' + service.name.removeUnderline + '/'
+		path
+	}
+	
+	def String getServiceWebTranslationPath(Service service) {
+		val path = './' + service.domain.webName + '/' + service.name.webName + '/' + I18N_PATH_NAME + '/'
+		path
+	}
+	
+	def String getServiceWebTranslationPathName(Service service) {
+		val path = service.serviceWebTranslationPath + service.toTranslationServiceName
+		path
+	}
+	
+	def String getServiceWebTranslationComponentPath() {
+		val path = './../' + I18N_PATH_NAME + '/'
+		path
+	}
+	
+	def String getServiceWebTranslationComponentPathName(Service service) {
+		val path = serviceWebTranslationComponentPath + service.toTranslationServiceName
 		path
 	}
 	

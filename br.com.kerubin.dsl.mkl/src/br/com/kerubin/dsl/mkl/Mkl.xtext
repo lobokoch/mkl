@@ -49,7 +49,8 @@ Entity:
 		(mapped?='@mapped')? &
 		(baseRepository?='@baseRepository')? &
 		(audit?='@audit')? &
-		('@parent' '(' parent=[Entity] ')')?
+		('@parent' '(' parent=[Entity] ')')? &
+		('@label' '(' label=STRING ')')?
 	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
 		Slots
@@ -88,6 +89,7 @@ Slot:
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
+			('label' ':' label=STRING)? &
 			(grid = Grid)? &
 			(web = Web)? 
 		)

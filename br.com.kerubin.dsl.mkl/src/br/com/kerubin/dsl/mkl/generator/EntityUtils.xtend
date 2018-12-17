@@ -36,6 +36,8 @@ class EntityUtils {
 	public static val VAR_FILTER = 'filter'
 	public static val LIST_FILTER_PAGE_SIZE = 'pageSize'
 	public static val UNKNOWN = '<UNKNOWN>'
+	public static val I18N_DEF = 'pt-br.json'
+	public static val I18N_PATH_NAME = 'i18n'
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -278,6 +280,16 @@ class EntityUtils {
 		key
 	}
 	
+	def static String getLabelValue(Entity entity) {
+		val label = entity.label ?: entity.translationKey
+		label
+	}
+	
+	def static String getLabelValue(Slot slot) {
+		val label = slot.label ?: slot.translationKey
+		label
+	}
+	
 	
 	def static String getTranslationKey(Service service) {
 		val key = service.domain.toFirstLower + '.' + service.name.toFirstLower
@@ -291,10 +303,6 @@ class EntityUtils {
 	def static CharSequence getTranspationKeyFunc(Slot slot) {
 		val key = slot.translationKey
 		'''{{ getTranslation('«key»') }}'''
-	}
-	
-	def static toEntityWebServiceName(Entity entity) {
-		entity.name.toLowerCase.removeUnderline + '.service'
 	}
 	
 	def static toEntityWebCRUDComponentName(Entity entity) {
@@ -313,6 +321,19 @@ class EntityUtils {
 		'app.module'
 	}
 	
+	def static buildTranslationMethod(Service service) {
+		'''
+		// TODO: temporário, só para testes.
+		getTranslation(key: string): string {
+			const value = this.«service.toTranslationServiceVarName».getTranslation(key);
+			return value;
+			
+			// const result = key.substring(key.lastIndexOf('_') + 1);
+			// return result;
+		}
+		'''
+	}
+	
 	def static toEntityWebComponentName(Entity entity) {
 		entity.name.toLowerCase.removeUnderline + '.component'
 	}
@@ -329,9 +350,72 @@ class EntityUtils {
 		entity.toDtoName + 'Component'
 	}
 	
+	def static toEntityWebModelNameWithPah(Entity ownerEntity, Slot slot) {
+		var name = UNKNOWN
+		if (slot.isEntity) {
+			val slotAsEntity = slot.asEntity
+			if (ownerEntity.isSameEntity(slotAsEntity)) { // It is circular reference
+				name = slotAsEntity.toEntityWebModelName					
+			}
+			else {
+				name = slotAsEntity.toEntityWebModelNameWithPah
+			}
+		}
+		
+		name
+	}
+	
+	def static toEntityWebServiceNameWithPah(Entity ownerEntity, Slot slot) {
+		var name = UNKNOWN
+		if (slot.isEntity) {
+			val slotAsEntity = slot.asEntity
+			if (ownerEntity.isSameEntity(slotAsEntity)) { // It is circular reference
+				name = slotAsEntity.toEntityWebServiceName					
+			}
+			else {
+				name = slotAsEntity.toEntityWebServiceNameWithPath
+			}
+		}
+		
+		name
+	}
+	
+	def static toEntityWebPath(Entity entity) {
+		val webName = entity.toWebName 
+		 val path = '../' + webName + '/'
+		 path
+	}
+	
+	def static toEntityWebServiceNameWithPath(Entity entity) {
+		val path = entity.toEntityWebPath
+		val name = entity.toEntityWebServiceName
+		val nameWithPah = path + name
+		nameWithPah
+	}
+	
+	def static toEntityWebServiceName(Entity entity) {
+		val webName = entity.toWebName 
+		val name = webName + '.service'
+		name
+	}
+	
+	def static toEntityWebModelNameWithPah(Entity entity) {
+		val path = entity.toEntityWebModelPath
+		val name = entity.toEntityWebModelName
+		val nameWithPah = path + name
+		nameWithPah
+	}
+	
 	def static toEntityWebModelName(Entity entity) {
 		val webName = entity.toWebName 
-		 '../' + webName + '/' + webName + '.model'
+		val name = webName + '.model'
+		name
+	}
+	
+	def static toEntityWebModelPath(Entity entity) {
+		val webName = entity.toWebName 
+		 val path = '../' + webName + '/'
+		 path
 	}
 	
 	def static toWebName(Entity entity) {
@@ -354,6 +438,19 @@ class EntityUtils {
 		entity.name.toFirstUpper
 	}
 	
+	def static isSameEntity(Entity a, Entity b) {
+		if (a === null && b === null) {
+			return true
+		}
+		
+		if (a === null || b === null) {
+			return false
+		}
+		
+		val result = a.name.equals(b.name)
+		return result
+	}
+	
 	
     def static toEntityLookupResultDTOName(Entity entity) {
         entity.name.toFirstUpper + 'LookupResult'
@@ -361,6 +458,10 @@ class EntityUtils {
 	
 	def static toEntityListFilterName(Entity entity) {
 		entity.fieldName + 'ListFilter'
+	}
+	
+	def static toEntityListFilterClassName(Entity entity) {
+		entity.fieldName.toFirstUpper + 'ListFilter'
 	}
 	
 	def static toEntityWebListItems(Entity entity) {
@@ -377,10 +478,6 @@ class EntityUtils {
 	
 	def static toEntityListListMethod(Entity entity) {
 		entity.fieldName + 'List'
-	}
-	
-	def static toWebEntityListSearchMethod(Entity entity) {
-		entity.fieldName + 'Search'
 	}
 	
 	def static toEntityListOnLazyLoadMethod(Entity entity) {
@@ -451,8 +548,32 @@ class EntityUtils {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
 	}
 	
+	def static toEntityAutoCompleteMethodName(Entity entity) {
+		entity.fieldName + 'AutoComplete'
+	}
+	
 	def static toAutoCompleteName(Entity entity) {
-		entity.name.toFirstUpper + 'AutoComplete'
+		val name = entity.toAutoCompleteClassName
+		name
+	}
+	
+	def static toTranslationServiceClassName(Service service) {
+		val name = service.domain.toFirstUpper + service.name.toFirstUpper + 'TranslationService'
+		name
+	}
+	
+	def static toTranslationServiceName(Service service) {
+		val name = service.domain.toLowerCase.removeUnderline + '-' + service.name.toLowerCase.removeUnderline + '-translation.service'
+		name
+	}
+	
+	def static toTranslationServiceVarName(Service service) {
+		val name = service.domain.toFirstLower + service.name.toFirstUpper + 'TranslationService'
+		name
+	}
+	
+	def static toAutoCompleteClassName(Entity entity) {
+		entity.toDtoName + 'AutoComplete'
 	}
 	
 	def static toAutoCompleteName(Slot slot) {
@@ -460,6 +581,11 @@ class EntityUtils {
 	}
 	
 	def static toAutoCompleteDTOName(Slot slot) {
+		val name = slot.toAutoCompleteClassName
+		name
+	}
+	
+	def static toAutoCompleteClassName(Slot slot) {
 		val name = slot.toAutoCompleteName.toFirstUpper
 		name
 	}
@@ -488,8 +614,9 @@ class EntityUtils {
 		entity.fieldName + 'FilterSearch()'
 	}
 	
-	def static getWebAutoComplete(Slot slot) {
-		slot.fieldName + 'AutoComplete'
+	def static getDefaultOrderedField(Entity entity) {
+		val slot = entity.slots.tail.findFirst[it.isOrderedOnGrid] ?: entity.id
+		slot.fieldName
 	}
 	
 	def static getEntityReplicationQuantity(Entity entity) {

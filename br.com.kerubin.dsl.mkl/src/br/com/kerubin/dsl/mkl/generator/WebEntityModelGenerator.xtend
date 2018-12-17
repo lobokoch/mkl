@@ -20,8 +20,8 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def generateEntityModel(Entity entity) {
-		val modelDir = entity.webEntityPath
-		val entityFile = modelDir + entity.toEntityWebModelName + '.ts'
+		val entityDir = entity.webEntityPath
+		val entityFile = entityDir + entity.toEntityWebModelName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityModel)
 	}
 	
@@ -32,12 +32,12 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		val body = '''
 		«generateSortFieldModel»
 		«generatePaginationFilterModel»
-		«entity.generateEntityListFilterModel»
 		«IF entity.hasListFilterMany»
 		«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteModel].join»
-		«entity.doGenerateEntityDTOModel»
 		«ENDIF»
-		
+		«entity.generateEntityListFilterModel»
+		«entity.generateEntityDTOModel»
+		«entity.generateEntityDefaultAutoComplete»
 		'''
 		
 		val imports = '''
@@ -47,8 +47,18 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		imports + body 
 	}
 	
+	def CharSequence generateEntityDefaultAutoComplete(Entity entity) {
+		val autoCompleteSlots = entity.slots.filter[isAutoCompleteResult]
+		'''
+		
+		export class «entity.toAutoCompleteName» {
+			«autoCompleteSlots.map[generateField(entity)].join»
+		}
+		'''
+	}
+	
 	def CharSequence generateListFilterAutoCompleteModel(Slot slot) {
-		val autoComplateName = slot.toAutoCompleteName
+		val autoComplateName = slot.toAutoCompleteClassName
 		
 		'''
 		
@@ -59,14 +69,11 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	// Begin DTO Model
-	def CharSequence doGenerateEntityDTOModel(Entity entity) {
+	def CharSequence generateEntityDTOModel(Entity entity) {
 		'''
 		
 		export class «entity.toEntityDTOName» {
-				
 			«entity.generateFields»
-			«/*entity.generateGetters*/»
-			«/*entity.generateSetters*/»
 		}
 		'''
 	}
@@ -74,21 +81,23 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	
 	def CharSequence generateFields(Entity entity) {
 		'''
-		«entity.slots.map[generateField(entity)].join('\r\n')»
+		«entity.slots.map[generateField(entity)].join»
 		'''
 		
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		var dtoModel = entity.toEntityWebModelNameWithPah(slot)
+		
 		if (slot.isDTOFull) {
-			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + slot.asEntity.toEntityWebModelName + "';")
+			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		//else if (slot.isDTOLookupResult) {
 		else if (slot.isEntity) {
-			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + slot.asEntity.toEntityWebModelName + "';")
+			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		else if (slot.isEnum) { 
-			entity.addImport("import { " + slot.asEnum.name.toFirstUpper + " } from './" + slot.ownerEntity.toEntityWebModelName + "';")
+			entity.addImport("import { " + slot.asEnum.name.toFirstUpper + " } from './" + dtoModel + "';")
 			// entity.addImport('import ' + slot.asEnum.enumPackage + ';')
 		}
 		
@@ -193,10 +202,8 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	def CharSequence generateEntityListFilterModel(Entity entity) {
 		'''
 		
-		export class «entity.toEntityListFilterName» extends PaginationFilter {
-				
+		export class «entity.toEntityListFilterClassName» extends PaginationFilter {
 			«entity.generateListFilterFields»
-		
 		}
 		'''
 	}
@@ -205,6 +212,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		val slots = entity.slots.filter[it.hasListFilter]
 		
 		'''
+		
 		«slots.map[generateListFilterField].join('\r\n')»
 		'''
 	}
@@ -222,14 +230,14 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF isMany»
-		«fieldName»: «slot.toAutoCompleteDTOName»[];
+		«fieldName»: «slot.toAutoCompleteClassName»[];
 		«ELSEIF isNotNull && isNull»
-		«slot.isNotNullFieldName»: «slot.toWebType»;
-		«slot.isNullFieldName»: «slot.toWebType»;
+		«slot.isNotNullFieldName»: boolean;
+		«slot.isNullFieldName»: boolean;
 		«ELSEIF isNotNull»
-		«slot.isNotNullFieldName»: «slot.toWebType»;
+		«slot.isNotNullFieldName»: boolean;
 		«ELSEIF isNull»
-		«slot.isNullFieldName»: «slot.toWebType»;
+		«slot.isNullFieldName»: boolean;
 		«ELSEIF isBetween»
 		«slot.toIsBetweenFromName»: «slot.toWebType»;
 		«slot.toIsBetweenToName»: «slot.toWebType»;

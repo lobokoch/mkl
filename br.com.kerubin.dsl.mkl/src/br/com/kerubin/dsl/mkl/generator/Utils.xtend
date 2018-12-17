@@ -126,4 +126,9 @@ class Utils {
 		var result = str.replace('_', '')
 		result
 	}
+	
+	def static String webName(String str) {
+		var result = str.toLowerCase.replace('_', '')
+		result
+	}
 }

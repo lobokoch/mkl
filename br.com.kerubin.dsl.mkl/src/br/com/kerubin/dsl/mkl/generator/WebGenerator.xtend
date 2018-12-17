@@ -26,7 +26,8 @@ class WebGenerator extends BaseGenerator {
 			new WebAppComponentCSSGenerator(this),
 			new WebAppComponentHTMLGenerator(this),
 			new WebAppComponentTSGenerator(this),
-			new WebAppModuleTSGenerator(this)
+			new WebAppModuleTSGenerator(this),
+			new WebEntityTranslationGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 
