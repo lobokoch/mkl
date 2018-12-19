@@ -84,12 +84,14 @@ Slot:
 		(
 			(autoComplete = AutoComplete)? &
 			(listFilter = ListFilter)? &
-			('stored' ':' enumType=EnumType)? &
+			('enumType' ':' enumType=EnumType)? &
 			(indexed?='indexed')? &
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
 			('label' ':' label=STRING)? &
+			('mask' ':' mask=STRING)? &
+			(^hidden ?= 'hidden')? &
 			(grid = Grid)? &
 			(web = Web)? 
 		)

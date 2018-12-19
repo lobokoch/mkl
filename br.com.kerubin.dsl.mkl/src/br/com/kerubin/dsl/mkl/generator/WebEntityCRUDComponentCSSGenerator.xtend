@@ -26,7 +26,9 @@ class WebEntityCRUDComponentCSSGenerator extends GeneratorExecutor implements IG
 	
 	def CharSequence doGenerateEntityCssComponent(Entity entity) {
 		'''
-		/* Write your CSS here. */
+		.hidden {
+			display: none;
+		}
 		
 		'''
 	}

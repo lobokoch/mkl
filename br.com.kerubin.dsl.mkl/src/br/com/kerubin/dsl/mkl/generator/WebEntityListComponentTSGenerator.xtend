@@ -59,14 +59,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «it.toAutoCompleteClassName» } from './«entity.toEntityWebModelName»';''')
 		]
 		
-		/*entity.slots.filter[it.isEntity].forEach[
-			val slotAsEntity = it.asEntity
-			imports.newLine
-			imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
-			imports.add('''import { «slotAsEntity.toDtoName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
-			imports.add('''import { «slotAsEntity.toAutoCompleteName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
-		]*/
-		
 		val component = entity.toEntityWebListComponentName
 		
 		val body = '''
@@ -102,7 +94,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			) { }
 			
 			ngOnInit() {
-		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // desc
+		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
 				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 					this.initializeDateFilterIntervalDropdownItems();
 				«filterSlots.filter[it.isBetween && it.isDate].map[
@@ -149,7 +141,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    if (event.sortField) {
 			      this.«listFilterNameVar».sortField = new SortField(event.sortField, event.sortOrder);
 			    } else {
-			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', -1);
+			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
 			    }
 			    const pageNumber = event.first / event.rows;
 			    this.«entity.toEntityListListMethod»(pageNumber);

@@ -29,7 +29,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityDTOConverterGenerator(this),
 			new JavaClientPageResultGenerator(this),
 			new JavaEntityControllerGenerator(this),
-			new JavaPostgreSQLGenerator(this)
+			new JavaPostgreSQLGenerator(this),
+			new JavaServerCORSGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

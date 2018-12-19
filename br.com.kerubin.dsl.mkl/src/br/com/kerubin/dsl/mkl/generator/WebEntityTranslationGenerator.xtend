@@ -51,7 +51,16 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 	def void generateTranslationKeysForEntity(Entity entity, List<String> keys) {
 		keys.add('"' + entity.translationKey + '": "' + entity.labelValue + '"')
 		entity.slots.forEach[
-			keys.add('"' + it.translationKey + '": "' + it.labelValue + '"')
+			val key = it.translationKey
+			keys.add('"' + key + '": "' + it.labelValue + '"')
+			
+			// Trata as chaves de enumeração.
+			if (it.isEnum) {
+				val enumerarion = it.asEnum
+				enumerarion.items.forEach[ enumItem |
+					keys.add('"' + key + '_' + enumItem.name.toLowerCase  + '": "' + enumItem.valueStr ?: it.name + '"')
+				]
+			}
 		]
 	}
 	

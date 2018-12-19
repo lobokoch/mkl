@@ -14,6 +14,7 @@ import br.com.kerubin.dsl.mkl.model.UUIDType
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import org.eclipse.xtend2.lib.StringConcatenation
+import br.com.kerubin.dsl.mkl.model.EnumType
 
 class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -84,6 +85,8 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityName + ';')
 		}
 		else if (slot.isEnum) { 
+			entity.addImport('import javax.persistence.EnumType;')
+			entity.addImport('import javax.persistence.Enumerated;')
 			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
 		}
 		
@@ -129,6 +132,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«IF !isOneToOne»
 		@Id
 		«ENDIF»
+		«ENDIF»
+		«IF slot.isEnum»
+		«IF EnumType.ORDINAL.equals(slot.enumType)»@Enumerated(EnumType.ORDINAL)«ELSE»@Enumerated(EnumType.STRING)«ENDIF»
 		«ENDIF»
 		«IF slot.hasRelationship»
 		«slot.getRelationAnnotation(entity)»

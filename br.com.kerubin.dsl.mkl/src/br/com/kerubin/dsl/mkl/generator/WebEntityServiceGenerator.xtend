@@ -209,7 +209,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			    if («VAR_FILTER».sortField) {
 			      // search/nameStartsWith?name=K&sort=name,desc
 			      const sortField = «VAR_FILTER».sortField;
-			      const sortValue = `${sortField.field},${sortField.order === 0 ? 'asc' : 'desc'}`;
+			      const sortValue = `${sortField.field},${sortField.order > 0 ? 'asc' : 'desc'}`;
 			      params.set('sort', sortValue);
 			    }
 			

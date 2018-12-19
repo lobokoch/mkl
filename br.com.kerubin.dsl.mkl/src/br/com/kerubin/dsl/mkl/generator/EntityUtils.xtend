@@ -38,6 +38,9 @@ class EntityUtils {
 	public static val UNKNOWN = '<UNKNOWN>'
 	public static val I18N_DEF = 'pt-br.json'
 	public static val I18N_PATH_NAME = 'i18n'
+	public static val ENUMS_PATH_NAME = 'enums'
+	public static val NAVBAR = 'navbar'
+	public static val NAVBAR_SELECTOR_NAME = 'app-' + NAVBAR
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -317,6 +320,14 @@ class EntityUtils {
 		'app.component'
 	}
 	
+	def static toWebNavbarComponentName() {
+		'navbar.component'
+	}
+	
+	def static toWebNavbarClassName() {
+		'NavbarComponent'
+	}
+	
 	def static toWebAppModuleName() {
 		'app.module'
 	}
@@ -348,6 +359,11 @@ class EntityUtils {
 	
 	def static toEntityWebComponentClassName(Entity entity) {
 		entity.toDtoName + 'Component'
+	}
+	
+	def static toEnumModelName(Service service) {
+		val name = service.domain.webName + '-' + service.name.webName + '-enums.model'
+		name
 	}
 	
 	def static toEntityWebModelNameWithPah(Entity ownerEntity, Slot slot) {
@@ -438,6 +454,10 @@ class EntityUtils {
 		entity.name.toFirstUpper
 	}
 	
+	def static toDtoName(Enumeration enumeration) {
+		enumeration.name.toFirstUpper
+	}
+	
 	def static isSameEntity(Entity a, Entity b) {
 		if (a === null && b === null) {
 			return true
@@ -505,7 +525,13 @@ class EntityUtils {
 	}
 	
 	def static getWebDropdownOptions(Slot slot) {
-		slot.fieldName + 'Options'
+		val name = slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'Options'
+		name
+	}
+	
+	def static getWebDropdownOptionsInitializationMethod(Slot slot) {
+		val name = 'initialize' + slot.webDropdownOptions.toFirstUpper
+		name
 	}
 	
 	def static getIsNotNull_isNullLabel(Slot slot, int index) {
@@ -542,6 +568,10 @@ class EntityUtils {
 	
 	def static getWebAutoCompleteSuggestions(Slot slot) {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoCompleteSuggestions'
+	}
+	
+	def static getWebAutoCompleteFieldConverter(Slot slot) {
+		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoCompleteFieldConverter'
 	}
 	
 	def static getWebAutoCompleteMethod(Slot slot) {

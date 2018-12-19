@@ -97,8 +97,8 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		else if (slot.isEnum) { 
-			entity.addImport("import { " + slot.asEnum.name.toFirstUpper + " } from './" + dtoModel + "';")
-			// entity.addImport('import ' + slot.asEnum.enumPackage + ';')
+			val slotAsEnum = slot.asEnum
+			entity.addImport('''import { «slotAsEnum.toDtoName» } from '«service.serviceWebEnumsPathName»';''')
 		}
 		
 		'''
@@ -177,7 +177,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		  constructor(field: string, order: number) {
 		    this.field = field;
-		    this.order = order = 0;
+		    this.order = order;
 		  }
 		}
 		'''

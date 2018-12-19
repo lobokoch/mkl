@@ -5,6 +5,8 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.ModelFactory
 
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+
 class ServiceBoosterImpl implements ServiceBooster {
 	
 	Service service
@@ -16,10 +18,19 @@ class ServiceBoosterImpl implements ServiceBooster {
 	}
 	
 	private def augmentEntities(Iterable<Entity> entities) {
-		entities.forEach[addEntityDefaultAutoComplete]
+		entities.forEach[augmentEntity]
+		entities.forEach[hideEntityIds]
 	}
 	
-	private def void addEntityDefaultAutoComplete(Entity entity) {
+	private def void hideEntityIds(Entity entity) {
+		if (entity.id.hidden === null) {
+			entity.id.hidden = true
+		}
+	}
+	
+	private def void augmentEntity(Entity entity) {
+		val entityHasAutoComplete = entity.hasAutoComplete;
+		
 		if (! entity.id.hasAutoComplete) {
 			entity.id.createAutoCompleteOnlyResutForSlot
 		}
@@ -28,9 +39,22 @@ class ServiceBoosterImpl implements ServiceBooster {
 			entity.id.createGridHiddenForSlot
 		}
 		
-		val slot = entity.firstSlot
-		if (!slot.hasAutoComplete && slot !== entity.id) {
-			slot.createAutoCompleteForSlot
+		if (! entity.id.hasLabel) {
+			entity.id.label = "#id"
+		}
+		
+		// If an entity slot doesn't has a label, it takes the label from his entity definition.
+		entity.slots.filter[isEntity].forEach[
+			if (!it.hasLabel) {
+				it.label = it.asEntity.label
+			}
+		]
+		
+		if (!entityHasAutoComplete) {
+			val slot = entity.slots.findFirst[it.isString]
+			if (slot !== null) {
+				slot.createAutoCompleteForSlot
+			}
 		}
 	}
 	

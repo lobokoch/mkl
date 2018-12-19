@@ -66,6 +66,8 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		// Kerubin begin
 		«generateAppImports»
+		
+		import { NavbarComponent } from './navbar/navbar.component';
 		// Kerubin end
 		
 		registerLocaleData(localePt, 'pt', localeExtraPT);
@@ -88,7 +90,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 			«generateRoutes»
 			// Kerubin Begin
 		  
-		  { path: 'mainmenu', component: MainMenuComponent }
+		  { path: 'mainmenu', component: ContaPagarListComponent }
 		];
 		
 		
@@ -97,6 +99,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		  declarations: [
 		    // Kerubin Begin
 		    «generateEntitiesNgModuleDeclarations»
+		    «toWebNavbarClassName»,
 		    // Kerubin Begin
 		    AppComponent
 		  ],
@@ -131,7 +134,9 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		  	// Kerubin Begin
 		  	«generateEntitiesServiceProvidersDeclaration»
 		  	«service.toTranslationServiceClassName»,
+		  	
 		  	// Kerubin End
+		  	
 		    MessageService,
 		    ConfirmationService,
 		    { provide: LOCALE_ID, useValue: 'pt' },

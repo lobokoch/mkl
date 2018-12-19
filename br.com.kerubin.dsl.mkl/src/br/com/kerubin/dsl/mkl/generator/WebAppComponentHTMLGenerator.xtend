@@ -25,6 +25,7 @@ class WebAppComponentHTMLGenerator extends GeneratorExecutor implements IGenerat
 	
 	def CharSequence generateAppComponent() {
 		'''
+		<«NAVBAR_SELECTOR_NAME»></«NAVBAR_SELECTOR_NAME»>
 		
 		<router-outlet></router-outlet>
 		

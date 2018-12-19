@@ -140,6 +140,7 @@ class Slot extends Element {
 	boolean parent
 	boolean many
 	boolean indexed
+	Boolean hidden
 	
 	boolean lookupKey
     boolean lookupResult
@@ -153,9 +154,18 @@ class Slot extends Element {
 	
 	String help
 	String label
+	String mask
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean isHiddenSlot() {
+		hidden !== null && hidden
+	}
+	
+	op boolean hasMask() {
+		return mask !== null && !mask.trim.isEmpty
+	}
 	
 	op boolean isShowOnGrid() {
 		return !hasGrid || !grid.isSlotIsHidden 
@@ -167,6 +177,10 @@ class Slot extends Element {
 	
 	op boolean isOrderedOnGrid() {
 		return !hasGrid || !grid.isSlotIsUnordered
+	}
+	
+	op boolean hasLabel() {
+		return label !== null && !label.trim.isEmpty
 	}
 	
 	op boolean hasGrid() {

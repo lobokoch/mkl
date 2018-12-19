@@ -27,8 +27,8 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateEntityRepository(Entity entity) {
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
-		val autoCompleteKeySlots = entity.slots.filter[it.isAutoCompleteResult]
-		val hasAutoComplete = !autoCompleteKeySlots.isEmpty
+		val autoCompleteSlots = entity.slots.filter[it.hasAutoComplete]
+		val hasAutoComplete = !autoCompleteSlots.isEmpty
 		
 		'''
 		package «entity.package»;
@@ -50,7 +50,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
 			«IF hasAutoComplete»
 			
-			@Query("«entity.generateAutoCompleteSQL(autoCompleteKeySlots.filter[it.isAutoCompleteResult], autoCompleteKeySlots.filter[it.isAutoCompleteKey])»")
+			@Query("«entity.generateAutoCompleteSQL(autoCompleteSlots.filter[it.isAutoCompleteResult], autoCompleteSlots.filter[it.isAutoCompleteKey])»")
 			Collection<«entity.toAutoCompleteName»> autoComplete(@Param("query") String query);
 			«ENDIF»
 			«IF entity.hasListFilterMany»

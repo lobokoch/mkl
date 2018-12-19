@@ -5,6 +5,7 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Service
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
+import br.com.kerubin.dsl.mkl.model.Enumeration
 
 abstract class BaseGenerator {
 	
@@ -13,6 +14,7 @@ abstract class BaseGenerator {
 	protected Service service
 	protected Configuration configuration
 	protected Iterable<Entity> entities
+	protected Iterable<Enumeration> enums
 	
 	ServiceBooster serviceBooster
 	
@@ -23,6 +25,7 @@ abstract class BaseGenerator {
 		service = resource.allContents.filter(Service).head
 		configuration = service.configuration
 		entities = service.elements.filter(Entity)
+		enums = service.elements.filter(Enumeration)
 		
 		injectServiteBooster();
 		serviceBooster.augmentService(service)

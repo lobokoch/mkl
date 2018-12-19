@@ -43,6 +43,10 @@ class GeneratorExecutor {
 		baseGenerator.entities
 	}
 	
+	def getEnums() {
+		baseGenerator.enums
+	}
+	
 	def String getBasePackage() {
 		service.configuration.groupId
 	}
@@ -64,6 +68,19 @@ class GeneratorExecutor {
 		val fullPath = path.webDir
 		fullPath
 	}
+	
+	def String getWebServiceEnumPath(Service service) {
+		val path = service.servicePath + ENUMS_PATH_NAME + '/'
+		val fullPath = path.webDir
+		fullPath
+	}
+	
+	def String getWebServiceNavbarPath(Service service) {
+		val path = service.servicePath + NAVBAR + '/'
+		val fullPath = path.webDir
+		fullPath
+	}
+
 	
 	def String getWebEntityPath(Entity entity) {
 		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
@@ -106,6 +123,16 @@ class GeneratorExecutor {
 	
 	def String getServiceWebTranslationComponentPathName(Service service) {
 		val path = serviceWebTranslationComponentPath + service.toTranslationServiceName
+		path
+	}
+	
+	def String getServiceWebEnumsPath() {
+		val path = './../' + ENUMS_PATH_NAME + '/'
+		path
+	}
+	
+	def String getServiceWebEnumsPathName(Service service) {
+		val path = serviceWebEnumsPath + service.toEnumModelName
 		path
 	}
 	
