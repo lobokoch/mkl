@@ -3,7 +3,7 @@
    <feature id="br.com.kerubin.dsl.mkl.feature" version="0.0.0">
       <category name="main"/>
    </feature>
-   <bundle id="br.com.kerubin.dsl.mkl.model" version="1.0.0.qualifier">
+   <bundle id="br.com.kerubin.dsl.mkl.model" version="1.0.0">
       <category name="main"/>
    </bundle>
    <category-def name="main" label="Mkl">

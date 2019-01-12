@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>br.com.kerubin.dsl.mkl</groupId>
 		<artifactId>br.com.kerubin.dsl.mkl.parent</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>1.0.0</version>
 	</parent>
 	<artifactId>br.com.kerubin.dsl.mkl.target</artifactId>
 	<packaging>eclipse-target-definition</packaging>

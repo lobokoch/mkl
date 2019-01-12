@@ -1,7 +1,8 @@
 .classpath
 .project
 .settings/
-target/
+*/target/*
+!*/target/repository/
 bin/
 src-gen/
 xtend-gen/
