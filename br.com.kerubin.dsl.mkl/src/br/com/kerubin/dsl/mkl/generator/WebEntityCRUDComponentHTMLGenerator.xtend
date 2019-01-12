@@ -101,7 +101,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
 		<div class="ui-g-12">
-			<h1>«entity.translationKey.transpationKeyFunc»</h1>
+			<h1>«entity.translationKey.translationKeyFunc»</h1>
 		</div>
 		'''
 	}

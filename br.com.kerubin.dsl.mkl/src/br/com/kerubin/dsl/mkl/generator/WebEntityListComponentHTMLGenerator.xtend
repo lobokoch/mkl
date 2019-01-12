@@ -82,9 +82,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            	«slots.map[slot |
 		            	'''
 	            		«IF slot.isOrderedOnGrid»
-	            			<th [pSortableColumn]="'«slot.fieldName»'">«slot.transpationKeyFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
+	            			<th [pSortableColumn]="'«slot.fieldName»'">«slot.translationKeyFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
 	            		«ELSE»
-	            			<th>«slot.transpationKeyFunc»</th>
+	            			<th>«slot.translationKeyFunc»</th>
 	            		«ENDIF»
 		            	'''
 		            ].join»
@@ -177,7 +177,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«ELSEIF slot.isEntity»
 			{{«fieldName»?.«slot.asEntity.slots.tail?.head?.fieldName ?: slot.asEntity.id.fieldName»}}
 			«ELSEIF slot.isEnum»
-			Enums not suported yeat :(
+			«slot.getTranslationKeyFunc(fieldName + '.toLowerCase()')»
 			«ELSE»
 			{{«fieldName»}}
 			«ENDIF»
@@ -333,7 +333,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
 		<div>
-			<h1>«entity.translationKey.transpationKeyFunc»</h1>
+			<h1>«entity.translationKey.translationKeyFunc»</h1>
 		</div>
 		'''
 	}

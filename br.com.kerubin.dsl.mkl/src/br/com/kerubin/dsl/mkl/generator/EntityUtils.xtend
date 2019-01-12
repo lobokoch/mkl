@@ -270,7 +270,7 @@ class EntityUtils {
 	}
 	
 	def static String getWebLabel(Slot slot) {
-		var label = if (slot.hasWebLabel) slot.web.label else slot.translationKey.transpationKeyFunc.toString
+		var label = if (slot.hasWebLabel) slot.web.label else slot.translationKey.translationKeyFunc.toString
 		label
 	}
 	
@@ -299,13 +299,18 @@ class EntityUtils {
 		key
 	}
 	
-	def static CharSequence getTranspationKeyFunc(String key) {
+	def static CharSequence getTranslationKeyFunc(String key) {
 		'''{{ getTranslation('«key»') }}'''
 	}
 	
-	def static CharSequence getTranspationKeyFunc(Slot slot) {
+	def static CharSequence getTranslationKeyFunc(Slot slot) {
 		val key = slot.translationKey
 		'''{{ getTranslation('«key»') }}'''
+	}
+	
+	def static CharSequence getTranslationKeyFunc(Slot slot, String suffix) {
+		val key = slot.translationKey
+		'''{{ getTranslation('«key»' + '_' + «suffix») }}'''
 	}
 	
 	def static toEntityWebCRUDComponentName(Entity entity) {
