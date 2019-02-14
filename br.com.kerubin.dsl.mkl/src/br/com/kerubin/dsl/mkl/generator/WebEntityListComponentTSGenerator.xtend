@@ -59,6 +59,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «it.toAutoCompleteClassName» } from './«entity.toEntityWebModelName»';''')
 		]
 		
+		entity.slots.filter[it.isEntity].forEach[
+			val slotAsEntity = it.asEntity
+			imports.newLine
+			//imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
+			//imports.add('''import { «slotAsEntity.toDtoName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+			imports.add('''import { «slotAsEntity.toAutoCompleteName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+		]
+		
 		val component = entity.toEntityWebListComponentName
 		
 		val body = '''
@@ -76,7 +84,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«listFilterNameVar» = new «listFilterNameVar.toFirstUpper»();
 			
 			«IF !filterSlots.empty»
-			«filterSlots.generateFilterSlotsInitialization»
+			«filterSlots.generateFilterSlotsInitializationVars»
 			dateFilterIntervalDropdownItems: SelectItem[];
 			«ENDIF»
 			
@@ -96,10 +104,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			ngOnInit() {
 		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
 				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
-					this.initializeDateFilterIntervalDropdownItems();
-				«filterSlots.filter[it.isBetween && it.isDate].map[
-					'''	this.«it.toIsBetweenOptionsOnClickMethod»(null);'''
-				].join('\r\n')»
+				this.initializeDateFilterIntervalDropdownItems();
+				«filterSlots.filter[it.isBetween && it.isDate].map['''this.«it.toIsBetweenOptionsOnClickMethod»(null);'''].join»
+				«ENDIF»
+				«IF !filterSlots.empty»
+				«filterSlots.generateFilterSlotsInitialization»
 				«ENDIF»
 			    // this.«fieldName» = new «dtoName»();
 		        // this.contaPagar.dataPagamento = moment().toDate();
@@ -149,6 +158,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«filterSlots.filter[isListFilterMany].map[generateAutoCompleteMethod].join»
 			
+			«entity.slots.filter[isEntity].map[generateAutoCompleteFieldConverter].join»
+			
 			«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 			private initializeDateFilterIntervalDropdownItems() {
 				this.dateFilterIntervalDropdownItems = [
@@ -192,6 +203,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence generateAutoCompleteMethod(Slot slot) {
 		val entity = slot.ownerEntity
+		
 		'''
 		«slot.webAutoCompleteMethod»(event) {
 		    const query = event.query;
@@ -203,6 +215,25 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		      this.showError('Erro ao buscar registros com o termo: ' + query);
 		    });
 		}
+		
+		'''
+	}
+	
+	def CharSequence generateAutoCompleteFieldConverter(Slot slot) {
+		val entity = slot.asEntity
+		
+		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id]
+		if (resultSlots.isEmpty) {
+			resultSlots = entity.slots.filter[it.autoCompleteResult]
+		}
+		
+		'''
+		«IF !resultSlots.isEmpty»
+		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
+			return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+		}
+		
+		«ENDIF»
 		'''
 	}
 	
@@ -299,13 +330,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 	}
 	
-	def CharSequence generateFilterSlotsInitialization(Iterable<Slot> slots) {
+	def CharSequence generateFilterSlotsInitializationVars(Iterable<Slot> slots) {
 		'''
-		«slots.map[generateFilterSlotInitialization].join»
+		«slots.map[generateFilterSlotInitializationVars].join»
 		'''
 	}
 	
-	def CharSequence generateFilterSlotInitialization(Slot slot) {
+	def CharSequence generateFilterSlotInitializationVars(Slot slot) {
+		
 		val isNotNull = slot.isNotNull
 			
 		val isNull = slot.isNull
@@ -328,7 +360,46 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		«ELSEIF isBetween»
 		
 		«IF slot.isDate»
-		«slot.toIsBetweenOptionsSelected»: SelectItem = {label: 'Esta semana', value: '2'};
+		«slot.toIsBetweenOptionsSelected»: SelectItem = {label: 'Este ano', value: '6'};
+		«ELSE»
+		«ENDIF»
+		
+		«ENDIF»
+		'''
+	}
+	
+	def CharSequence generateFilterSlotsInitialization(Iterable<Slot> slots) {
+		'''
+		«slots.map[generateFilterSlotInitialization].join»
+		'''
+	}
+	
+	def CharSequence generateFilterSlotInitialization(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		val isNotNull = slot.isNotNull
+			
+		val isNull = slot.isNull
+			
+		val isMany = isMany(slot)
+		
+		val isBetween = slot.isBetween 
+			
+		'''
+		«IF isMany»
+		«ELSEIF isNotNull || isNull»
+		
+		«IF isNotNull»
+		this.«entity.toEntityListFilterName».«slot.isNotNullFieldName» = «IF slot.getIsNotNull_isNullSelected === 0»true;«ELSE»false;«ENDIF»
+		«ENDIF»
+		
+		«IF isNull»
+		this.«entity.toEntityListFilterName».«slot.isNullFieldName» = «IF slot.getIsNotNull_isNullSelected === 1»true;«ELSE»false;«ENDIF»
+		«ENDIF»
+		
+		«ELSEIF isBetween»
+		
+		«IF slot.isDate»
 		«ELSE»
 		«ENDIF»
 		

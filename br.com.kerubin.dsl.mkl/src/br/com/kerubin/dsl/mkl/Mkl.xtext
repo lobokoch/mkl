@@ -126,7 +126,7 @@ ListFilter:
 ;
 
 FilterOperator:
-	filterOperatorEnum = FilterOperatorEnum ':' label = STRING
+	filterOperatorEnum = FilterOperatorEnum ':' label = STRING ('default' ':' def=STRING)?
 ;
 
 enum FilterOperatorEnum:

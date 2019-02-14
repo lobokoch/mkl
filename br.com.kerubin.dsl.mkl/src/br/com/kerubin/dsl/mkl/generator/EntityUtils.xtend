@@ -545,6 +545,20 @@ class EntityUtils {
 		label
 	}
 	
+	def static getIsNotNull_isNullSelected_OLD(Slot slot) {
+		val index = 2 // xxx;yyy;0|1
+		var label = slot?.listFilter?.filterOperator?.label
+		label = getLabelValueByIndex(label, slot.name.toFirstUpper, index)
+		val selectedIndex = try { Integer.parseInt(label.trim) } catch(Exception e) { 0 }
+		selectedIndex
+	}
+	
+	def static getIsNotNull_isNullSelected(Slot slot) {
+		var def = slot?.listFilter?.filterOperator?.def
+		val value = if ('isNotNull'.equalsIgnoreCase(def)) 0 else 1
+		value
+	}
+	
 	def static getFilterIsBetweenLabel(Slot slot, int index) {
 		var label = slot?.listFilter?.filterOperator?.label
 		label = getLabelValueByIndex(label, slot.name.toFirstUpper, index)

@@ -175,7 +175,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«ELSEIF slot.isMoney»
 			{{«fieldName» | currency:'BRL':'symbol':'1.2-2':'pt' }}
 			«ELSEIF slot.isEntity»
-			{{«fieldName»?.«slot.asEntity.slots.tail?.head?.fieldName ?: slot.asEntity.id.fieldName»}}
+			{{«slot.webAutoCompleteFieldConverter»(«fieldName»)}}
 			«ELSEIF slot.isEnum»
 			«slot.getTranslationKeyFunc(fieldName + '.toLowerCase()')»
 			«ELSE»
