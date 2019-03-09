@@ -75,6 +75,10 @@ class EntityUtils {
 		name.replace('_', '').splitByCharacterTypeCamelCase.map[toLowerCase].join('_')
 	}
 	
+	def static toConstantName(String name) {
+		name.replace('_', '').splitByCharacterTypeCamelCase.map[toUpperCase].join('_')
+	}
+	
 	def static getDatabaseName(Slot slot) {
 		slot.alias.getDatabaseName
 	}
@@ -128,6 +132,13 @@ class EntityUtils {
 	def static String toJavaTypeDTO(Slot slot) {
 		if (slot.isDTOLookupResult) {
 			return slot.asEntity.toEntityLookupResultDTOName
+		}
+		toJavaType(slot, false)
+	}
+	
+	def static String toJavaTypeForEntityEvent(Slot slot) {
+		if (slot.isEntity) { // returns the entity id
+			return toJavaType(slot.asEntity.id, false)
 		}
 		toJavaType(slot, false)
 	}
@@ -493,12 +504,20 @@ class EntityUtils {
 		entity.fieldName + 'ListItems'
 	}
 	
+	def static getPublishSlots(Entity entity) {
+		entity.slots.filter[it.isPublish]
+	}
+	
 	def static toEntityWebListItemsTotalElements(Entity entity) {
 		entity.fieldName + 'ListTotalElements'
 	}
 	
 	def static toEntityListFilterPredicateName(Entity entity) {
 		entity.name.toFirstUpper + 'ListFilterPredicate'
+	}
+	
+	def static toEntityDomainEventTypeName(Entity entity) {
+		'DomainEvent'
 	}
 	
 	def static toEntityListListMethod(Entity entity) {
@@ -554,7 +573,7 @@ class EntityUtils {
 	}
 	
 	def static getIsNotNull_isNullSelected(Slot slot) {
-		var def = slot?.listFilter?.filterOperator?.def
+		var def = slot?.listFilter?.filterOperator?.def ?: null
 		val value = if ('isNotNull'.equalsIgnoreCase(def)) 0 else 1
 		value
 	}
@@ -619,6 +638,40 @@ class EntityUtils {
 	def static toTranslationServiceVarName(Service service) {
 		val name = service.domain.toFirstLower + service.name.toFirstUpper + 'TranslationService'
 		name
+	}
+	
+	def static toEntityEventName(Entity entity) {
+		entity.toDtoName + 'Event'
+	}
+	
+	def static toEntityEventConstantName(Entity entity, String eventName) {
+		entity.toDtoName.toConstantName + '_' + eventName.toUpperCase
+	}
+	
+	def static generateConstructor(String className, Iterable<Slot> slots, boolean noArgsConstructor, boolean allArgsConstructor) {
+		'''
+		«IF noArgsConstructor»
+		
+		public «className»() {
+			
+		}
+		«ENDIF»
+		«IF allArgsConstructor»
+		
+		public «className»(«slots.map[it.buildFieldAndType].join(', ')») {
+			«slots.map[it.buildFieldThis].join('\n')»
+		}
+		«ENDIF»
+		'''
+	}
+	
+	def static String buildFieldThis(Slot slot) {
+		val fileName = slot.name.toFirstLower
+		'''this.«fileName» = «fileName»;'''.toString
+	}
+	
+	def static String buildFieldAndType(Slot slot) {
+		'''«slot.toJavaTypeForEntityEvent» «slot.name.toFirstLower»'''.toString
 	}
 	
 	def static toAutoCompleteClassName(Entity entity) {
@@ -799,6 +852,14 @@ class EntityUtils {
 	
 	def static toServiceName(Entity entity) {
 		entity.name.toFirstUpper + "Service"
+	}
+	
+	def static toSubscriberEventRabbitConfigName(Entity entity) {
+		entity.name.toFirstUpper + "SubscriberEventRabbitConfig"
+	}
+	
+	def static toSubscriberEventHandlerName(Entity entity) {
+		entity.name.toFirstUpper + "SubscriberEventHandler"
 	}
 	
 	def static toServiceImplName(Entity entity) {

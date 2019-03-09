@@ -123,7 +123,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		'''
 		«IF slot == entity.id»
-		«IF slot.isUUID && !isOneToOne && !entity.isExternal»
+		«IF slot.isUUID && !isOneToOne && !entity.isExternalEntity»
 		«entity.addImport('import javax.persistence.GeneratedValue;')»
 		«entity.addImport('import org.hibernate.annotations.GenericGenerator;')»
 		@GeneratedValue(generator = "uuid2")

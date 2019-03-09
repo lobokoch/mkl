@@ -87,8 +87,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val repositoryVar = entity.toRepositoryName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
-		val actualEntityVar = 'actual' + entityName
 		val getEntityMethod = 'get' + entityName
+		val publishSlots = entity.getPublishSlots
+		val entityEventName = entity.toEntityEventName
 		
 		'''
 		package «entity.package»;
@@ -98,6 +99,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import org.springframework.data.domain.Page;
 		import org.springframework.data.domain.Pageable;
 		import org.springframework.stereotype.Service;
+		import org.springframework.transaction.annotation.Transactional;
 		
 		import com.querydsl.core.types.Predicate;
 		
@@ -105,7 +107,15 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		«IF entity.hasAutoComplete»
 		import java.util.Collection;
 		«ENDIF»
+		«IF entity.hasPublishEntityEvents»
+		import br.com.kerubin.api.messaging.core.DomainEntityEventsPublisher;
+		import br.com.kerubin.api.messaging.core.DomainEvent;
+		import br.com.kerubin.api.messaging.core.DomainEventEnvelope;
+		import br.com.kerubin.api.messaging.core.DomainEventEnvelopeBuilder;
+		«service.getImportServiceConstants»
+		«ENDIF»
 		
+		@Transactional
 		@Service
 		public class «entity.toServiceImplName» implements «entity.toServiceName» {
 			
@@ -115,8 +125,19 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Autowired
 			private «entity.toEntityListFilterPredicateName» «entity.toEntityListFilterPredicateName.toFirstLower»;
 			
+			«IF entity.hasPublishEntityEvents»
+			@Autowired
+			DomainEntityEventsPublisher publisher;
+			«ENDIF»
+			
 			public «entityName» create(«entityName» «entityVar») {
+				«IF !entity.hasPublishCreated»
 				return «repositoryVar».save(«entityVar»);
+				«ELSE»
+				«entityName» entity = «repositoryVar».save(«entityVar»);
+				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('created')»);
+				return entity;
+				«ENDIF»
 			}
 			
 			public «entityName» read(«idType» «idVar») {
@@ -124,14 +145,39 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
-				«entityName» «actualEntityVar» = «getEntityMethod»(«idVar»);
-				BeanUtils.copyProperties(«entityVar», «actualEntityVar», "«entity.id.name»");
-				return «repositoryVar».save(«actualEntityVar»);
+				«entityName» entity = «getEntityMethod»(«idVar»);
+				BeanUtils.copyProperties(«entityVar», entity, "«entity.id.name»");
+				entity = «repositoryVar».save(entity);
+				
+				«IF entity.hasPublishUpdated»
+				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('updated')»);
+				
+				«ENDIF»
+				return entity;
 			}
 			
 			public void delete(«idType» «idVar») {
 				«repositoryVar».deleteById(«idVar»);
+				
+				«IF entity.hasPublishDeleted»
+				«entityName» entity = new «entityName»();
+				«entity.id.buildMethodSet('entity', idVar)»;
+				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('deleted')»);
+				«ENDIF»
 			}
+			
+			«IF entity.hasPublishEntityEvents»
+			private void publishEvent(«entityName» entity, String eventName) {
+				«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', ')»);
+				DomainEventEnvelope<DomainEvent> envelope = DomainEventEnvelopeBuilder
+						.getBuilder(eventName, event)
+						.domain(«service.toServiceConstantsName».DOMAIN)
+						.service(«service.toServiceConstantsName».SERVICE)
+						.build();
+				
+				publisher.publish(envelope);
+			}
+			«ENDIF»
 			
 			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
 				Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName.toFirstLower»);
@@ -159,6 +205,30 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 		}
 		'''
+	}
+	
+	def CharSequence buildPublishEvent(Entity entity, String eventName) {
+		val publishSlots = entity.getPublishSlots
+		val entityEventName = entity.toEntityEventName
+		'''
+		«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', ')»);
+		DomainEventEnvelope<DomainEvent> envelope = DomainEventEnvelopeBuilder
+				.getBuilder(«entityEventName».«entity.toEntityEventConstantName('created')», event)
+				.domain(«service.toServiceConstantsName».DOMAIN)
+				.service(«service.toServiceConstantsName».SERVICE)
+				.build();
+		
+		publisher.publish(envelope);
+		'''
+	}
+	
+	def CharSequence buildSlotGet(Slot slot) {
+		var result = ''
+		if (slot.isEntity)
+			result = 'entity'.buildMethodGetEntityId(slot)
+		else
+			result = 'entity'.buildMethodGet(slot)
+		result
 	}
 	
 	def CharSequence generateListFilterAutoCompleteImpl(Slot slot) {

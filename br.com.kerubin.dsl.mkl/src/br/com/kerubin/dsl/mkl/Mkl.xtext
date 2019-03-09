@@ -9,17 +9,33 @@ DomainModel:
  ; 
 
 Service:
-	'microservice' Name '{'
-		configuration=Configuration
-		(elements+=(Entity | PublicObject | Enumeration)*)
+	('service' | 'microservice') Name '{'
+		( 
+			(configuration=Configuration)? &
+			(dependencies+=MavenDependency)? & 
+			(elements+=(Entity | PublicObject | Enumeration)*) 
+		)
 	'}'
 ;
 
-Configuration:
-	'config' '{' 
+MavenDependency:
+	'dependency' '{'
 		'groupId' ':' groupId=STRING
+		'artifactId' ':' artifactId=STRING
 		'version' ':' version=STRING
-		'cloudConfigUri' ':' cloudConfigUri=STRING
+	'}' 
+;
+
+Configuration:
+	'config' '{'
+	(
+		('groupId' ':' groupId=STRING) &
+		('version' ':' version=STRING) &
+		('servicePort' ':' servicePort=INT) & 
+		('cloudConfigUri' ':' cloudConfigUri=STRING) &
+		('messaging' '{' 'version' ':' messagingVersion=STRING '}')
+	)
+		
 	'}'
 ;
 
@@ -43,7 +59,9 @@ EnumItem:
 
 Entity:
 	(
-		(externalObject=ExternalObject)? & 
+		(externalEntity?='@externalEntity')? &
+		(subscribeEntityEvents=SubscribeEntityEvents)? & 
+		(publishEntityEvents=PublishEntityEvents)? & 
 		(enableReplication?='@enableReplication')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
@@ -57,8 +75,27 @@ Entity:
 	'}'
 ;
 
-ExternalObject:
-	external?='@external' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ')'
+SubscribeEntityEvents:
+	'@subscribe' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ',' 'events' '=' '[' events=CudEvents ']' ')'
+;
+
+PublishEntityEvents:
+{PublishEntityEvents}
+	'@publish' ('(' 'events' '=' '[' events=CudEvents ']' ')')?
+;
+
+CudEvents:
+{CudEvents}
+		(cud?='cud') | 
+		(
+			(created?='created') |
+			(created?='created' ',' updated?='updated') |
+			(created?='created' ',' updated?='updated' ',' deleted?='deleted') |
+			(updated?='updated') |
+			(updated?='updated' ',' deleted?='deleted') |
+			(updated?='created' ',' deleted?='deleted') |
+			(deleted?='deleted') 
+		)
 ;
 
 PublicObject:
@@ -92,6 +129,7 @@ Slot:
 			('label' ':' label=STRING)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
+			(publish ?= 'publish')? &
 			(grid = Grid)? &
 			(web = Web)? 
 		)

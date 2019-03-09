@@ -2,6 +2,7 @@ package br.com.kerubin.dsl.mkl.generator
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import br.com.kerubin.dsl.mkl.model.MavenDependency
 
 class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -36,21 +37,12 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		id
 	}
 	
-	/*def private getApplicationName() {
-		service.name.toLowerCase.replace("_", "-") + '-' + projectApplicationName
-	}*/
-	
 	def private getApplicationId() {
 		val result = mountName(newArrayList(service.domain, service.name, projectApplicationName))
 		result
-		//service.domain.toLowerCase.replace("_", "-") + '-' + service.name.toLowerCase.replace("_", "-") + '-' + projectApplicationName
 	}
 	
 	def private generateApplicationProject() {
-		//val MODULES_DIR = getModulesDir
-		//val PROJECT_APPLICATION = projectApplicationName
-		
-		//val pomFileName = MODULES_DIR + PROJECT_APPLICATION + '/pom.xml'
 		val pomFileName = 'pom.xml'
 		
 		if (fsa.isFile(pomFileName, MklOutputConfigurationProvider.OUTPUT_KEEPED)) {
@@ -65,10 +57,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		val appSourceFolder = applicationSourceFolder
 		val path = service.servicePackagePath
 		generateFileForApp(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
-		generateFileForApp(getApplicationResourcesFolder + 'bootstrap.yml', generateApplicationBootstrap())
+		generateFileForApp(getApplicationResourcesFolder + 'bootstrap.yml', generateResourceSpringBootApplicationBootstrap())
+		generateFileForApp(getApplicationResourcesFolder + 'application.yml', generateResourceSpringBootApplication())
 	}
 	
-	def generateApplicationBootstrap() {
+	def generateResourceSpringBootApplicationBootstrap() {
 		'''
 		spring:
 		  application:
@@ -76,6 +69,32 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		  cloud:
 		    config:
 		      uri: «service.configuration.cloudConfigUri»
+		'''
+	}
+	
+	def generateResourceSpringBootApplication() {
+		'''
+		server:
+		  port: «configuration.servicePort»
+		
+		spring:
+		    datasource:
+		        driver-class-name: org.postgresql.Driver
+		        username: postgres
+		        password: 'postgres'
+		        platform: PostgreSQL
+		        url: jdbc:postgresql://localhost:5432/«service.domain.toLowerCase»_«service.name.toLowerCase»
+		    jpa:
+		        database-platform: org.hibernate.dialect.PostgreSQLDialect
+		        generate-ddl: false
+		        hibernate:
+		            ddl-auto: none
+		        show-sql: true
+		    rabbitmq:
+		        port: 5672
+		        username: admin
+		        password: admin
+		        host: localhost
 		'''
 	}
 	
@@ -159,6 +178,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<artifactId>spring-boot-starter-test</artifactId>
 					<scope>test</scope>
 				</dependency>
+				«buildMessagingDependency»
 			</dependencies>
 			
 			<!--
@@ -244,8 +264,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		          <groupId>com.querydsl</groupId>
 		          <artifactId>querydsl-jpa</artifactId>
 		        </dependency>
-		       
-		        
+		        «buildMessagingDependency»
+				<!-- Begin Entity Dependencies -->
+				«service?.dependencies.map[buildEntityMavenDependency]?.join»
+				<!-- End Entity Dependencies -->
 		    </dependencies>
 		    <build>
 		        <plugins>
@@ -337,6 +359,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		    		<groupId>org.springframework.boot</groupId>
 		    		<artifactId>spring-boot-starter-web</artifactId>
 		    	</dependency>
+		    	«buildMessagingDependency»
 		    </dependencies>
 		    <build>
 		        <defaultGoal>install</defaultGoal>
@@ -422,6 +445,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<spring-cloud.version>Finchley.RC1</spring-cloud.version>			
 				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>			
 				<querydsl.version>4.2.1</querydsl.version>			
+				<kerubin.messaging.version>«IF configuration.messagingVersion.isNotEmpty»«configuration.messagingVersion»«ELSE»0.0.1-SNAPSHOT«ENDIF»</kerubin.messaging.version>
+				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»			
 			</properties>
 			<modules>
 				<module>«projectClientName»</module>
@@ -467,6 +492,26 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 						<artifactId>querydsl-apt</artifactId>
 						<version>${querydsl.version}</version>
 					</dependency>
+					<dependency>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-starter-amqp</artifactId>
+					</dependency>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-core</artifactId>
+					</dependency>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-annotations</artifactId>
+					</dependency>
+					<dependency>
+						<groupId>com.fasterxml.jackson.core</groupId>
+						<artifactId>jackson-databind</artifactId>
+					</dependency>
+					«buildMessagingDependency(true)»
+					<!-- Begin Entity Dependencies -->
+					«service?.dependencies.map[buildEntityMavenDependency(true)]?.join»
+					<!-- End Entity Dependencies -->
 				</dependencies>
 			</dependencyManagement>
 			<build>
@@ -497,6 +542,40 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			</repositories>
 			
 		</project>
+		'''
+	}
+	
+	private def CharSequence buildMessagingDependency() {
+		buildMessagingDependency(false)
+	}
+	
+	private def CharSequence buildMessagingDependency(boolean withVersion) {
+		'''
+		<dependency>
+			<groupId>br.com.kerubin.api</groupId>
+			<artifactId>messaging</artifactId>
+			«IF withVersion»<version>${kerubin.messaging.version}</version>«ENDIF»
+		</dependency>
+		'''
+	}
+	
+	private def CharSequence buildEntityMavenDependency(MavenDependency dependency) {
+		dependency.buildEntityMavenDependency(false)
+	}
+	
+	private def CharSequence buildEntityMavenDependency(MavenDependency dependency, boolean withVersion) {
+		'''
+		<dependency>
+			<groupId>«dependency.groupId»</groupId>
+			<artifactId>«dependency.artifactId»</artifactId>
+			«IF withVersion»<version>«dependency.versionFullKey»</version>«ENDIF»
+		</dependency>
+		'''
+	}
+	
+	private def CharSequence buildEntityMavenDependencyVersion(MavenDependency dependency) {
+		'''
+		<«dependency.versionKey»>«dependency.version»</«dependency.versionKey»>
 		'''
 	}
 	

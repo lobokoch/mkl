@@ -136,6 +136,13 @@ class GeneratorExecutor {
 		path
 	}
 	
+	def String getExternalServicePackage(Entity entity) {
+		val domainName = entity?.subscribeEntityEvents?.externalDomain
+		val serviceName = entity?.subscribeEntityEvents?.externalService
+		
+		basePackage + '.' + domainName?.removeUnderline + '.' + serviceName?.removeUnderline
+	}
+	
 	def String getServicePackage(Service service) {
 		basePackage + '.' + service.domain.removeUnderline + '.' + service.name.removeUnderline
 	}
@@ -146,6 +153,44 @@ class GeneratorExecutor {
 	
 	def String getImportPageResult(Service service) {
 		'import ' + service.packagePageResult + ".PageResult;"
+	}
+	
+	def String getServiceName(Service service) {
+		service.name.getNameExt
+	}
+	
+	def String getDomainName(Service service) {
+		service.domain.getNameExt
+	}
+	
+	def String getNameExt(String name) {
+		name.removeUnderline.toFirstUpper
+	}
+	
+	def String toExternalServiceConstantsName(Entity entity) {
+		val domainName = entity?.subscribeEntityEvents?.externalDomain
+		val serviceName = entity?.subscribeEntityEvents?.externalService
+		domainName?.getNameExt + serviceName?.getNameExt + "Constants"
+	}
+	
+	def String getImportExternalServiceConstants(Entity entity) {
+		'import ' + entity.getExternalServicePackage + '.' + entity.toExternalServiceConstantsName + ';'
+	}
+	
+	def String getImportExternalEntityEvent(Entity entity) {
+		'import ' + entity.getExternalEntityPakage + '.' + entity.toEntityEventName + ';'
+	}
+	
+	def String getExternalEntityPakage(Entity entity) {
+		entity.getExternalServicePackage + '.entity.' + entity.name.toLowerCase
+	}
+	
+	def String toServiceConstantsName(Service service) {
+		service.domainName + service.serviceName + "Constants"
+	}
+	
+	def String getImportServiceConstants(Service service) {
+		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
 	}
 	
 	def String getServicePackagePath(Service service) {

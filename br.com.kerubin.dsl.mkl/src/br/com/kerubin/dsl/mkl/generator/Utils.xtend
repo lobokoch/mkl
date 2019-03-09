@@ -136,4 +136,12 @@ class Utils {
 		var result = str.toLowerCase.replace('_', '')
 		result
 	}
+	
+	def static isNotEmpty(String value) {
+		value !== null && !value.trim.isEmpty
+	}
+	
+	def static isEmpty(String value) {
+		value === null || value.trim.isEmpty
+	}
 }

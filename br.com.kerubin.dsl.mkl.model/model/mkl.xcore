@@ -38,14 +38,31 @@ class Service extends Element {
 	
 	/*resolving*/ 
 	contains Configuration configuration
+	contains MavenDependency[] dependencies
 	contains ServiceElement[] elements opposite service
 	
+}
+
+class MavenDependency {
+	String groupId
+	String artifactId
+	String version
+	
+	op String getVersionKey() {
+		artifactId.replace('-', '.') + '.version'
+	}
+	
+	op String getVersionFullKey() {
+		'${' + getVersionKey + '}'
+	}
 }
 
 class Configuration {
 	String groupId
 	String version
+	int servicePort
 	String cloudConfigUri
+	String messagingVersion
 	
 }
 
@@ -94,10 +111,21 @@ abstract class ServiceObject extends ServiceElement {
 	
 }
 
-class ExternalObject {
-	boolean external
+class SubscribeEntityEvents {
 	String externalDomain
 	String externalService
+	contains CudEvents events
+}
+
+class PublishEntityEvents {
+	contains CudEvents events
+}
+
+class CudEvents {
+	boolean cud = 'false'
+	boolean created = 'false'
+	boolean updated = 'false'
+	boolean deleted = 'false'
 }
 
 
@@ -117,6 +145,23 @@ enum FilterOperatorEnum {
 class FilterOperator {
 	FilterOperatorEnum filterOperatorEnum
 	String label
+	String def //default
+	
+	op String getDefault() {
+		if (def !== null) {
+			return def			
+		}
+		
+		switch(FilterOperatorEnum) {
+			case FilterOperatorEnum.IS_NOT_NULL,
+			case FilterOperatorEnum.IS_NULL,
+			case FilterOperatorEnum.IS_NOT_NULL_IS_NULL: {
+				return FilterOperatorEnum.IS_NULL.literal
+			}
+			
+			default: return null
+		}
+	}
 }
 
 class ListFilter {
@@ -141,6 +186,7 @@ class Slot extends Element {
 	boolean many
 	boolean indexed
 	Boolean hidden
+	boolean publish = 'false'
 	
 	boolean lookupKey
     boolean lookupResult
@@ -312,7 +358,6 @@ abstract class Record extends Slotted {
 }
 
 class PublicObject extends Record, ServiceObject {
-	contains ExternalObject externalObject
 	ESet<String> _imports
 	
 	op void addImport(String import_) {
@@ -335,7 +380,58 @@ class Entity extends PublicObject {
 	boolean mapped
 	boolean baseRepository
 	boolean enableReplication
+	boolean externalEntity = 'false'
 	String label
+	contains SubscribeEntityEvents subscribeEntityEvents
+	contains PublishEntityEvents publishEntityEvents
+	
+	op boolean hasSubscribeCreated() {
+		subscribeEntityEvents !== null && (
+			subscribeEntityEvents.events === null || 
+			subscribeEntityEvents.events.cud ||
+			subscribeEntityEvents.events.created
+		)
+	}
+	
+	op boolean hasSubscribeUpdated() {
+		subscribeEntityEvents !== null && (
+			subscribeEntityEvents.events === null || 
+			subscribeEntityEvents.events.cud ||
+			subscribeEntityEvents.events.updated
+		)
+	}
+	
+	op boolean hasSubscribeDeleted() {
+		subscribeEntityEvents !== null && (
+			subscribeEntityEvents.events === null || 
+			subscribeEntityEvents.events.cud ||
+			subscribeEntityEvents.events.deleted
+		)
+	}
+	
+	op boolean hasPublishCreated() {
+		publishEntityEvents !== null && (
+			publishEntityEvents.events === null || 
+			publishEntityEvents.events.cud ||
+			publishEntityEvents.events.created
+		)
+	}
+	
+	op boolean hasPublishUpdated() {
+		publishEntityEvents !== null && (
+			publishEntityEvents.events === null || 
+			publishEntityEvents.events.cud ||
+			publishEntityEvents.events.updated
+		)
+	}
+	
+	op boolean hasPublishDeleted() {
+		publishEntityEvents !== null && (
+			publishEntityEvents.events === null || 
+			publishEntityEvents.events.cud ||
+			publishEntityEvents.events.deleted
+		)
+	}
 	
 	op Slot getFirstSlot() {
 		val slot = slots.tail.head ?: slots.head
@@ -362,8 +458,12 @@ class Entity extends PublicObject {
 		return slots.tail.asEList
 	}
 	
-	op boolean isExternal() {
-		return externalObject !== null && externalObject.external
+	op boolean hasSubscribeEntityEvents() {
+		return subscribeEntityEvents !== null
+	}
+	
+	op boolean hasPublishEntityEvents() {
+		return publishEntityEvents !== null
 	}
 	
 }
