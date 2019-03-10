@@ -60,13 +60,17 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			public void delete(«idType» «idVar»);
 			
-			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable);
+			public Page<«entityName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName», Pageable pageable);
 			
 			«IF entity.hasAutoComplete»
 			public Collection<«entity.toAutoCompleteName»> autoComplete(String query);
 			«ENDIF»
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
+			«ENDIF»
+			«IF entity.hasSumFields»
+			
+			public «entity.toEntitySumFieldsName» get«entity.toEntitySumFieldsName»(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName»);
 			«ENDIF»
 		}
 		'''
@@ -102,6 +106,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import org.springframework.transaction.annotation.Transactional;
 		
 		import com.querydsl.core.types.Predicate;
+		«IF entity.hasSumFields»
+		import com.querydsl.core.types.Projections;
+		import com.querydsl.jpa.impl.JPAQueryFactory;
+		
+		import javax.persistence.EntityManager;
+		import javax.persistence.PersistenceContext;
+		«ENDIF»
 		
 		import java.util.Optional;
 		«IF entity.hasAutoComplete»
@@ -115,10 +126,14 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		«service.getImportServiceConstants»
 		«ENDIF»
 		
-		@Transactional
 		@Service
 		public class «entity.toServiceImplName» implements «entity.toServiceName» {
 			
+			«IF entity.hasSumFields»
+			@PersistenceContext
+			private EntityManager em;
+			
+			«ENDIF»
 			@Autowired
 			private «entity.toRepositoryName» «repositoryVar»;
 			
@@ -130,6 +145,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			DomainEntityEventsPublisher publisher;
 			«ENDIF»
 			
+			
+			@Transactional
 			public «entityName» create(«entityName» «entityVar») {
 				«IF !entity.hasPublishCreated»
 				return «repositoryVar».save(«entityVar»);
@@ -140,10 +157,12 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«ENDIF»
 			}
 			
+			@Transactional(readOnly = true)
 			public «entityName» read(«idType» «idVar») {
 				return «getEntityMethod»(«idVar»);
 			}
 			
+			@Transactional
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
 				«entityName» entity = «getEntityMethod»(«idVar»);
 				BeanUtils.copyProperties(«entityVar», entity, "«entity.id.name»");
@@ -156,6 +175,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				return entity;
 			}
 			
+			@Transactional
 			public void delete(«idType» «idVar») {
 				«repositoryVar».deleteById(«idVar»);
 				
@@ -179,13 +199,15 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			«ENDIF»
 			
-			public Page<«entityName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
-				Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName.toFirstLower»);
+			@Transactional(readOnly = true)
+			public Page<«entityName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName», Pageable pageable) {
+				Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName»);
 				
 				Page<«entityName»> resultPage = «repositoryVar».findAll(predicate, pageable);
 				return resultPage;
 			}
 			
+			@Transactional(readOnly = true)
 			private «entityName» «getEntityMethod»(«idType» «entity.id.name») {
 				Optional<«entityName»> «entityVar» = «repositoryVar».findById(«idVar»);
 				if (!«entityVar».isPresent()) {
@@ -195,6 +217,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			«IF entity.hasAutoComplete»
+			@Transactional(readOnly = true)
 			public Collection<«entity.toAutoCompleteName»> autoComplete(String query) {
 				Collection<«entity.toAutoCompleteName»> result = «repositoryVar».autoComplete(query);
 				return result;
@@ -203,8 +226,40 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteImpl].join»
 			«ENDIF»
+			
+			«IF entity.hasSumFields»
+			«entity.generateMethodGetContaPagarSumFields»
+			«ENDIF»
 		}
 		'''
+	}
+	
+	def CharSequence generateMethodGetContaPagarSumFields(Entity entity) {
+		val entityName = entity.toEntityName
+		val entityQueryDSLName = entity.toEntityQueryDSLName
+		
+		'''
+		@Transactional(readOnly = true)
+		public «entity.toEntitySumFieldsName» get«entity.toEntitySumFieldsName»(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName») {
+			Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName»);
+			
+			«entityQueryDSLName» qEntity = «entityQueryDSLName».«entityName.toFirstLower»;
+			JPAQueryFactory query = new JPAQueryFactory(em);
+			«entity.toEntitySumFieldsName» result = query.select(
+					Projections.bean(«entity.toEntitySumFieldsName».class, 
+							«entity.sumFieldSlots.map[generateSumField].join(', \r')»
+					))
+			.from(qEntity)
+			.where(predicate)
+			.fetchOne();
+			
+			return result;
+		}
+		'''
+	}
+	
+	def CharSequence generateSumField(Slot slot) {
+		'''qEntity.«slot.fieldName».sum().as("«slot.sumFieldName»")'''
 	}
 	
 	def CharSequence buildPublishEvent(Entity entity, String eventName) {
@@ -237,6 +292,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		'''
 		
+		@Transactional(readOnly = true)
 		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(String query) {
 			Collection<«autoComplateName.toFirstUpper»> result = «repositoryVar».«autoComplateName»(query);
 			return result;

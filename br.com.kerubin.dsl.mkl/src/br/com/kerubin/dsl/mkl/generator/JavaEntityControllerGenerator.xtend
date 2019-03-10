@@ -111,7 +111,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			}
 			
 			@GetMapping
-			public PageResult<«entityDTOName»> list(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
+			public PageResult<«entityDTOName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
 				Page<«entityName»> page = «entityServiceVar».list(«entity.toEntityListFilterName.toFirstLower», pageable);
 				List<«entityDTOName»> content = page.getContent().stream().map(pe -> «entityDTOVar»DTOConverter.«toDTO»(pe)).collect(Collectors.toList());
 				PageResult<«entityDTOName»> pageResult = new PageResult<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
@@ -129,6 +129,25 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
 			«ENDIF»
+			
+			«IF entity.hasSumFields»
+			«entity.generateMethodGetContaPagarSumFields»
+			«ENDIF»
+		}
+		'''
+	}
+	
+	def CharSequence generateMethodGetContaPagarSumFields(Entity entity) {
+		val sumFieldsName = entity.toEntitySumFieldsName
+		val getEntitySumFields = 'get' + sumFieldsName
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		val listFilterName = entity.toEntityListFilterName
+		
+		'''
+		@GetMapping("/«sumFieldsName.toFirstLower»")
+		public «entity.toEntitySumFieldsName» «getEntitySumFields»(«entity.toEntityListFilterClassName» «listFilterName») {
+			«sumFieldsName» result = «entityServiceVar».«getEntitySumFields»(«listFilterName»);
+			return result;
 		}
 		'''
 	}

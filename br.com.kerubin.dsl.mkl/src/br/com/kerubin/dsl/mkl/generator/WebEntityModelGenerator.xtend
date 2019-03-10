@@ -38,6 +38,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		«entity.generateEntityListFilterModel»
 		«entity.generateEntityDTOModel»
 		«entity.generateEntityDefaultAutoComplete»
+		«entity.generateEntitySumFieldsModel»
 		'''
 		
 		val imports = '''
@@ -78,6 +79,20 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		'''
 	}
 	
+	def CharSequence generateEntitySumFieldsModel(Entity entity) {
+		'''
+		
+		export class «entity.toEntitySumFieldsName» {
+			«entity.sumFieldSlots.map[generateSumField].join»
+		}
+		'''
+	}
+	
+	def CharSequence generateSumField(Slot slot) {
+		'''
+		«slot.sumFieldName»: number;
+		'''
+	}
 	
 	def CharSequence generateFields(Entity entity) {
 		'''

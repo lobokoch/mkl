@@ -66,12 +66,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLGrid(Entity entity) {
 		val slots = entity.slots.filter[it.isShowOnGrid]
+		val hasSum = slots.exists[hasSumField]
 		
 		'''
 		
 		<!-- Begin GRID -->
 		<div class="ui-g-12" name="data-grid">
-			<p-table [loading]="loading" [responsive]="true" [customSort]="true" [paginator]="true" 
+			<p-table selectionMode="single" [loading]="loading" [responsive]="true" [customSort]="true" [paginator]="true" 
 				[value]="«entity.toEntityWebListItems»"
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
 			    [totalRecords]="«entity.toEntityWebListItemsTotalElements»"
@@ -93,7 +94,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        </ng-template>
 		        
 			    <ng-template pTemplate="body" let-«entity.fieldName»>
-		            <tr>
+		            <tr [pSelectableRow]="«entity.fieldName»">
 		            	«slots.map[generateHTMLGridDataRow].join»
 		              	<td>
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
@@ -103,6 +104,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            </tr>
 		        </ng-template>
 		        
+		        
 		        <ng-template pTemplate="emptymessage" let-columns>
 				    <tr>
 				        <td [attr.colspan]="«slots.size + 1»">
@@ -111,6 +113,15 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 				    </tr>
 				</ng-template>
 				
+				«IF hasSum»
+				<ng-template pTemplate="footer">
+					<tr>
+						<td>Totais</td>
+						«slots.tail.map[it.generateSumField].join»
+						<td></td>
+					</tr>
+				</ng-template>
+				«ENDIF»
 				<!--
 				<ng-template pTemplate="footer">
 			      <tr>
@@ -130,6 +141,21 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		</div>
 		<!-- End GRID -->
 		'''
+	}
+	
+	def CharSequence generateSumField(Slot slot) {
+		'''
+		«IF slot.hasSumField»<td«slot.generateSumFieldCSS»>«slot.generateSumFieldValue»</td>«ELSE»<td></td>«ENDIF»
+		'''
+	}
+	
+	def CharSequence generateSumFieldCSS(Slot slot) {
+		val sum = slot.sumField
+		''' class="sumField«IF sum.hasStyleClass» «sum.styleClass»«ENDIF»"«IF sum.hasStyleCss» style="«sum.styleCss»"«ENDIF»'''
+	}
+	
+	def CharSequence generateSumFieldValue(Slot slot) {
+		'''{{ «slot.ownerEntity.toEntitySumFieldsName.toFirstLower».«slot.sumFieldName»«IF slot.isMoney» | currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}'''
 	}
 	
 	def CharSequence generateHTMLExtras(Entity entity) {
@@ -322,6 +348,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		<div class="ui-g-12 ui-md-12 ui-fluid">
 			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
 			<p-autoComplete name="«slot.toAutoCompleteName»" 
+			placeholder="Digite para pesquisar..." [dropdown]="true" 
 			[(ngModel)]="«entity.toEntityListFilterName».«slot.fieldName»" [multiple]="true"
 			[suggestions]="«slot.webAutoCompleteSuggestions»"
 			(completeMethod)="«slot.webAutoCompleteMethod»($event)"

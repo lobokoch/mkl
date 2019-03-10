@@ -1,14 +1,11 @@
 package br.com.kerubin.dsl.mkl.generator
 
-import br.com.kerubin.dsl.mkl.model.Service
 import br.com.kerubin.dsl.mkl.model.Entity
-import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.ModelFactory
+import br.com.kerubin.dsl.mkl.model.Service
+import br.com.kerubin.dsl.mkl.model.Slot
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import br.com.kerubin.dsl.mkl.model.EnumType
-import br.com.kerubin.dsl.mkl.model.BasicType
-import br.com.kerubin.dsl.mkl.model.BasicTypeReference
 
 class ServiceBoosterImpl implements ServiceBooster {
 	
@@ -64,9 +61,12 @@ class ServiceBoosterImpl implements ServiceBooster {
 			entity.id.publish = true // id is implicit
 		}
 		
-		if (entity.hasSubscribeDeleted) { // Creates an implicit deleted slot.
+		if (entity.hasSubscribeDeleted && !entity.slots.exists[it.name == DELETED_FIELD_NAME]) { // Creates an implicit deleted slot.
 			val deletedSlot = ModelFactory.eINSTANCE.createSlot
-			deletedSlot.name = "deleted"
+			deletedSlot.name = DELETED_FIELD_NAME
+			deletedSlot.label = DELETED_FIELD_LABEL
+			//deletedSlot.web.label = DELETED_FIELD_LABEL
+			deletedSlot.implicit = true
 			deletedSlot.hidden = true
 			deletedSlot.optional = true
 			val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference

@@ -40,6 +40,9 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val serviceVar = serviceName.toFirstLower
 		val listFilterNameVar = entity.toEntityListFilterName
 		
+		val entitySumFieldsClassName = entity.toEntitySumFieldsName
+		val getMethodEntitySumFields = 'get' + entitySumFieldsClassName
+		
 		val filterSlots = entity.slots.filter[it.hasListFilter]
 		
 		imports.add('''
@@ -67,6 +70,10 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «slotAsEntity.toAutoCompleteName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
 		]
 		
+		if (entity.hasSumFields) {
+			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
+		}
+		
 		val component = entity.toEntityWebListComponentName
 		
 		val body = '''
@@ -88,6 +95,10 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			dateFilterIntervalDropdownItems: SelectItem[];
 			«ENDIF»
 			
+			«IF entity.hasSumFields»
+			«entitySumFieldsClassName.toFirstLower» = new «entitySumFieldsClassName»();
+			«ENDIF»
+			
 			/*
 			«fieldName»: «dtoName»;
 			totaisFiltroContaPagar = new TotaisFiltroContaPagar(0.0, 0.0);
@@ -105,7 +116,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
 				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 				this.initializeDateFilterIntervalDropdownItems();
-				«filterSlots.filter[it.isBetween && it.isDate].map['''this.«it.toIsBetweenOptionsOnClickMethod»(null);'''].join»
+				«««filterSlots.filter[it.isBetween && it.isDate].map['''this.«it.toIsBetweenOptionsOnClickMethod»(null);'''].join»
 				«ENDIF»
 				«IF !filterSlots.empty»
 				«filterSlots.generateFilterSlotsInitialization»
@@ -122,9 +133,23 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.«entity.toEntityWebListItems» = result.items;
 			      this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
 			    });
-			
-			    // this.getTotaisFiltroContaPagar();
+				
+				«IF entity.hasSumFields»
+				this.«getMethodEntitySumFields»();
+				«ENDIF»
 			}
+			
+			«IF entity.hasSumFields»
+			«getMethodEntitySumFields»() {
+			    this.«serviceVar».«getMethodEntitySumFields»(this.«listFilterNameVar»)
+				.then(response => {
+				  this.«entitySumFieldsClassName.toFirstLower» = response;
+				})
+				.catch(error => {
+				  this.showError('Erro ao buscar totais:' + error);
+				});
+			}
+			«ENDIF»
 			
 			«entity.toWebEntityFilterSearchMethod» {
 			    this.«entity.toEntityListListMethod»(0);
@@ -324,7 +349,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			if (dateFrom != null && dateTo != null) {
-			  this.«entity.toEntityListListMethod»(0);
+			  // this.«entity.toEntityListListMethod»(0);
 			}
 		}
 		'''

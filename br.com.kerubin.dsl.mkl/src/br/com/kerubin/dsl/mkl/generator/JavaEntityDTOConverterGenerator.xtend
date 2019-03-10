@@ -98,7 +98,7 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		'''
 		public «entity.toDTOConverterName»() {
 			mapper = new ModelMapper();
-			mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.LOOSE);
+			mapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STANDARD);
 			
 			«IF ! oneToOneBidirectionalSlots.empty»
 			«entity.generateTypeMapDtoToEntity»

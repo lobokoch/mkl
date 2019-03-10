@@ -30,7 +30,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	
 	def generateListFilter(Entity entity) {
 		val basePakage = clientGenSourceFolder
-		val entityFile = basePakage + entity.packagePath + '/' + entity.toEntityListFilterName + '.java'
+		val entityFile = basePakage + entity.packagePath + '/' + entity.toEntityListFilterClassName + '.java'
 		generateFile(entityFile, entity.generateEntityListFilter)
 		entity.imports.clear
 	}
@@ -51,7 +51,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateEntityListFilterPredicateImpl(Entity entity) {
 		entity.initializeEntityImports
-		val varFilter = entity.toEntityListFilterName.toFirstLower
+		val varFilter = entity.toEntityListFilterName
 		val qEntity = 'Q' + entity.toEntityName.toFirstUpper
 		val varQEntity = 'qEntity'
 		val slots = entity.slots.filter[it.hasListFilter]
@@ -74,7 +74,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		public class «entity.toEntityListFilterPredicateImplName» implements «entity.toEntityListFilterPredicateName» {
 			
 			@Override
-			public Predicate mountAndGetPredicate(«entity.toEntityListFilterName» «varFilter») {
+			public Predicate mountAndGetPredicate(«entity.toEntityListFilterClassName» «varFilter») {
 				if («varFilter» == null) {
 					return null;
 				}
@@ -230,7 +230,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		public interface «entity.toEntityListFilterPredicateName» {
 			
-			Predicate mountAndGetPredicate(«entity.toEntityListFilterName» «entity.toEntityListFilterName.toFirstLower»);
+			Predicate mountAndGetPredicate(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName»);
 		
 		}
 		
@@ -248,7 +248,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val body = '''
 		
-		public class «entity.toEntityListFilterName» {
+		public class «entity.toEntityListFilterClassName» {
 		
 			«slots.generateFields»
 		

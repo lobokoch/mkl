@@ -168,6 +168,19 @@ class ListFilter {
 	contains FilterOperator filterOperator
 }
 
+class SumField {
+	String styleClass
+	String styleCss
+	
+	op boolean hasStyleCss() {
+		styleCss !== null && !styleCss.trim.isEmpty 
+	}
+	
+	op boolean hasStyleClass() {
+		styleClass !== null && !styleClass.trim.isEmpty
+	}
+}
+
 class Grid {
 	boolean slotIsHidden
 	boolean slotIsUnordered
@@ -181,6 +194,7 @@ class Web {
 
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
+	boolean implicit = 'false'
 	boolean optional
 	boolean parent
 	boolean many
@@ -191,6 +205,7 @@ class Slot extends Element {
 	boolean lookupKey
     boolean lookupResult
 	
+	contains SumField sumField
 	contains AutoComplete autoComplete
 	contains ListFilter listFilter
 	contains Web web
@@ -204,6 +219,10 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasSumField() {
+		sumField !== null
+	}
 	
 	op boolean isHiddenSlot() {
 		hidden !== null && hidden
@@ -384,6 +403,10 @@ class Entity extends PublicObject {
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
+	
+	op boolean hasSumFields() {
+		slots.exists[hasSumField]
+	}
 	
 	op boolean hasSubscribeCreated() {
 		subscribeEntityEvents !== null && (

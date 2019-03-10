@@ -24,6 +24,7 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityDomainEventGenerator(this),			
 			new JavaEntitySubscriberEventRabbitConfigGenerator(this),			
 			new JavaEntitySubscriberEventHandlerGenerator(this),			
+			new JavaEntityContaPagarSumFieldsGenerator(this),			
 			new JavaEnumGenerator(this),
 			new JavaEntityLookupResultDTOGenerator(this),
 			new JavaEntityListFilterGenerator(this),

@@ -127,6 +127,7 @@ Slot:
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
 			('label' ':' label=STRING)? &
+			(sumField = SumField)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
 			(publish ?= 'publish')? &
@@ -134,6 +135,18 @@ Slot:
 			(web = Web)? 
 		)
 ;
+
+SumField:
+{SumField}
+	'sum'  
+	('('
+		(
+			('styleClass' ':' styleClass = STRING)? &
+			('styleCss' ':' styleCss = STRING)?
+		)
+	')')?
+;
+
 
 Grid:
 {Grid}

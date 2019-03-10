@@ -38,6 +38,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val dtoName = entity.toDtoName
 		val varName = dtoName.toFirstLower
 		val serviceName = entity.toEntityWebServiceClassName
+		val entitySumFieldsClassName = entity.toEntitySumFieldsName
 		
 		val slots = entity.slots
 		val slotsListFilter = slots.filter[hasListFilter]
@@ -53,6 +54,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		slotsListFilter.filter[isListFilterMany].forEach[
 			imports.add('''import { «it.toAutoCompleteDTOName» } from './«entity.toEntityWebModelName»';''')
 		]
+		
+		if (entity.hasSumFields) {
+			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
+		}
 		
 		
 		val body = '''
@@ -192,6 +197,24 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			        console.log(`Error in «varName»PagarList: ${error}`);
 			      });
 			}
+			
+			«IF entity.hasSumFields»
+			
+			get«entitySumFieldsClassName»(«entity.toEntityListFilterName»: «entity.toEntityListFilterClassName»): Promise<«entitySumFieldsClassName»> {
+			    const headers = this.getHeaders();
+			    
+				const searchParams = this.mountAndGetSearchParams(«entity.toEntityListFilterName»);
+				return this.http.get(`${this.url}/«entitySumFieldsClassName.toFirstLower»`, { headers, search: searchParams })
+				  .toPromise()
+				  .then(response => {
+				    const result = response.json();
+				    return result;
+				  })
+				  .catch(error => {
+				    console.log(`Error in get«entitySumFieldsClassName»: ${error}`);
+				  });
+			}
+			«ENDIF»
 			
 			mountAndGetSearchParams(«VAR_FILTER»: «dtoName»ListFilter): URLSearchParams {
 			    const params = new URLSearchParams();

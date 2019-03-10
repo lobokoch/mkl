@@ -41,6 +41,8 @@ class EntityUtils {
 	public static val ENUMS_PATH_NAME = 'enums'
 	public static val NAVBAR = 'navbar'
 	public static val NAVBAR_SELECTOR_NAME = 'app-' + NAVBAR
+	public static val DELETED_FIELD_NAME = 'deleted'
+	public static val DELETED_FIELD_LABEL = 'inativo'
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -458,6 +460,10 @@ class EntityUtils {
 		entity.name.toFirstUpper + "Entity"
 	}
 	
+	def static toEntityQueryDSLName(Entity entity) {
+		'Q' + entity.toEntityName
+	}
+	
 	def static toVarName(Entity entity) {
 		entity.name.toFirstLower
 	}
@@ -505,7 +511,11 @@ class EntityUtils {
 	}
 	
 	def static getPublishSlots(Entity entity) {
-		entity.slots.filter[it.isPublish]
+		entity.slots.filter[isPublish]
+	}
+	
+	def static getSumFieldSlots(Entity entity) {
+		entity.slots.filter[hasSumField]
 	}
 	
 	def static toEntityWebListItemsTotalElements(Entity entity) {
@@ -538,6 +548,10 @@ class EntityUtils {
 	
 	def static getFieldName(Slot slot) {
 		slot.name.toFirstLower
+	}
+	
+	def static getSumFieldName(Slot slot) {
+		'sum' + slot.name.toFirstUpper
 	}
 	
 	def static getEntityFieldName(Slot slot) {
@@ -644,8 +658,16 @@ class EntityUtils {
 		entity.toDtoName + 'Event'
 	}
 	
+	def static toEntitySumFieldsName(Entity entity) {
+		entity.toDtoName + 'SumFields'
+	}
+	
 	def static toEntityEventConstantName(Entity entity, String eventName) {
 		entity.toDtoName.toConstantName + '_' + eventName.toUpperCase
+	}
+	
+	def static generateNoArgsConstructor(String className) {
+		className.generateConstructor(null, true, false)
 	}
 	
 	def static generateConstructor(String className, Iterable<Slot> slots, boolean noArgsConstructor, boolean allArgsConstructor) {
@@ -766,6 +788,15 @@ class EntityUtils {
 		''' 
 	}
 	
+	def static CharSequence getGetMethod(Slot slot, String prefix, String suffix) {
+		val name = prefix.toFirstUpper + slot.name.toFirstUpper + suffix?.toFirstUpper
+		'''
+		public «slot.toJavaType» get«name»() {
+			return «name.toFirstLower»;
+		}
+		''' 
+	}
+	
 	def static CharSequence getGetMethodAsBoolean(Slot slot, String suffix) {
 		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
 		'''
@@ -799,6 +830,16 @@ class EntityUtils {
 	
 	def static CharSequence getSetMethod(Slot slot, String suffix) {
 		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		val nameFirstLower = name.toFirstLower
+		'''
+		public void set«name»(«slot.toJavaType» «nameFirstLower») {
+			this.«nameFirstLower» = «nameFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence getSetMethod(Slot slot, String prefix, String suffix) {
+		val name = prefix.toFirstUpper + slot.name.toFirstUpper + suffix?.toFirstUpper
 		val nameFirstLower = name.toFirstLower
 		'''
 		public void set«name»(«slot.toJavaType» «nameFirstLower») {
