@@ -255,7 +255,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
-			return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+			if («slot.fieldName») {
+				return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+			} else {
+				null;
+			}
 		}
 		
 		«ENDIF»

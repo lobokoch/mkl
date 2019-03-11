@@ -139,7 +139,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			«IF entity.hasEntitySlots»
 			private adjustNullEntitySlots(entityList: «dtoName»[]) {
-				entityList.forEach(«varName» => {
+				/*entityList.forEach(«varName» => {
 				      «entity.slots.filter[it.isEntity].map[it |
 				      '''
 				      if (!«varName».«it.fieldName») {
@@ -148,7 +148,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 				      	
 				      '''
 				      ].join('\r\n')»
-				});
+				});*/
 			}
 			«ENDIF»
 			

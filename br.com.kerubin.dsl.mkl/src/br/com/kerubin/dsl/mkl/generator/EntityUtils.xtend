@@ -555,7 +555,7 @@ class EntityUtils {
 	}
 	
 	def static getEntityFieldName(Slot slot) {
-		slot.ownerEntity.fieldName + '.' + slot.fieldName
+		slot.ownerEntity.fieldName + '?.' + slot.fieldName
 	}
 	
 	def static getFieldNameWeb(Slot slot) {
@@ -702,6 +702,10 @@ class EntityUtils {
 	
 	def static toAutoCompleteName(Slot slot) {
 		slot.ownerEntity.fieldName + slot.name.toFirstUpper + 'AutoComplete'
+	}
+	
+	def static toAutoCompleteClearMethodName(Slot slot) {
+		slot.toAutoCompleteName + 'Clear'
 	}
 	
 	def static toAutoCompleteDTOName(Slot slot) {

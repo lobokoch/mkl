@@ -109,8 +109,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.«fieldName» = «fieldName»;
 			      this.showSuccess('Registro criado com sucesso!');
 			    }).
-			    catch(erro => {
-			      this.showError('Erro ao criar registro: ' + erro);
+			    catch(error => {
+			      this.showError('Erro ao criar registro: ' + error);
 			    });
 			}
 			
@@ -120,15 +120,15 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.«fieldName» = «fieldName»;
 			      this.showSuccess('Registro alterado!');
 			    })
-			    .catch(erro => {
-			      this.showError('Erro ao atualizar registro: ' + erro);
+			    .catch(error => {
+			      this.showError('Erro ao atualizar registro: ' + error);
 			    });
 			}
 			
 			get«dtoName»ById(id: string) {
 			    this.«serviceVar».retrieve(id)
 			    .then((«fieldName») => this.«fieldName» = «fieldName»)
-			    .catch(erro => {
+			    .catch(error => {
 			      this.showError('Erro ao buscar registro: ' + id);
 			    });
 			}
@@ -147,8 +147,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			        this.showError('Não foi possível criar os registros.');
 			      }
 			    })
-			    .catch(erro => {
-			      this.showError('Ocorreu um erro ao criar os registros: ' + erro);
+			    .catch(error => {
+			      this.showError('Ocorreu um erro ao criar os registros: ' + error);
 			    });
 			  }
 			«ENDIF»
@@ -209,6 +209,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		}
 		
 		'''
+		«slot.toAutoCompleteClearMethodName»(event) {
+			// The autoComplete value has been reseted
+			this.«slot.ownerEntity.fieldName».«slot.fieldName» = null;
+		}
+		
 		«slot.toAutoCompleteName»(event) {
 		    const query = event.query;
 		    this.«serviceName»
@@ -223,7 +228,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
-			return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+			if («slot.fieldName») {
+				return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+			} else {
+				return null;
+			}
 		}
 		«ENDIF»
 		'''

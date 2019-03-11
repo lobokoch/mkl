@@ -200,7 +200,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				isOpenTagClosed = true
 				builder.addIndent('''
 					<ng-template let-«slot.fieldName» pTemplate="item">
-						<div class="ui-helper-clearfix">«resultSlots.map['''{{ «slot.fieldName».«it.fieldName» }}'''].join(' - ')»</div>
+						«««<div class="ui-helper-clearfix">«resultSlots.map['''{{ «slot.fieldName».«it.fieldName» }}'''].join(' - ')»</div>
+						<div class="ui-helper-clearfix">{{ «slot.webAutoCompleteFieldConverter»(«slot.fieldName») }}</div>
 					</ng-template>
 				''')
 			}
@@ -212,7 +213,12 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		if (slot.isEntity) {
 			// Pega como resultado o primeiro campo de resultado que não seja o id da entidade, caso não tenha nenhum, ai traz o id da entidade como campo de resultado.
 			webComponentType = 'p-autoComplete'
-			builder.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true" [suggestions]="«slot.webAutoCompleteSuggestions»" (completeMethod)="«slot.toAutoCompleteName»($event)" [field]="«slot.webAutoCompleteFieldConverter»"''')
+			builder
+			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''')
+			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''')
+			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''')
+			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''')
+			.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''')
 			return
 		}
 		else if (slot.isEnum){
