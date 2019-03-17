@@ -1,10 +1,22 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.EntityField
+import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.RuleTarget
+import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNullOrEmpty
+import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
+import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
+import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.TemporalObject
+import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -216,6 +228,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
 			}
 			
+			«IF entity.hasRules»«entity.buildRulesForGridRowStyleClass»«ENDIF»
+			
 			«buildTranslationMethod(service)»
 			
 			«addExtras()»
@@ -226,6 +240,171 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		source
 	}
 	
+	def CharSequence buildRulesForGridRowStyleClass(Entity entity) {
+		val rules = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROW] && it.apply.hasStyleClass]
+		
+		if (!rules.empty) {
+			val varEntity = entity.fieldName
+			'''
+			applyAndGetRuleGridRowStyleClass(«varEntity»: «entity.toDtoName»): String {
+				«rules.map[buildRuleForGridRowStyleClass].join»
+			
+			    return null;
+			}
+			'''
+		}
+	}
+	
+	def CharSequence buildRuleForGridRowStyleClass(Rule rule) {
+		val resultStrExp = new StringBuilder
+		rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp)
+		val exp = resultStrExp.toString
+		'''
+		
+		if («exp») {
+			return '«rule.apply.resutValue»';
+		}
+		'''
+	}
+	
+	def void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp) {
+		if (expression ===  null) {
+			return
+		}
+		
+		var String objName = null
+		var String strExpression = null
+		var isObjStr = false
+		var isObjDate = false
+		var isNumber = false
+		if (expression.left.whenObject instanceof EntityField) {
+			val slot = (expression.left.whenObject as EntityField).field
+			objName = slot.ownerEntity.fieldName + '.' + slot.fieldName
+			isObjStr = slot.isString
+			isObjDate = slot.isDate
+			isNumber = slot.isNumber
+			strExpression = objName
+		}
+		else if (expression.left.whenObject instanceof TemporalObject) {
+			val tObj = expression.left.whenObject as TemporalObject
+			objName = tObj.temporalConstant.literal
+			strExpression = tObj.temporalConstant.getTemporalConstantValue
+			isObjDate = true
+		}
+		
+		
+		val op = expression.left.objectOperation
+		if (op !== null) {
+			if (op instanceof RuleWhenOpIsNullOrEmpty) {
+				if (isObjStr) {
+					resultStrExp.concatSB('(').append('!').append(objName).concatSB('||').concatSB(objName).append('.trim().length == 0)')						
+				}
+				else {
+					resultStrExp.concatSB('!').append(objName)					
+				}
+			}
+			else if (op instanceof RuleWhenOpIsBetween) {
+				val opIsBetween = op as RuleWhenOpIsBetween
+				val dateFrom = opIsBetween.betweenFrom.getTemporalValue
+				val dateTo = opIsBetween.betweenTo.getTemporalValue
+				if (isObjDate) {
+					resultStrExp.concatSB('''«objName.toDateMoment».isBetween(«dateFrom», «dateTo»)''')
+				}
+				else {
+					resultStrExp.concatSB('''(«objName» >= «dateFrom» && «objName» <= «dateTo»)''')					
+				}
+			}
+			else if (op instanceof RuleWhenOpIsSame) {
+				val opIsSame = op as RuleWhenOpIsSame
+				val value = opIsSame.valueToCompare.getTemporalValue
+				if (isObjDate) {
+					resultStrExp.concatSB('''«objName.toDateMoment».isSame(«value», 'day')''')
+				}
+				else {
+					resultStrExp.concatSB('''«objName» == «value»''')					
+				}
+			}
+			else if (op instanceof RuleWhenOpIsBefore) {
+				val opIsBefore = op as RuleWhenOpIsBefore
+				val value = opIsBefore.valueToCompare.getTemporalValue
+				if (isObjDate) {
+					resultStrExp.concatSB('''«objName.toDateMoment».isBefore(«value», 'day')''')
+				}
+				else {
+					resultStrExp.concatSB('''«objName» < «value»''')					
+				}
+			}
+		}
+		else {
+			resultStrExp.concatSB(strExpression)
+		}
+		
+		if (expression.rigth !== null) {
+			resultStrExp.concatSB(expression.operator.adaptRuleWhenOperator)
+			expression.rigth.buildRuleWhenForGridRowStyleClass(resultStrExp)
+		}
+	}
+	
+	def StringBuilder concatSB(StringBuilder sb, String value) {
+		if (sb.length > 0) {
+			sb.append(' ')
+		}
+		sb.append(value);
+	}
+	
+	def StringBuilder insertSB(StringBuilder sb, String value) {
+		if (sb.length > 0) {
+			sb.append(' ')
+		}
+		sb.append(value);
+	}
+	
+	def String adaptRuleWhenOperator(RuleWhenOperator operator) {
+		val opValue = operator.operator
+		switch (opValue) {
+			case 'and': {
+				'&&'
+			}
+			case 'or': {
+				'||'
+			}
+			default: {
+				opValue
+			}
+		}
+	}
+	
+	def String getGetTemporalValue(RuleWhenTemporalValue temporalValue) {
+		if (temporalValue.temporalObject !== null) {
+			val constObj = temporalValue.temporalObject.temporalConstant.getTemporalConstantValue
+			constObj
+		}
+		else {
+			temporalValue.valueInt.toString
+		}
+	}
+	
+	def String toDateMoment(String objectName) {
+		'moment(' + objectName + ')'
+	}
+	
+	def String getTemporalConstantValue(RuleWhenTemporalConstants temporalConstant) {
+		switch (temporalConstant) {
+			case RuleWhenTemporalConstants.TOMORROW: {
+				"moment().add(1, 'day')"
+			}
+			case RuleWhenTemporalConstants.YESTERDAY: {
+				"moment().add(-1, 'day')"
+			}
+			case RuleWhenTemporalConstants.END_OF_WEEK: {
+				"moment().endOf('week')"
+			}
+			default: {
+				'moment()' // Today
+			}
+		}
+	}
+		
 	def CharSequence generateAutoCompleteMethod(Slot slot) {
 		val entity = slot.ownerEntity
 		
@@ -258,7 +437,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			if («slot.fieldName») {
 				return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
 			} else {
-				null;
+				return null;
 			}
 		}
 		

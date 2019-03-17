@@ -9,7 +9,7 @@ DomainModel:
  ; 
 
 Service:
-	('service' | 'microservice') Name '{'
+	'service' Name '{'
 		( 
 			(configuration=Configuration)? &
 			(dependencies+=MavenDependency)? & 
@@ -39,14 +39,6 @@ Configuration:
 	'}'
 ;
 
-/*ParentModule:
-	'parentModule' '{'
-		'groupId' ':' groupId=STRING
-		'artifactId' ':' artifactId=STRING
-		'version' ':' version=STRING
-	'}'
-;*/
-
 Enumeration:
 	'enum' Name '{'
 		items+=EnumItem*
@@ -72,8 +64,11 @@ Entity:
 	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
 		Slots
+		Rules?
 	'}'
 ;
+
+
 
 SubscribeEntityEvents:
 	'@subscribe' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ',' 'events' '=' '[' events=CudEvents ']' ')'
@@ -135,6 +130,104 @@ Slot:
 			(web = Web)? 
 		)
 ;
+
+fragment Rules returns Rulled:
+	'rules' '{' rules += Rule* '}'
+;
+
+// BEGIN rule
+Rule:
+	'with' '(' 
+		(targets += RuleTarget (',' targets += RuleTarget)*)?
+	')'
+	'.'
+	'apply' '(' 
+		apply = RuleApply
+	')'
+	'.'
+	'when' '(' 
+		when = RuleWhen
+	')'
+;
+
+RuleWhen:
+{RuleWhen}
+	expression = RuleWhenExpression	
+;
+
+RuleWhenExpression:
+	left = RuleExpression
+		 ( operator = RuleWhenOperator rigth = RuleWhenExpression )? 
+;
+
+RuleExpression:
+	(whenObject = (EntityField | TemporalObject)) 
+		('.' objectOperation = RuleWhenAbstractObjectOperation)?
+;
+
+RuleWhenAbstractObjectOperation:
+	//RuleWhenOpAddDays |
+	RuleWhenOpIsBetween | 
+	RuleWhenOpIsSame | 
+	RuleWhenOpIsBefore | 
+	RuleWhenOpIsNullOrEmpty
+;
+
+RuleWhenOpIsNullOrEmpty:
+	methodName = 'isNull'
+;
+
+RuleWhenOpIsBetween:
+	methodName = 'isBetween' '(' betweenFrom = RuleWhenTemporalValue ',' betweenTo = RuleWhenTemporalValue ')'
+;
+
+RuleWhenOpIsSame:
+	methodName = 'isSame' '(' valueToCompare = RuleWhenTemporalValue ')'
+;
+
+RuleWhenOpIsBefore:
+	methodName = 'isBefore' '(' valueToCompare = RuleWhenTemporalValue ')'
+;
+
+RuleWhenOpAddDays:
+	methodName = 'addDays' '(' addDaysValue = RuleWhenTemporalValue ')'
+;
+
+EntityField:
+	field=[Slot]
+;
+
+RuleWhenOperator:
+{RuleWhenOperator}	
+	operator = ('and' | 'or' /* | 'not'*/ | '==' | '>' | '<' | '<=' | '>=')
+;
+
+TemporalObject:
+	temporalConstant = RuleWhenTemporalConstants
+;
+
+enum RuleWhenTemporalConstants:
+	TODAY='today' | TOMORROW='tomorrow' | YESTERDAY='yesterday' | END_OF_WEEK='endOfWeek'
+;
+
+RuleWhenTemporalValue: 
+{RuleWhenTemporalValue}
+	valueInt = INT | temporalObject = TemporalObject
+;
+
+RuleApply:
+{RuleApply}	
+	(
+		('styleClass' ':' styleClass = STRING)? &
+		('styleCss' ':' styleCss = STRING)?
+	)
+;
+
+enum RuleTarget:
+	 GRID_ROW='grid.row' | GRID_ROW_CELL='grid.row.cell'
+;
+
+//END Rule
 
 SumField:
 {SumField}

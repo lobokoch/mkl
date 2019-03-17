@@ -3,6 +3,127 @@ package br.com.kerubin.dsl.mkl.model
 import java.util.Set
 import java.util.LinkedHashSet
 
+// BEGIN Rule
+
+class Rulled {
+	contains Rule[] rules opposite owner
+	
+	op boolean hasRules() {
+		rules !== null
+	}
+}
+
+class Rule {
+	RuleTarget[] targets
+	contains RuleApply apply
+	contains RuleWhen when
+	container Rulled owner opposite rules
+}
+
+class RuleWhen {
+	contains RuleWhenExpression expression
+}
+
+class RuleWhenExpression {
+	contains RuleExpression left
+	contains RuleWhenOperator operator
+	contains RuleWhenExpression rigth
+}
+
+class RuleExpression {
+	contains RuleWhenObject whenObject
+	contains RuleWhenAbstractObjectOperation objectOperation
+}
+
+abstract class RuleWhenObject {
+	
+}
+
+class EntityField extends RuleWhenObject {
+	refers Slot field
+}
+
+class TemporalObject extends RuleWhenObject {
+	RuleWhenTemporalConstants temporalConstant
+}
+
+abstract class RuleWhenAbstractObjectOperation {
+	String methodName
+}
+
+class RuleWhenOpAddDays extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenTemporalValue addDaysValue
+}
+
+class RuleWhenOpIsBetween extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenTemporalValue betweenFrom
+	contains RuleWhenTemporalValue betweenTo
+}
+
+class RuleWhenOpIsSame extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenTemporalValue valueToCompare
+}
+
+class RuleWhenOpIsBefore extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenTemporalValue valueToCompare
+}
+
+class RuleWhenOpIsNullOrEmpty extends RuleWhenAbstractObjectOperation {
+	
+}
+
+
+class RuleWhenTemporalValue {
+	contains TemporalObject temporalObject
+	int valueInt
+}
+
+class RuleWhenOperator {
+	String operator
+}
+
+
+enum RuleWhenTemporalConstants {
+	TODAY as 'today'
+	TOMORROW as 'tomorrow'
+	YESTERDAY as 'yesterday' 
+	END_OF_WEEK as 'endOfWeek'
+	/*BEGIN_OF_MONTH as 'beginOfMonth'
+	NEXT_SATURDAY as 'nextSaturday'
+	NEXT_SUNDAY as 'nextSunday'
+	LAST_SUNDAY as 'lastSunday'
+	LAST_MONDAY as 'lastMonday'*/
+}
+
+class RuleApply {
+	String styleClass
+	String styleCss
+	
+	op boolean hasStyleClass() {
+		styleClass !== null && !styleClass.trim.isEmpty
+	}
+	
+	op boolean hasStyleCss() {
+		styleCss !== null && !styleCss.trim.isEmpty
+	}
+	
+	op String getResutValue() {
+		if (hasStyleClass) {
+			styleClass
+		}
+		else {
+			styleCss
+		}
+	}
+}
+
+enum RuleTarget {
+	GRID_ROW as 'grid.row'
+	GRID_ROW_CELL as 'grid.row.cell'
+}
+
+// END Rule
+
 abstract class Named {
 	String name
 	String _alias
@@ -65,12 +186,6 @@ class Configuration {
 	String messagingVersion
 	
 }
-
-/*class ParentModule {
-	String groupId
-	String artifactId
-	String version
-}*/
 
 abstract class ServiceElement extends Element {
 	container Service service opposite elements
@@ -192,6 +307,10 @@ class Web {
 	String label
 }
 
+abstract class Slotted extends Element {
+	contains Slot[] slots opposite ownerObject
+}
+
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
 	boolean implicit = 'false'
@@ -292,6 +411,18 @@ class Slot extends Element {
 		false
 	}
 	
+	op boolean isNumber() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof IntegerType || 
+			basicType instanceof MoneyType || 
+			basicType instanceof DoubleType || 
+			basicType instanceof ByteType
+		}
+		
+		false
+	}
+	
 	op boolean isMoney() {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
@@ -348,11 +479,6 @@ class Slot extends Element {
 	
 }
 
-abstract class Slotted extends Element {
-	contains Slot[] slots opposite ownerObject
-	
-}
-
 class EnumTypeReference extends TypeReference {
 	refers ServiceElement referencedType
 }
@@ -392,7 +518,7 @@ class PublicObject extends Record, ServiceObject {
 	
 }
 
-class Entity extends PublicObject {
+class Entity extends PublicObject, Rulled {
 	refers Entity parent
 	boolean secure
 	boolean audit
@@ -403,6 +529,8 @@ class Entity extends PublicObject {
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
+	
+	//contains Rulled rules
 	
 	op boolean hasSumFields() {
 		slots.exists[hasSumField]

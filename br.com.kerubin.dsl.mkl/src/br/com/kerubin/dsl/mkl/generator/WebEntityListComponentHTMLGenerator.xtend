@@ -4,6 +4,9 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Slot
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.EntityField
+import br.com.kerubin.dsl.mkl.model.RuleTarget
 
 class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -94,9 +97,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        </ng-template>
 		        
 			    <ng-template pTemplate="body" let-«entity.fieldName»>
-		            <tr [pSelectableRow]="«entity.fieldName»">
+		            <tr«entity.applyRulesOnGrid» [pSelectableRow]="«entity.fieldName»">
 		            	«slots.map[generateHTMLGridDataRow].join»
-		              	<td>
+		              	<td class="kb-actions">
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
 		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="pi pi-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
 		              		<button (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
@@ -116,9 +119,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 				«IF hasSum»
 				<ng-template pTemplate="footer">
 					<tr>
-						<td>Totais</td>
+						<td class="kb-sum-footer">Totais</td>
 						«slots.tail.map[it.generateSumField].join»
-						<td></td>
+						<td class="kb-sum-footer"></td>
 					</tr>
 				</ng-template>
 				«ENDIF»
@@ -143,15 +146,38 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
+	def CharSequence applyRulesOnGrid(Entity entity) {
+		if (!entity.hasRules) {
+			return ''''''
+		}
+		if (entity.rules.exists[it.targets.exists[it == RuleTarget.GRID_ROW]]) {
+			return ''' [ngClass]="applyAndGetRuleGridRowStyleClass(«entity.fieldName»)"'''
+		}
+		
+		//val forGridRow = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROW]].map[it.applyRuleOnGrid]?.join
+		//val result = '[ngClass]="applyAndGetRuleGridRowStyleClass(contaPagar)"'
+	}
+	
+	def CharSequence applyRuleOnGrid(Rule rule) {
+		// <tr [ngClass]="contaPagar?.dataPagamento == null ? 'conta-vence-hoje' : null">
+		val expressions = newArrayList
+		if (rule.when.expression.left.whenObject instanceof EntityField) {
+			val slot = (rule.when.expression.left.whenObject as EntityField).field
+			expressions.add(slot.fieldName)
+		}
+		
+		''''''
+	}
+	
 	def CharSequence generateSumField(Slot slot) {
 		'''
-		«IF slot.hasSumField»<td«slot.generateSumFieldCSS»>«slot.generateSumFieldValue»</td>«ELSE»<td></td>«ENDIF»
+		«IF slot.hasSumField»<td«slot.generateSumFieldCSS»>«slot.generateSumFieldValue»</td>«ELSE»<td class="kb-sum-footer"></td>«ENDIF»
 		'''
 	}
 	
 	def CharSequence generateSumFieldCSS(Slot slot) {
 		val sum = slot.sumField
-		''' class="sumField«IF sum.hasStyleClass» «sum.styleClass»«ENDIF»"«IF sum.hasStyleCss» style="«sum.styleCss»"«ENDIF»'''
+		''' class="kb-sum-footer sumField«IF sum.hasStyleClass» «sum.styleClass»«ENDIF»"«IF sum.hasStyleCss» style="«sum.styleCss»"«ENDIF»'''
 	}
 	
 	def CharSequence generateSumFieldValue(Slot slot) {
