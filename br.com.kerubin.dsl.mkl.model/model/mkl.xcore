@@ -294,6 +294,7 @@ class ListFilter {
 class SumField {
 	String styleClass
 	String styleCss
+	String label
 	
 	op boolean hasStyleCss() {
 		styleCss !== null && !styleCss.trim.isEmpty 
@@ -301,6 +302,10 @@ class SumField {
 	
 	op boolean hasStyleClass() {
 		styleClass !== null && !styleClass.trim.isEmpty
+	}
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.isEmpty
 	}
 }
 

@@ -248,7 +248,8 @@ SumField:
 	('('
 		(
 			('styleClass' ':' styleClass = STRING)? &
-			('styleCss' ':' styleCss = STRING)?
+			('styleCss' ':' styleCss = STRING)? &
+			('label' ':' label = STRING)?
 		)
 	')')?
 ;

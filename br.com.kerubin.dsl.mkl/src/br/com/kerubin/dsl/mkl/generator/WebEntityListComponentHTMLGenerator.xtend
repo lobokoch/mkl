@@ -177,7 +177,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateSumFieldValue(Slot slot) {
-		'''{{ «slot.ownerEntity.toEntitySumFieldsName.toFirstLower».«slot.sumFieldName»«IF slot.isMoney» | currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}'''
+		'''«IF slot.sumField.hasLabel»«slot.sumField.label»: «ENDIF»{{ «slot.ownerEntity.toEntitySumFieldsName.toFirstLower».«slot.sumFieldName»«IF slot.isMoney» | currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}'''
 	}
 	
 	def CharSequence generateHTMLExtras(Entity entity) {
