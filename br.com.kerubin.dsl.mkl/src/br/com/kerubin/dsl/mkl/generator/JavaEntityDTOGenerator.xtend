@@ -72,6 +72,16 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		// Bean Validations
+		val hasNotBlankValidation = !slot.isUUID && (slot.isRequired && slot.isString)
+		val hasNotNullValidation = !slot.isUUID && (slot.isRequired && !slot.isString)
+		if (hasNotBlankValidation) {
+			entity.addImport('import javax.validation.constraints.NotBlank;')
+		}
+		if (hasNotNullValidation) {
+			entity.addImport('import javax.validation.constraints.NotNull;')
+		}
+		
 		if (slot.isDTOFull) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
 		}
@@ -83,12 +93,19 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		}
 		
 		'''
+		«IF hasNotBlankValidation»«slot.buildFieldRequiredValidationAnnotation('NotBlank')»«ENDIF»
+		«IF hasNotNullValidation»«slot.buildFieldRequiredValidationAnnotation('NotNull')»«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSE»
 		private «slot.toJavaTypeDTO» «slot.name.toFirstLower»;
 		«ENDIF»
 		'''
+	}
+	
+	def CharSequence buildFieldRequiredValidationAnnotation(Slot slot, String validationType) {
+		val name = slot?.label ?: slot.name
+		'''@«validationType»(message="'«name»' é obrigatório.")'''
 	}
 	
 	def CharSequence generateGetters(Entity entity) {

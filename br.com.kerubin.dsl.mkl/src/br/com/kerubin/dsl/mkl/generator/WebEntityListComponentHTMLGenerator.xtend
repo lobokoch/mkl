@@ -153,13 +153,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		if (entity.rules.exists[it.targets.exists[it == RuleTarget.GRID_ROW]]) {
 			return ''' [ngClass]="applyAndGetRuleGridRowStyleClass(«entity.fieldName»)"'''
 		}
-		
-		//val forGridRow = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROW]].map[it.applyRuleOnGrid]?.join
-		//val result = '[ngClass]="applyAndGetRuleGridRowStyleClass(contaPagar)"'
 	}
 	
 	def CharSequence applyRuleOnGrid(Rule rule) {
-		// <tr [ngClass]="contaPagar?.dataPagamento == null ? 'conta-vence-hoje' : null">
 		val expressions = newArrayList
 		if (rule.when.expression.left.whenObject instanceof EntityField) {
 			val slot = (rule.when.expression.left.whenObject as EntityField).field
@@ -220,7 +216,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		val hasStyleClass = slot.hasGridStyleClass
 		'''
-		<td>
+		<td«slot.buildBodyRowStyleCss»>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy'}}
@@ -236,6 +232,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«IF hasStyleClass»</div">«ENDIF»
 		</td>
 		'''
+	}
+	
+	def String buildBodyRowStyleCss(Slot slot) {
+		if (slot.isMoney) {
+			return ' class="kb-field-money"'
+		}
+		return ''
 	}
 	
 	def CharSequence generateHTMLButtons(Entity entity) {

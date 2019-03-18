@@ -17,6 +17,7 @@ class JavaGenerator extends BaseGenerator {
 		val IGeneratorExecutor[] generators = #[
 			new JavaProjectsGenerator(this),
 			new JavaServerConfigGenerator(this),
+			new JavaCustomResponseEntityExceptionHandlerGenerator(this),
 			new JavaEntityJPAGenerator(this),
 			new JavaEntityRepositoryGenerator(this),
 			new JavaEntityServiceGenerator(this),

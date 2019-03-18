@@ -43,6 +43,10 @@ class EntityField extends RuleWhenObject {
 	refers Slot field
 }
 
+class NumberObject extends RuleWhenObject {
+	Double value
+}
+
 class TemporalObject extends RuleWhenObject {
 	RuleWhenTemporalConstants temporalConstant
 }
@@ -68,7 +72,11 @@ class RuleWhenOpIsBefore extends RuleWhenAbstractObjectOperation {
 	contains RuleWhenTemporalValue valueToCompare
 }
 
-class RuleWhenOpIsNullOrEmpty extends RuleWhenAbstractObjectOperation {
+class RuleWhenOpIsNull extends RuleWhenAbstractObjectOperation {
+	
+}
+
+class RuleWhenOpIsNotNull extends RuleWhenAbstractObjectOperation {
 	
 }
 
@@ -338,6 +346,10 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean isRequired() {
+		!optional
+	}
 	
 	op boolean hasSumField() {
 		sumField !== null

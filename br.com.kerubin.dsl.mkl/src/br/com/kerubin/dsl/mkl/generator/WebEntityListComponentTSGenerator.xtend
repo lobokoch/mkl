@@ -6,7 +6,8 @@ import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNullOrEmpty
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotNull
 import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
 import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
 import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
@@ -17,6 +18,7 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
+import br.com.kerubin.dsl.mkl.model.NumberObject
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -291,16 +293,30 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			strExpression = tObj.temporalConstant.getTemporalConstantValue
 			isObjDate = true
 		}
+		else if (expression.left.whenObject instanceof NumberObject) {
+			val tObj = expression.left.whenObject as NumberObject
+			objName = tObj.value.toString
+			strExpression = objName
+			isNumber = true
+		}
 		
 		
 		val op = expression.left.objectOperation
 		if (op !== null) {
-			if (op instanceof RuleWhenOpIsNullOrEmpty) {
+			if (op instanceof RuleWhenOpIsNull) {
 				if (isObjStr) {
 					resultStrExp.concatSB('(').append('!').append(objName).concatSB('||').concatSB(objName).append('.trim().length == 0)')						
 				}
 				else {
 					resultStrExp.concatSB('!').append(objName)					
+				}
+			}
+			else if (op instanceof RuleWhenOpIsNotNull) {
+				if (isObjStr) {
+					resultStrExp.concatSB('(').append(objName).concatSB('||').concatSB(objName).append('.trim().length > 0)')						
+				}
+				else {
+					resultStrExp.concatSB(objName)					
 				}
 			}
 			else if (op instanceof RuleWhenOpIsBetween) {
