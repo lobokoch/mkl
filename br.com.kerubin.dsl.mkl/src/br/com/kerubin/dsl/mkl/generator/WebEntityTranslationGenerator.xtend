@@ -54,6 +54,9 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 			val key = it.translationKey
 			keys.add('"' + key + '": "' + it.labelValue + '"')
 			
+			val keyGrid = it.translationKeyGrid
+			keys.add('"' + keyGrid + '": "' + it.getLabelGridValue + '"')
+			
 			// Trata as chaves de enumeração.
 			if (it.isEnum) {
 				val enumerarion = it.asEnum

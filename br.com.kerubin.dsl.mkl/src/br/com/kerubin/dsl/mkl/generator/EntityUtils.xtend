@@ -44,6 +44,13 @@ class EntityUtils {
 	public static val DELETED_FIELD_NAME = 'deleted'
 	public static val DELETED_FIELD_LABEL = 'inativo'
 	
+	def static StringBuilder concatSB(StringBuilder sb, String value) {
+		if (sb.length > 0) {
+			sb.append(' ')
+		}
+		sb.append(value);
+	}
+	
 	def static generateEntityImports(Entity entity) {
 		'''
 		«entity.imports.map[it].join('\r\n')»
@@ -291,6 +298,10 @@ class EntityUtils {
 		slot.ownerEntity.translationKey + '_' + slot.name.toFirstLower
 	}
 	
+	def static String getTranslationKeyGrid(Slot slot) {
+		slot.getTranslationKey + '_grid'
+	}
+	
 	def static String getTranslationKey(Entity entity) {
 		val key = entity.service.translationKey + '.' + entity.name.toFirstLower
 		key
@@ -306,6 +317,11 @@ class EntityUtils {
 		label
 	}
 	
+	def static String getLabelGridValue(Slot slot) {
+		val label = slot.labelGrid ?: slot.getLabelValue
+		label
+	}
+	
 	
 	def static String getTranslationKey(Service service) {
 		val key = service.domain.toFirstLower + '.' + service.name.toFirstLower
@@ -318,6 +334,11 @@ class EntityUtils {
 	
 	def static CharSequence getTranslationKeyFunc(Slot slot) {
 		val key = slot.translationKey
+		'''{{ getTranslation('«key»') }}'''
+	}
+	
+	def static CharSequence getTranslationKeyGridFunc(Slot slot) {
+		val key = slot.translationKeyGrid
 		'''{{ getTranslation('«key»') }}'''
 	}
 	
@@ -552,6 +573,10 @@ class EntityUtils {
 	
 	def static getSumFieldName(Slot slot) {
 		'sum' + slot.name.toFirstUpper
+	}
+	
+	def static getEntitySumFieldName(Slot slot) {
+		slot.ownerEntity.toEntitySumFieldsName.toFirstLower + '.' + slot.sumFieldName
 	}
 	
 	def static getEntityFieldName(Slot slot) {

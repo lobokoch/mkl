@@ -86,9 +86,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            	«slots.map[slot |
 		            	'''
 	            		«IF slot.isOrderedOnGrid»
-	            			<th [pSortableColumn]="'«slot.fieldName»'">«slot.translationKeyFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
+	            			<th [pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
 	            		«ELSE»
-	            			<th>«slot.translationKeyFunc»</th>
+	            			<th>«slot.getTranslationKeyGridFunc»</th>
 	            		«ENDIF»
 		            	'''
 		            ].join»
@@ -121,7 +121,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 					<tr>
 						<td class="kb-sum-footer">Totais</td>
 						«slots.tail.map[it.generateSumField].join»
-						<td class="kb-sum-footer"></td>
+						<td class="kb-sum-footer">«entity.buildEntityRuleWithSum»</td>
 					</tr>
 				</ng-template>
 				«ENDIF»
@@ -146,11 +146,52 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
+	def CharSequence buildEntityRuleWithSum(Entity entity) {
+		val rule = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_SUMROW_LAST_CELL]].head
+		if (rule === null) {
+			return ''
+		}
+		
+		val sbLabels = new StringBuilder
+		val sbField = new StringBuilder
+		var expression = rule.apply.sumFieldExpression
+		var slot = expression.leftField.field
+		sbLabels.append(slot.getSumSlotLabelWithStyle)
+		sbField.append(slot.getEntitySumFieldName)
+		while (expression.rightField !== null) {
+			sbLabels.append(expression.operator.literal)
+			sbField.concatSB(expression.operator.literal)
+			
+			expression = expression.rightField
+			
+			slot = expression.leftField.field
+			sbLabels.append(slot.getSumSlotLabelWithStyle)
+			sbField.concatSB(slot.getEntitySumFieldName)
+		}
+		
+		'''(«sbLabels.toString»): {{ («sbField.toString») | currency:'BRL':'symbol':'1.2-2':'pt' }}'''
+	}
+	
+	def String getSumSlotLabelWithStyle(Slot slot) {
+		val label = slot?.sumField?.label ?: slot.label
+		var stylled = label
+		if (slot.hasSumField) {
+			val sumField = slot.sumField
+			if (sumField.hasStyleClass) {
+				stylled = '''<span class="«sumField.styleClass»">«label»</span>'''
+			}
+			else if (sumField.hasStyleCss) {
+				stylled = '''<span style="«sumField.styleCss»">«label»</span>'''
+			}
+		}
+		stylled
+	}
+	
 	def CharSequence applyRulesOnGrid(Entity entity) {
 		if (!entity.hasRules) {
 			return ''''''
 		}
-		if (entity.rules.exists[it.targets.exists[it == RuleTarget.GRID_ROW]]) {
+		if (entity.rules.exists[it.targets.exists[it == RuleTarget.GRID_ROWS]]) {
 			return ''' [ngClass]="applyAndGetRuleGridRowStyleClass(«entity.fieldName»)"'''
 		}
 	}

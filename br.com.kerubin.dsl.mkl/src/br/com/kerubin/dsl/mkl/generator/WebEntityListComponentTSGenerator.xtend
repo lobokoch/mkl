@@ -243,7 +243,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	}
 	
 	def CharSequence buildRulesForGridRowStyleClass(Entity entity) {
-		val rules = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROW] && it.apply.hasStyleClass]
+		val rules = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROWS] && it.apply.hasStyleClass]
 		
 		if (!rules.empty) {
 			val varEntity = entity.fieldName
@@ -359,13 +359,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			resultStrExp.concatSB(expression.operator.adaptRuleWhenOperator)
 			expression.rigth.buildRuleWhenForGridRowStyleClass(resultStrExp)
 		}
-	}
-	
-	def StringBuilder concatSB(StringBuilder sb, String value) {
-		if (sb.length > 0) {
-			sb.append(' ')
-		}
-		sb.append(value);
 	}
 	
 	def StringBuilder insertSB(StringBuilder sb, String value) {
