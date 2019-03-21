@@ -90,13 +90,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            	«slots.map[slot |
 		            	'''
 	            		«IF slot.isOrderedOnGrid»
-	            			<th [pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
+	            			<th «slot.buildGridColumnWidth»[pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
 	            		«ELSE»
 	            			<th>«slot.getTranslationKeyGridFunc»</th>
 	            		«ENDIF»
 		            	'''
 		            ].join»
-		              	<th>Ações</th>
+						<th style="width: 12em">Ações</th>
 		            </tr>
 		        </ng-template>
 		        
@@ -130,25 +130,22 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 					</tr>
 				</ng-template>
 				«ENDIF»
-				<!--
-				<ng-template pTemplate="footer">
-			      <tr>
-			          <td></td>
-			          <td></td>
-			          <td><div class="total-conta-nao-paga">{{ getTotalValorPagar | currency:'BRL':'symbol':'1.2-2':'pt' }}</div></td>
-			          <td></td>
-			          <td><div class="total-conta-paga">{{ getTotalValorPago | currency:'BRL':'symbol':'1.2-2':'pt' }}</div></td>
-			          <td><div class="total-contas">{{ getTotalGeralContasPagar | currency:'BRL':'symbol':'1.2-2':'pt' }}</div></td>
-			          <td></td>
-			          <td></td>
-			      </tr>
-			    </ng-template>
-			    -->
-			    
 			</p-table>
 		</div>
 		<!-- End GRID -->
 		'''
+	}
+	
+	def CharSequence buildGridColumnWidth(Slot slot) {
+		if (slot.isDate) {
+			'''style="width: 7em" '''
+		}
+		else if (slot.isMoney) {
+			'''style="width: 8em" '''
+		}
+		else {
+			''''''
+		}
 	}
 	
 	def CharSequence generateRuleActions(Rule rule) {
