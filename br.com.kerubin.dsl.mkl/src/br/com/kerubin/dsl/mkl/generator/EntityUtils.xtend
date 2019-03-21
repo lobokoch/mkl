@@ -28,6 +28,7 @@ import java.util.List
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
 import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
+import br.com.kerubin.dsl.mkl.model.RuleTarget
 
 class EntityUtils {
 	
@@ -43,13 +44,6 @@ class EntityUtils {
 	public static val NAVBAR_SELECTOR_NAME = 'app-' + NAVBAR
 	public static val DELETED_FIELD_NAME = 'deleted'
 	public static val DELETED_FIELD_LABEL = 'inativo'
-	
-	def static StringBuilder concatSB(StringBuilder sb, String value) {
-		if (sb.length > 0) {
-			sb.append(' ')
-		}
-		sb.append(value);
-	}
 	
 	def static generateEntityImports(Entity entity) {
 		'''
@@ -479,6 +473,14 @@ class EntityUtils {
 	
 	def static toEntityName(Entity entity) {
 		entity.name.toFirstUpper + "Entity"
+	}
+	
+	def static getRuleActions(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
+	}
+	
+	def static hasRuleActions(Entity entity) {
+		!entity.ruleActions.empty 
 	}
 	
 	def static toEntityQueryDSLName(Entity entity) {

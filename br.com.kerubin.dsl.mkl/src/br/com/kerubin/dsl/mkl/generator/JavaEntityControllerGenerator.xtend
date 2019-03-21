@@ -1,9 +1,13 @@
 package br.com.kerubin.dsl.mkl.generator
 
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.Slot
+
+import static br.com.kerubin.dsl.mkl.generator.Utils.*
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 
 class JavaEntityControllerGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -36,12 +40,17 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val toDTO = 'convertEntityToDto'
 		val toEntity = 'convertDtoToEntity'
 		
+		val ruleActions = entity.ruleActions
+		
 		'''
 		package «entity.package»;
 		
 		«IF entity.hasAutoComplete»
 		import java.util.Collection;
 		import org.springframework.web.bind.annotation.RequestParam;
+		«ENDIF»
+		«IF !ruleActions.empty»
+		import org.springframework.web.server.ResponseStatusException;
 		«ENDIF»
 		import java.util.List;
 		import java.util.stream.Collectors;
@@ -133,6 +142,30 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«IF entity.hasSumFields»
 			«entity.generateMethodGetContaPagarSumFields»
 			«ENDIF»
+			
+			«ruleActions.map[generateRuleActions].join»
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleActions(Rule rule) {
+		val actionName = rule.getRuleActionName
+		val entity = (rule.owner as Entity)
+		val idVar = entity.id.name.toFirstLower
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		
+		'''
+		
+		@PutMapping("/«actionName»/{«idVar»}")
+		@ResponseStatus(HttpStatus.NO_CONTENT)
+		public void «actionName»(@PathVariable «idType» «idVar») {
+			try {
+				«entityServiceVar».«actionName»(«idVar»);
+			}
+			catch(IllegalStateException e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+			}
 		}
 		'''
 	}

@@ -5,6 +5,25 @@ import java.util.LinkedHashSet
 
 // BEGIN Rule
 
+class RuleAction {
+	String actionName
+	contains ActionButton actionButton
+}
+
+class ActionButton {
+	String tooltip
+	String icon
+}
+
+class FieldAssignExpression {
+	contains FieldAndValue[] fieldValues
+}
+
+class FieldAndValue {
+	contains FieldObject field
+	contains AbstractObject value
+}
+
 class Rulled {
 	contains Rule[] rules opposite owner
 	
@@ -17,7 +36,12 @@ class Rule {
 	RuleTarget[] targets
 	contains RuleApply apply
 	contains RuleWhen when
+	contains RuleAction action
 	container Rulled owner opposite rules
+	
+	op boolean hasWhen() {
+		when !== null
+	}
 }
 
 class RuleWhen {
@@ -31,29 +55,33 @@ class RuleWhenExpression {
 }
 
 class RuleExpression {
-	contains RuleWhenObject whenObject
+	contains AbstractObject whenObject
 	contains RuleWhenAbstractObjectOperation objectOperation
 }
 
-class EntityFieldMathExpression {
-	contains EntityField leftField
+class FieldMathExpression {
+	contains FieldObject leftField
 	MathOperator operator
-	contains EntityFieldMathExpression rightField
+	contains FieldMathExpression rightField
 }
 
-abstract class RuleWhenObject {
+abstract class AbstractObject {
 	
 }
 
-class EntityField extends RuleWhenObject {
+class FieldObject extends AbstractObject {
 	refers Slot field
 }
 
-class NumberObject extends RuleWhenObject {
+class NumberObject extends AbstractObject {
 	Double value
 }
 
-class TemporalObject extends RuleWhenObject {
+class NullObject extends AbstractObject {
+	String nullValue
+}
+
+class TemporalObject extends AbstractObject {
 	RuleWhenTemporalConstants temporalConstant
 }
 
@@ -102,17 +130,13 @@ enum RuleWhenTemporalConstants {
 	TOMORROW as 'tomorrow'
 	YESTERDAY as 'yesterday' 
 	END_OF_WEEK as 'endOfWeek'
-	/*BEGIN_OF_MONTH as 'beginOfMonth'
-	NEXT_SATURDAY as 'nextSaturday'
-	NEXT_SUNDAY as 'nextSunday'
-	LAST_SUNDAY as 'lastSunday'
-	LAST_MONDAY as 'lastMonday'*/
 }
 
 class RuleApply {
 	String styleClass
 	String styleCss
-	contains EntityFieldMathExpression sumFieldExpression
+	contains FieldMathExpression sumFieldExpression
+	contains FieldAssignExpression actionExpression
 	
 	op boolean hasStyleClass() {
 		styleClass !== null && !styleClass.trim.isEmpty
@@ -143,6 +167,7 @@ enum RuleTarget {
 	GRID_ROWS as 'grid.rows'
 	GRID_ROW_CELL as 'grid.row.cell'
 	GRID_SUMROW_LAST_CELL as 'grid.sum.lastCell'
+	GRID_ACTIONS as 'grid.actions'
 }
 
 // END Rule

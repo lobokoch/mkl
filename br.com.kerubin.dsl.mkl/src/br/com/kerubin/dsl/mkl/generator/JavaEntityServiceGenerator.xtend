@@ -1,9 +1,14 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.Slot
+import java.util.Set
+
+import static br.com.kerubin.dsl.mkl.generator.Utils.*
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 
 class JavaEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -39,6 +44,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val entityVar = entity.toEntityName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		val ruleActions = entity.ruleActions
 		
 		'''
 		package «entity.package»;
@@ -72,7 +78,20 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			public «entity.toEntitySumFieldsName» get«entity.toEntitySumFieldsName»(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName»);
 			«ENDIF»
+			
+			«ruleActions.map[generateRuleActionsInterfaceMethod].join»
 		}
+		'''
+	}
+	
+	def CharSequence generateRuleActionsInterfaceMethod(Rule rule) {
+		val actionName = rule.getRuleActionName
+		val entity = (rule.owner as Entity)
+		val idVar = entity.id.name.toFirstLower
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		
+		'''
+		public void «actionName»(«idType» «idVar»);
 		'''
 	}
 	
@@ -94,9 +113,15 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val getEntityMethod = 'get' + entityName
 		val publishSlots = entity.getPublishSlots
 		val entityEventName = entity.toEntityEventName
+		val ruleActions = entity.ruleActions
 		
-		'''
+		val imports = newLinkedHashSet
+		
+		val pakage = '''
 		package «entity.package»;
+		'''
+		
+		val preImports = ''' 
 		
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
@@ -125,6 +150,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import br.com.kerubin.api.messaging.core.DomainEventEnvelopeBuilder;
 		«service.getImportServiceConstants»
 		«ENDIF»
+		'''
+		
+		val code = '''
 		
 		@Service
 		public class «entity.toServiceImplName» implements «entity.toServiceName» {
@@ -230,9 +258,52 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«IF entity.hasSumFields»
 			«entity.generateMethodGetContaPagarSumFields»
 			«ENDIF»
+			
+			«ruleActions.map[generateRuleActionsImpl(imports)].join»
+		}
+		'''
+		
+		val result = pakage + preImports + imports.join + '\n' + code;
+		
+		result
+	}
+	
+	def CharSequence generateRuleActionsImpl(Rule rule, Set<String> imports) {
+		val actionName = rule.getRuleActionName
+		val entity = (rule.owner as Entity)
+		val idVar = entity.id.name.toFirstLower
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		val entityName = entity.toEntityName
+		val entityVar = entity.fieldName
+		val getEntityMethod = 'get' + entityName
+		val repositoryVar = entity.toRepositoryName.toFirstLower
+		
+		val whenExpression = rule.buildRuleWhenExpressionForJava(imports)
+		var fieldValues = rule.apply.actionExpression.fieldValues
+		val hasWhen = rule.hasWhen
+		
+		'''
+		
+		@Transactional
+		@Override
+		public void «actionName»(«idType» «idVar») {
+			«entityName» «entityVar» = «getEntityMethod»(«idVar»);
+			
+			«IF hasWhen»if («whenExpression») {«ENDIF»
+				«fieldValues.map[it.generateActionFieldAssign(entityVar, imports)].join»
+				
+				«entityVar» = «repositoryVar».save(«entityVar»);
+			«IF hasWhen»}
+			else {
+				throw new IllegalStateException("Condição inválida para executar a ação: «actionName».");
+			}
+			«ENDIF»
+			
 		}
 		'''
 	}
+	
+	
 	
 	def CharSequence generateMethodGetContaPagarSumFields(Entity entity) {
 		val entityName = entity.toEntityName

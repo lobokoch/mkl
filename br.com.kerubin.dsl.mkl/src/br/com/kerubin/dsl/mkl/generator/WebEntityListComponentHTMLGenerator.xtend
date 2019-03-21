@@ -4,9 +4,11 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Slot
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Rule
-import br.com.kerubin.dsl.mkl.model.EntityField
 import br.com.kerubin.dsl.mkl.model.RuleTarget
+import br.com.kerubin.dsl.mkl.model.FieldObject
 
 class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -71,6 +73,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val slots = entity.slots.filter[it.isShowOnGrid]
 		val hasSum = slots.exists[hasSumField]
 		
+		val ruleActions = entity.ruleActions
+		
 		'''
 		
 		<!-- Begin GRID -->
@@ -103,6 +107,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
 		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="pi pi-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
 		              		<button (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
+		              		«ruleActions.map[it.generateRuleActions].join»
 		              	</td>
 		            </tr>
 		        </ng-template>
@@ -146,6 +151,23 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
+	def CharSequence generateRuleActions(Rule rule) {
+		val actionName = rule.getRuleActionName
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.fieldName
+		val icon = rule.action?.actionButton?.icon ?: 'pi pi-cog' //gear
+		val tooltip = rule.action?.actionButton?.tooltip ?: actionName
+		
+		'''
+		<button pButton
+		    [disabled]="!«rule.getRuleActionWhenName»(«entityVar»)"
+		    (click)="«actionName»(«entityVar»)"
+		    icon="«icon»"  tooltipPosition="top"
+		    pTooltip="«tooltip»">
+		</button>
+		'''
+	}
+	
 	def CharSequence buildEntityRuleWithSum(Entity entity) {
 		val rule = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_SUMROW_LAST_CELL]].head
 		if (rule === null) {
@@ -155,16 +177,16 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val sbLabels = new StringBuilder
 		val sbField = new StringBuilder
 		var expression = rule.apply.sumFieldExpression
-		var slot = expression.leftField.field
+		var slot = expression.getLeftField.getField
 		sbLabels.append(slot.getSumSlotLabelWithStyle)
 		sbField.append(slot.getEntitySumFieldName)
-		while (expression.rightField !== null) {
-			sbLabels.append(expression.operator.literal)
-			sbField.concatSB(expression.operator.literal)
+		while (expression.getRightField !== null) {
+			sbLabels.append(expression.getOperator.literal)
+			sbField.concatSB(expression.getOperator.literal)
 			
-			expression = expression.rightField
+			expression = expression.getRightField
 			
-			slot = expression.leftField.field
+			slot = expression.getLeftField.getField
 			sbLabels.append(slot.getSumSlotLabelWithStyle)
 			sbField.concatSB(slot.getEntitySumFieldName)
 		}
@@ -198,8 +220,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence applyRuleOnGrid(Rule rule) {
 		val expressions = newArrayList
-		if (rule.when.expression.left.whenObject instanceof EntityField) {
-			val slot = (rule.when.expression.left.whenObject as EntityField).field
+		if (rule.when.expression.left.whenObject instanceof FieldObject) {
+			val slot = (rule.when.expression.left.whenObject as FieldObject).getField
 			expressions.add(slot.fieldName)
 		}
 		

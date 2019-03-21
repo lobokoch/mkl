@@ -139,17 +139,20 @@ fragment Rules returns Rulled:
 
 // BEGIN rule
 Rule:
-	'with' '(' 
-		(targets += RuleTarget (',' targets += RuleTarget)*)?
-	')'
-	'.'
-	'apply' '(' 
-		apply = RuleApply
-	')'
-	('.'
-	'when' '(' 
-		when = RuleWhen
-	')')?
+	'with' '(' (targets += RuleTarget (',' targets += RuleTarget)*)? ')'
+	'.' 'apply' '(' apply = RuleApply ')'
+	('.' 'when' '(' when = RuleWhen ')')?
+	('.' 'action' '(' action = RuleAction ')')?
+;
+
+RuleAction:
+	'name' ':' actionName = ID 
+	'button' '(' actionButton = ActionButton ')'
+;
+
+ActionButton:
+	'tooltip' ':' tooltip = STRING 
+	'icon' ':' icon = STRING
 ;
 
 RuleWhen:
@@ -163,7 +166,7 @@ RuleWhenExpression:
 ;
 
 RuleExpression:
-	(whenObject = (EntityField | TemporalObject | NumberObject)) 
+	(whenObject = (FieldObject | TemporalObject | NumberObject)) 
 		('.' objectOperation = RuleWhenAbstractObjectOperation)?
 ;
 
@@ -199,7 +202,11 @@ RuleWhenOpAddDays:
 	methodName = 'addDays' '(' addDaysValue = RuleWhenTemporalValue ')'
 ;
 
-EntityField:
+NullObject:
+	nullValue = 'null'
+;
+
+FieldObject:
 	field=[Slot]
 ;
 
@@ -234,13 +241,22 @@ RuleApply:
 	(
 		('styleClass' ':' styleClass = STRING)? & 
 		('styleCss' ':' styleCss = STRING)? &
-		('(' sumFieldExpression = EntityFieldMathExpression ')')?
+		('(' sumFieldExpression = FieldMathExpression ')')? &
+		(actionExpression = FieldAssignExpression)?
 	)
 ;
 
-EntityFieldMathExpression:
-	leftField = EntityField 
-		(operator = MathOperator rightField = EntityFieldMathExpression)?
+FieldAssignExpression:
+	fieldValues += FieldAndValue (',' fieldValues += FieldAndValue)*
+;
+
+FieldAndValue:
+	field = FieldObject '=' value = (FieldObject | TemporalObject | NumberObject | NullObject)
+;
+
+FieldMathExpression:
+	leftField = FieldObject 
+		(operator = MathOperator rightField = FieldMathExpression)?
 ;
 
 enum MathOperator:
@@ -248,7 +264,10 @@ enum MathOperator:
 ;
 
 enum RuleTarget:
-	 GRID_ROWS='grid.rows' | GRID_ROW_CELL='grid.row.cell' | GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell'
+	 GRID_ROWS='grid.rows' | 
+	 GRID_ROW_CELL='grid.row.cell' | 
+	 GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell' |
+	 GRID_ACTIONS = 'grid.actions'
 ;
 
 //END Rule

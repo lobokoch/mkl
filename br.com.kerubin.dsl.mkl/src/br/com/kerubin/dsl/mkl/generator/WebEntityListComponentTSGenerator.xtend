@@ -1,7 +1,6 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
-import br.com.kerubin.dsl.mkl.model.EntityField
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
@@ -15,10 +14,13 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.TemporalObject
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
 import br.com.kerubin.dsl.mkl.model.NumberObject
+import br.com.kerubin.dsl.mkl.model.FieldObject
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -58,6 +60,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val getMethodEntitySumFields = 'get' + entitySumFieldsClassName
 		
 		val filterSlots = entity.slots.filter[it.hasListFilter]
+		val ruleActions = entity.ruleActions
+		val idVar = entity.id.name.toFirstLower
 		
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
@@ -173,7 +177,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.confirmation.confirm({
 			      message: 'Confirma a exclusão do registro?',
 			      accept: () => {
-			        this.«serviceVar».delete(«fieldName».id)
+			        this.«serviceVar».delete(«fieldName».«idVar»)
 			        .then(() => {
 			          this.showSuccess('Registro excluído!');
 			          this.«entity.toEntityListListMethod»(0);
@@ -231,6 +235,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			«IF entity.hasRules»«entity.buildRulesForGridRowStyleClass»«ENDIF»
+			«ruleActions.map[generateRuleActions].join»
 			
 			«buildTranslationMethod(service)»
 			
@@ -242,13 +247,53 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		source
 	}
 	
+	def CharSequence generateRuleActions(Rule rule) {
+		val actionName = rule.getRuleActionName 
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.fieldName
+		val dtoName = entity.toDtoName
+		val idVar = entity.id.name.toFirstLower
+		
+		val serviceName = entity.toEntityWebServiceClassName
+		val serviceVar = serviceName.toFirstLower
+		
+		val hasWhen = rule.hasWhen
+		var String expression = null
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		'''
+		«IF hasWhen»
+		
+		«rule.getRuleActionWhenName»(«entityVar»: «dtoName») {
+			return «expression»;
+		}
+		«ENDIF»
+		
+		«actionName»(«entityVar»: «dtoName») {
+			this.«serviceVar».«actionName»(«entityVar».«idVar»)
+				.then(() => {
+				  this.showSuccess('Ação executada com sucesso!');
+				  this.«entity.toEntityListListMethod»(0);
+				})
+				.catch((e) => {
+					console.log('Erro ao executar a ação «actionName»: ' + e);
+				  	this.showError('Não foi possível executar a ação.');
+				});
+		}
+		'''
+	}
+	
 	def CharSequence buildRulesForGridRowStyleClass(Entity entity) {
 		val rules = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROWS] && it.apply.hasStyleClass]
 		
 		if (!rules.empty) {
-			val varEntity = entity.fieldName
+			val entityVar = entity.fieldName
 			'''
-			applyAndGetRuleGridRowStyleClass(«varEntity»: «entity.toDtoName»): String {
+			applyAndGetRuleGridRowStyleClass(«entityVar»: «entity.toDtoName»): String {
 				«rules.map[buildRuleForGridRowStyleClass].join»
 			
 			    return null;
@@ -279,8 +324,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		var isObjStr = false
 		var isObjDate = false
 		var isNumber = false
-		if (expression.left.whenObject instanceof EntityField) {
-			val slot = (expression.left.whenObject as EntityField).field
+		if (expression.left.whenObject instanceof FieldObject) {
+			val slot = (expression.left.whenObject as FieldObject).getField
 			objName = slot.ownerEntity.fieldName + '.' + slot.fieldName
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
@@ -299,8 +344,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			strExpression = objName
 			isNumber = true
 		}
-		
-		
 		val op = expression.left.objectOperation
 		if (op !== null) {
 			if (op instanceof RuleWhenOpIsNull) {
@@ -397,8 +440,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'moment(' + objectName + ')'
 	}
 	
-	def String getTemporalConstantValue(RuleWhenTemporalConstants temporalConstant) {
-		switch (temporalConstant) {
+	def String getTemporalConstantValue(RuleWhenTemporalConstants tc) {
+		switch (tc) {
 			case RuleWhenTemporalConstants.TOMORROW: {
 				"moment().add(1, 'day')"
 			}

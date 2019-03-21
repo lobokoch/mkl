@@ -2,10 +2,12 @@ package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
+import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 
 class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -42,6 +44,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val slots = entity.slots
 		val slotsListFilter = slots.filter[hasListFilter]
+		
+		val ruleActions = entity.ruleActions
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «entity.toAutoCompleteName» } from './«entity.toEntityWebModelName»';''')
@@ -121,6 +125,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			      return «varName»;
 			    });
 			}
+			
+			«ruleActions.map[generateRuleActions].join»
 			
 			«IF entity.hasDate»
 			private adjustEntityDates(entityList: «dtoName»[]) {
@@ -273,6 +279,20 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateRuleActions(Rule rule) {
+		val actionName = rule.getRuleActionName
+		
+		'''
+		«actionName»(id: string): Promise<void> {
+			const headers = this.getHeaders();
+			
+			return this.http.put(`${this.url}/«actionName»/${id}`, { headers })
+			.toPromise()
+			.then(() => null);
+		}
+		'''
 	}
 	
 	def CharSequence generateListFilterAutoComplete(Slot slot) {

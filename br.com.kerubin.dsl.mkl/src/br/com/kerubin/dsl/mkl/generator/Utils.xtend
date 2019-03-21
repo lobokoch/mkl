@@ -144,4 +144,18 @@ class Utils {
 	def static isEmpty(String value) {
 		value === null || value.trim.isEmpty
 	}
+	
+	def static StringBuilder concatSB(StringBuilder sb, String value) {
+		if (sb.length > 0) {
+			sb.append(' ')
+		}
+		sb.append(value);
+	}
+	
+	def static StringBuilder concatSB(StringBuilder sb, CharSequence value) {
+		if (sb.length > 0) {
+			sb.append(' ')
+		}
+		sb.append(value);
+	}
 }
