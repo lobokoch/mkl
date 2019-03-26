@@ -63,6 +63,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
 		
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		val body = '''
 		
@@ -127,6 +128,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			}
 			
 			«ruleActions.map[generateRuleActions].join»
+			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
 			
 			«IF entity.hasDate»
 			private adjustEntityDates(entityList: «dtoName»[]) {
@@ -281,10 +283,27 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		source
 	}
 	
+	def CharSequence generateRuleMakeCopiesActions(Rule rule) {
+		val actionName = rule.getRuleActionMakeCopiesName
+		val grouperField = rule.ruleMakeCopiesGrouperSlot
+		
+		'''
+		 
+		«actionName»(id: string, numberOfCopies: Number, referenceFieldInterval: Number, «grouperField.fieldName»: String): Promise<void> {
+		    const headers = this.getHeaders();
+		      const entityCopy = { id, numberOfCopies, referenceFieldInterval, «grouperField.fieldName» };
+			    return this.http.post(`${this.url}/«actionName»`, JSON.stringify(entityCopy), { headers })
+			    .toPromise()
+			    .then( () => null);
+		}
+		'''
+	}
+	
 	def CharSequence generateRuleActions(Rule rule) {
 		val actionName = rule.getRuleActionName
 		
 		'''
+		 
 		«actionName»(id: string): Promise<void> {
 			const headers = this.getHeaders();
 			

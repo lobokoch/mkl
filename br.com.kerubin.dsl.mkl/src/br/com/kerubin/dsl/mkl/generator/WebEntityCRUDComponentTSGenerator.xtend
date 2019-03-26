@@ -5,6 +5,8 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.model.Rule
 
 class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -37,6 +39,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val fieldName = entity.fieldName
 		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -54,8 +57,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «slotAsEnum.toDtoName» } from '«service.serviceWebEnumsPathName»';''')
 		]
 		
-		val component = entity.toEntityWebCRUDComponentName
+		if (!ruleMakeCopies.empty) {
+			imports.add('''import {SelectItem} from 'primeng/api';''')
+		}
 		
+		val component = entity.toEntityWebCRUDComponentName
 		val body = '''
 		
 		@Component({
@@ -65,7 +71,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		})
 		
 		export class «entity.toEntityWebComponentClassName» implements OnInit {
-			
+			«IF !ruleMakeCopies.empty»«initializeMakeCopiesVars(ruleMakeCopies.head)»«ENDIF»
 			«fieldName» = new «dtoName»();
 			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
 			«entity.slots.filter[isEnum].map[mountDropdownOptionsVar].join('\n\r')»
@@ -79,6 +85,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    private messageService: MessageService
 			) { 
 				«entity.slots.filter[isEnum].map['''this.«it.webDropdownOptionsInitializationMethod»();'''].join('\n\r')»
+				«IF !ruleMakeCopies.empty»
+				this.initializeCopiesReferenceFieldOptions();
+				«ENDIF»
 			}
 			
 			ngOnInit() {
@@ -166,11 +175,75 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			«buildTranslationMethod(service)»
+			
+			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
+			«ruleMakeCopies.map[generateInitializeCopiesReferenceFieldOptions].join»
 		}
 		'''
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateInitializeCopiesReferenceFieldOptions(Rule rule) {
+		'''
+		 
+		initializeCopiesReferenceFieldOptions() {
+		    this.copiesReferenceFieldOptions = [
+		      this.copiesReferenceField
+		    ];
+		
+		    this.copiesReferenceFieldSelected = this.copiesReferenceField;
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleMakeCopiesActions(Rule rule) {
+		val actionName = rule.getRuleActionMakeCopiesName
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.fieldName
+		val grouperField = rule.ruleMakeCopiesGrouperSlot
+		val serviceName = entity.toEntityWebServiceClassName
+		val serviceVar = serviceName.toFirstLower
+		
+		'''
+		
+		«actionName»(form: FormControl) {
+		      if (!this.«entityVar».«grouperField.fieldName») {
+		        // this.copiesMustHaveGroup = true;
+		        this.showError('Campo \'«grouperField.fieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
+		        return;
+		      }
+		      // this.copiesMustHaveGroup = false;
+		
+		      this.«serviceVar».«actionName»(this.«entityVar».«entity.id.fieldName», this.numberOfCopies,
+		        this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
+			    .then(() => {
+		        // this.copiesMustHaveGroup = false;
+		        this.showSuccess('Operação realizada com sucesso!');
+			    }).
+			    catch(error => {
+		        // this.copiesMustHaveGroup = false;
+		        const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
+		        console.log(error);
+			      this.showError('Erro: ' + message);
+			    });
+		}
+		'''
+	}
+	
+	def CharSequence initializeMakeCopiesVars(Rule rule) {
+		val referenceField = rule.apply.makeCopiesExpression.referenceField.field
+		'''
+		 
+		numberOfCopies = 1;
+		copiesReferenceFieldInterval = 30;
+		
+		copiesReferenceFieldOptions: SelectItem[];
+		copiesReferenceField: SelectItem = { label: '«referenceField.labelValue»', value: '«referenceField.fieldName»' };
+		copiesReferenceFieldSelected: SelectItem;
+		 
+		'''
 	}
 	
 	def CharSequence generateEnumInitializationOptions(Slot slot) {

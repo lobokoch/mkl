@@ -69,16 +69,20 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		val id = entity.id
 		val grouperField = rule.ruleMakeCopiesGrouperSlot
 		
+		val makeCopies = rule.apply.makeCopiesExpression
+		val min = makeCopies.minCopies
+		val max = makeCopies.maxCopies
+		
 		'''
 		@NotNull(message="'«id.name.toFirstUpper»' é obrigatório.")
 		private «id.toJavaType» «id.fieldName»;
 		
-		@Min(value = 1, message = "A quantidade de cópias não pode ser menor que 1.")
-		@Max(value = 10000, message = "A quantidade de cópias não pode ser maior que 10000.")
+		@Min(value = «min», message = "A quantidade de cópias não pode ser menor que «min».")
+		@Max(value = «max», message = "A quantidade de cópias não pode ser maior que «max».")
 		private Long numberOfCopies;
 		
 		@Min(value = 1, message = "O intervalo não pode ser menor que 1.")
-		@Max(value = 10000, message = "O intervalo não pode ser maior que 10000.")
+		@Max(value = 1000, message = "O intervalo não pode ser maior que 1000.")
 		private Long referenceFieldInterval;
 		
 		@NotBlank(message = "O campo '«rule.getRuleMakeCopiesGrouperSlotName»' deve ser informado.")

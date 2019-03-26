@@ -253,9 +253,11 @@ RuleApply:
 MakeCopiesExpression:
 	'makeCopies' '('
 		(
-			('title' ':' title = STRING)? &
+			('grouperField' ':' grouperField = FieldObject) &
 			('referenceField' ':' referenceField = FieldObject) &
-			('grouperField' ':' grouperField = FieldObject) 
+			('title' ':' title = STRING)? &
+			('minCopies' ':' minCopies = INT)? &
+			('maxCopies' ':' maxCopies = INT)?
 		)
 	')'
 ;

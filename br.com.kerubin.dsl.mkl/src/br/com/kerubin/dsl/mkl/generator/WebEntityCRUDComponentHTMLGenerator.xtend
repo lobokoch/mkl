@@ -15,6 +15,8 @@ import br.com.kerubin.dsl.mkl.model.UUIDType
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.model.Rule
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	val closedHTMLTags = #['p-', 'textarea']
@@ -41,6 +43,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence doGenerateEntityComponentGenerator(Entity entity) {
+		val rules = entity.ruleMakeCopies
+		
 		'''
 		<div class="container">
 		
@@ -49,7 +53,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		  	
 				«entity.generateEntityTitle»
 				«entity.generateEntityFields»
-				«IF entity.enableReplication»«entity.generateEntityReplication»«ENDIF»
+				«IF !rules.empty»«entity.generateEntityCopies(rules.head)»«ENDIF»
 				«entity.generateButtons»
 			
 			</div>
@@ -59,28 +63,53 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
-	def CharSequence generateEntityReplication(Entity entity) {
+	def CharSequence generateEntityCopies(Entity entity, Rule rule) {
+		val makeCopies = rule.apply.makeCopiesExpression
+		val title = makeCopies?.title ?: 'Gerar cópias'
+		val actionName = rule.getRuleActionMakeCopiesName
+		
+		val actionButton = rule?.action?.actionButton
+		val buttonToolTip = actionButton?.tooltip ?: 'Gerar cópias deste registro'
+		val buttonLabel = actionButton?.label ?: 'Gerar cópias'
+		val buttonIcon = actionButton?.icon ?: 'pi pi-clone'
+		val min = makeCopies.minCopies
+		val max = makeCopies.maxCopies
+		
 		'''
+		 
+		<!-- BEGIN make copies -->
+		<!-- placeholder="Informe um identificador, exemplo: #luz_2019" -->
+		<!-- <div class="invalid-message" *ngIf="copiesMustHaveGroup && !contaPagar.agrupador">Campo obrigatório para gerar cópias.</div> -->
+		    
+		    <div *ngIf="isEditing" class="kb-make-copies ui-g-12">
 		
-		<!-- Begin Agrupador -->
-		<div class="ui-g-12" *ngIf="«entity.fieldName».«entity.id.fieldName» != null" style="margin: 0 auto">
-		      <div class="ui-g-12 ui-md-4 ui-fluid">
-		        <label>Agrupador</label>
-		        <input [(ngModel)]="«entity.fieldName».agrupador" minlength="3" pInputText type="text" name="agrupador" ngModel>
+		      <div class="ui-g-12 ui-fluid">
+		          <label>«title»:</label>
 		      </div>
 		
-		      <div class="ui-g-12 ui-md-2 ui-fluid">
-		        <label>Quantidade</label>
-		        <p-spinner ngModel name="«entity.entityReplicationQuantity»" size="10" [(ngModel)]="«entity.entityReplicationQuantity»" [min]="1" [max]="100"></p-spinner>
-		      </div>
+		      <div class="ui-g-12 ui-fluid">
+		        <div class="ui-g-12 ui-fluid ui-md-2">
+		          <label for="numberOfCopies">Número de cópias</label>
+		          <p-spinner size="30" name="numberOfCopies" [(ngModel)]="numberOfCopies" [min]="«min»" [max]="«max»"></p-spinner>
+		        </div>
 		
-		      <div class="ui-g-12 ui-md-2 ui-fluid centro-pai" >
-		        <div class="ui-g-12 ui-md-2 centro-filho">
-		          <button pButton (click)="«entity.entityReplicationMethod»" type="button" label="Replicar" class="ui-button-info"></button>
+		        <div class="ui-g-12 ui-fluid ui-md-2">
+		          <label for="copiesReferenceField" style="display: block">Campo de referência</label>
+		          <p-dropdown optionLabel="label" name="copiesReferenceField" #copiesReferenceField="ngModel" [options]="copiesReferenceFieldOptions" ngModel [(ngModel)]="copiesReferenceFieldSelected" placeholder="Selecione"></p-dropdown>
+		        </div>
+		
+		        <div class="ui-g-12 ui-md-2 ui-fluid">
+		          <label for="copiesReferenceFieldInterval" style="display: block">Intervalo (dias)</label>
+		          <p-spinner size="30" name="copiesReferenceFieldInterval" [(ngModel)]="copiesReferenceFieldInterval" [min]="1" [max]="1000"></p-spinner>
+		        </div>
+		
+		        <div class="ui-g-12 ui-fluid ui-md-2">
+		          <span style="display: block">&nbsp;</span>
+		          <button pButton (click)="«actionName»()" type="button" pTooltip="«buttonToolTip»" tooltipPosition="top" icon="«buttonIcon»" label="«buttonLabel»" class="ui-button-info"></button>
 		        </div>
 		      </div>
-		</div>
-		<!-- End Agrupador -->
+		    </div>
+		    <!-- END make copies -->
 		'''
 	}
 	

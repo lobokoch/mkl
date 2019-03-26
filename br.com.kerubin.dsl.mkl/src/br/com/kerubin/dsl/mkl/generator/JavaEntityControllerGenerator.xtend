@@ -160,7 +160,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		
 		'''
 		
-		@PutMapping("/«actionName»")
+		@PostMapping("/«actionName»")
 		@ResponseStatus(HttpStatus.NO_CONTENT)
 		public void «actionName»(@Valid @RequestBody «makeCopiesClassName» «makeCopiesNameVar») {
 			try {

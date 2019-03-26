@@ -7,6 +7,8 @@ import java.util.LinkedHashSet
 
 class MakeCopiesExpression {
 	String title
+	int minCopies = '1'
+	int maxCopies = '60'
 	contains FieldObject referenceField
 	contains FieldObject grouperField
 	
