@@ -41,6 +41,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val toEntity = 'convertDtoToEntity'
 		
 		val ruleActions = entity.ruleActions
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		'''
 		package «entity.package»;
@@ -49,7 +50,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		import java.util.Collection;
 		import org.springframework.web.bind.annotation.RequestParam;
 		«ENDIF»
-		«IF !ruleActions.empty»
+		«IF !ruleActions.empty || !ruleMakeCopies.isEmpty»
 		import org.springframework.web.server.ResponseStatusException;
 		«ENDIF»
 		import java.util.List;
@@ -144,6 +145,30 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«ENDIF»
 			
 			«ruleActions.map[generateRuleActions].join»
+			«ruleMakeCopies.map[generateRuleMakeCopies].join»
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleMakeCopies(Rule rule) {
+		val actionName = rule.getRuleActionMakeCopiesName
+		val entity = (rule.owner as Entity)
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		
+		val makeCopiesClassName = entity.toEntityMakeCopiesName
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		
+		'''
+		
+		@PutMapping("/«actionName»")
+		@ResponseStatus(HttpStatus.NO_CONTENT)
+		public void «actionName»(@Valid @RequestBody «makeCopiesClassName» «makeCopiesNameVar») {
+			try {
+				«entityServiceVar».«actionName»(«makeCopiesNameVar»);
+			}
+			catch(Exception e) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
+			}
 		}
 		'''
 	}

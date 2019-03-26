@@ -18,8 +18,28 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
 import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
 import br.com.kerubin.dsl.mkl.model.FieldAndValue
 import br.com.kerubin.dsl.mkl.model.NullObject
+import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class RuleUtils {
+	
+	def static Slot getRuleMakeCopiesGrouperSlot(Rule rule) {
+		rule?.apply?.makeCopiesExpression?.grouperField?.field
+	}
+	
+	def static Slot getRuleMakeCopiesReferenceField(Rule rule) {
+		rule?.apply?.makeCopiesExpression?.referenceField?.field
+	}
+	
+	def static String getRuleMakeCopiesGrouperSlotName(Rule rule) {
+		rule?.apply?.makeCopiesExpression?.grouperField?.field?.name?.toFirstUpper ?: '<NULL>'
+	}
+	
+	def static CharSequence getRuleActionMakeCopiesName(Rule rule) {
+		val actionName = rule?.action?.actionName ?: 'makeCopies' + (rule.owner as Entity).toDtoName
+		
+		'action' + actionName.toFirstUpper
+	}
 	
 	def static CharSequence getRuleActionName(Rule rule) {
 		'action' + rule.action.actionName.toFirstUpper

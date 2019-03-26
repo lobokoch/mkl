@@ -151,8 +151,11 @@ RuleAction:
 ;
 
 ActionButton:
-	'tooltip' ':' tooltip = STRING 
-	'icon' ':' icon = STRING
+	(
+		('tooltip' ':' tooltip = STRING) & 
+		('label' ':' label = STRING)? & 
+		('icon' ':' icon = STRING)?
+	)
 ;
 
 RuleWhen:
@@ -242,8 +245,19 @@ RuleApply:
 		('styleClass' ':' styleClass = STRING)? & 
 		('styleCss' ':' styleCss = STRING)? &
 		('(' sumFieldExpression = FieldMathExpression ')')? &
-		(actionExpression = FieldAssignExpression)?
+		(actionExpression = FieldAssignExpression)? &
+		(makeCopiesExpression = MakeCopiesExpression)?
 	)
+;
+
+MakeCopiesExpression:
+	'makeCopies' '('
+		(
+			('title' ':' title = STRING)? &
+			('referenceField' ':' referenceField = FieldObject) &
+			('grouperField' ':' grouperField = FieldObject) 
+		)
+	')'
 ;
 
 FieldAssignExpression:
@@ -267,7 +281,8 @@ enum RuleTarget:
 	 GRID_ROWS='grid.rows' | 
 	 GRID_ROW_CELL='grid.row.cell' | 
 	 GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell' |
-	 GRID_ACTIONS = 'grid.actions'
+	 GRID_ACTIONS = 'grid.actions' |
+	 FORM = 'form'
 ;
 
 //END Rule

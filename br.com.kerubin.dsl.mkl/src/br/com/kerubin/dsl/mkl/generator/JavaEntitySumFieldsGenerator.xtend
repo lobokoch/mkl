@@ -7,7 +7,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
-class JavaEntityContaPagarSumFieldsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
+class JavaEntitySumFieldsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)

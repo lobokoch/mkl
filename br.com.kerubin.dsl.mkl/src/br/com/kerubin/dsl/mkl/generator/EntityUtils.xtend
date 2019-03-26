@@ -479,6 +479,10 @@ class EntityUtils {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
 	}
 	
+	def static getRuleMakeCopies(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.apply.hasMakeCopiesExpression]
+	}
+	
 	def static hasRuleActions(Entity entity) {
 		!entity.ruleActions.empty 
 	}
@@ -689,6 +693,10 @@ class EntityUtils {
 		entity.toDtoName + 'SumFields'
 	}
 	
+	def static toEntityMakeCopiesName(Entity entity) {
+		entity.toDtoName + 'MakeCopies'
+	}
+	
 	def static toEntityEventConstantName(Entity entity, String eventName) {
 		entity.toDtoName.toConstantName + '_' + eventName.toUpperCase
 	}
@@ -717,6 +725,12 @@ class EntityUtils {
 	def static String buildFieldThis(Slot slot) {
 		val fileName = slot.name.toFirstLower
 		'''this.«fileName» = «fileName»;'''.toString
+	}
+	
+	
+	
+	def static CharSequence buildField(Slot slot) {
+		'''private «slot.toJavaTypeDTO» «slot.name.toFirstLower»;'''
 	}
 	
 	def static String buildFieldAndType(Slot slot) {
@@ -811,7 +825,7 @@ class EntityUtils {
 	}
 	
 	def static CharSequence getGetMethod(Slot slot, String suffix) {
-		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		val name = slot.name.toFirstUpper + (suffix?.toFirstUpper ?: '')
 		'''
 		public «slot.toJavaType» get«name»() {
 			return «name.toFirstLower»;
@@ -860,7 +874,7 @@ class EntityUtils {
 	}
 	
 	def static CharSequence getSetMethod(Slot slot, String suffix) {
-		val name = slot.name.toFirstUpper + suffix?.toFirstUpper
+		val name = slot.name.toFirstUpper + (suffix?.toFirstUpper ?: '')
 		val nameFirstLower = name.toFirstLower
 		'''
 		public void set«name»(«slot.toJavaType» «nameFirstLower») {

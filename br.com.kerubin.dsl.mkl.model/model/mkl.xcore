@@ -5,6 +5,16 @@ import java.util.LinkedHashSet
 
 // BEGIN Rule
 
+class MakeCopiesExpression {
+	String title
+	contains FieldObject referenceField
+	contains FieldObject grouperField
+	
+	op boolean hasTitle() {
+		title !== null && !title.trim.empty
+	}
+}
+
 class RuleAction {
 	String actionName
 	contains ActionButton actionButton
@@ -13,6 +23,7 @@ class RuleAction {
 class ActionButton {
 	String tooltip
 	String icon
+	String label
 }
 
 class FieldAssignExpression {
@@ -137,6 +148,11 @@ class RuleApply {
 	String styleCss
 	contains FieldMathExpression sumFieldExpression
 	contains FieldAssignExpression actionExpression
+	contains MakeCopiesExpression makeCopiesExpression
+	
+	op boolean hasMakeCopiesExpression() {
+		makeCopiesExpression !== null
+	}
 	
 	op boolean hasStyleClass() {
 		styleClass !== null && !styleClass.trim.isEmpty
@@ -168,6 +184,7 @@ enum RuleTarget {
 	GRID_ROW_CELL as 'grid.row.cell'
 	GRID_SUMROW_LAST_CELL as 'grid.sum.lastCell'
 	GRID_ACTIONS as 'grid.actions'
+	FORM as 'form'
 }
 
 // END Rule

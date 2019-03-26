@@ -6,7 +6,6 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import java.util.Set
 
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
-
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 
@@ -45,6 +44,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val idVar = entity.id.name.toFirstLower
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val ruleActions = entity.ruleActions
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		'''
 		package «entity.package»;
@@ -78,9 +78,21 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			public «entity.toEntitySumFieldsName» get«entity.toEntitySumFieldsName»(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName»);
 			«ENDIF»
-			
 			«ruleActions.map[generateRuleActionsInterfaceMethod].join»
+			«ruleMakeCopies.map[generateRuleMakeCopiesActionsInterfaceMethod].join»
 		}
+		'''
+	}
+	
+	def CharSequence generateRuleMakeCopiesActionsInterfaceMethod(Rule rule) {
+		val actionName = rule.getRuleActionMakeCopiesName
+		val entity = (rule.owner as Entity)
+		val makeCopiesClassName = entity.toEntityMakeCopiesName
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		
+		'''
+		
+		public void «actionName»(«makeCopiesClassName» «makeCopiesNameVar»);
 		'''
 	}
 	
@@ -91,6 +103,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		
 		'''
+		
 		public void «actionName»(«idType» «idVar»);
 		'''
 	}
@@ -114,11 +127,12 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val publishSlots = entity.getPublishSlots
 		val entityEventName = entity.toEntityEventName
 		val ruleActions = entity.ruleActions
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		val imports = newLinkedHashSet
 		
 		val pakage = '''
-		package «entity.package»;
+		package «entity.package»;		
 		'''
 		
 		val preImports = ''' 
@@ -138,6 +152,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import javax.persistence.EntityManager;
 		import javax.persistence.PersistenceContext;
 		«ENDIF»
+		«IF !ruleMakeCopies.empty»
+		import org.apache.commons.lang3.StringUtils;
+		«ENDIF»
 		
 		import java.util.Optional;
 		«IF entity.hasAutoComplete»
@@ -153,7 +170,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		'''
 		
 		val code = '''
-		
+		 
 		@Service
 		public class «entity.toServiceImplName» implements «entity.toServiceName» {
 			
@@ -260,12 +277,67 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			
 			«ruleActions.map[generateRuleActionsImpl(imports)].join»
+			«ruleMakeCopies.map[generateRuleMakeCopiesActionsImpl(imports)].join»
 		}
 		'''
 		
-		val result = pakage + preImports + imports.join + '\n' + code;
+		val result = pakage + preImports + imports.join('\n\r') + '\n\r' + code;
 		
 		result
+	}
+	
+	def CharSequence generateRuleMakeCopiesActionsImpl(Rule rule, Set<String> imports) {
+		val actionName = rule.getRuleActionMakeCopiesName
+		val entity = (rule.owner as Entity)
+		val entityName = entity.toEntityName
+		val entityVar = entity.fieldName
+		val getEntityMethod = 'get' + entityName
+		
+		val repositoryVar = entity.toRepositoryName.toFirstLower
+		
+		val makeCopiesClassName = entity.toEntityMakeCopiesName
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		
+		val grouperField = rule.ruleMakeCopiesGrouperSlot
+		val referenceField = rule.getRuleMakeCopiesReferenceField
+		val getGrouperMethod =  makeCopiesNameVar + '.' + grouperField.buildMethodGet
+		
+		imports.add('import java.time.LocalDate;')
+		imports.add('import java.util.List;')
+		imports.add('import java.util.ArrayList;')
+		imports.add('import java.time.temporal.ChronoUnit;')
+		
+		'''
+		
+		@Transactional
+		@Override
+		public void «actionName»(«makeCopiesClassName» «makeCopiesNameVar») {
+			if (StringUtils.isBlank(«getGrouperMethod»)) {
+				throw new IllegalArgumentException("O campo 'Agrupador' deve ser informado.");
+			}
+			
+			«entityName» «entityVar» = «getEntityMethod»(«makeCopiesNameVar».«entity.id.buildMethodGet»);
+			«grouperField.buildMethodSet(entityVar, getGrouperMethod)»;
+			
+			LocalDate lastDate = «entityVar».«referenceField.buildMethodGet»;
+			List<«entityName»> copies = new ArrayList<>();
+			long interval = «makeCopiesNameVar».getReferenceFieldInterval();
+			int fixedDay = lastDate.getDayOfMonth();
+			for (int i = 0; i < «makeCopiesNameVar».getNumberOfCopies(); i++) {
+				«entityName» copiedEntity = «entityVar».clone();
+				copies.add(copiedEntity);
+				copiedEntity.«entity.id.buildMethodSet('null')»;
+				lastDate = lastDate.plus(interval, ChronoUnit.DAYS);
+				if (interval == 30) {
+					lastDate = lastDate.withDayOfMonth(fixedDay);
+				}
+				copiedEntity.«referenceField.buildMethodSet('lastDate')»;
+			}
+			
+			copies.add(«entityVar»);
+			«repositoryVar».saveAll(copies);
+		}
+		'''
 	}
 	
 	def CharSequence generateRuleActionsImpl(Rule rule, Set<String> imports) {

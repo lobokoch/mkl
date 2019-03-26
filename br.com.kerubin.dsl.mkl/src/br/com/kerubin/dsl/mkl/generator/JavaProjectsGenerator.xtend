@@ -174,6 +174,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<artifactId>flyway-core</artifactId>
 				</dependency>
 				<dependency>
+				    <groupId>org.apache.commons</groupId>
+				    <artifactId>commons-lang3</artifactId>
+				</dependency>
+				<dependency>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-test</artifactId>
 					<scope>test</scope>
@@ -264,6 +268,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		          <groupId>com.querydsl</groupId>
 		          <artifactId>querydsl-jpa</artifactId>
 		        </dependency>
+		        <dependency>
+				    <groupId>org.apache.commons</groupId>
+				    <artifactId>commons-lang3</artifactId>
+				</dependency>
 		        «buildMessagingDependency»
 				<!-- Begin Entity Dependencies -->
 				«service?.dependencies.map[buildEntityMavenDependency]?.join»
@@ -445,6 +453,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<spring-cloud.version>Finchley.RC1</spring-cloud.version>			
 				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>			
 				<querydsl.version>4.2.1</querydsl.version>			
+				<commons.lang.version>3.8.1</commons.lang.version>			
 				<kerubin.messaging.version>«IF configuration.messagingVersion.isNotEmpty»«configuration.messagingVersion»«ELSE»0.0.1-SNAPSHOT«ENDIF»</kerubin.messaging.version>
 				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»			
 			</properties>
@@ -507,6 +516,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<dependency>
 						<groupId>com.fasterxml.jackson.core</groupId>
 						<artifactId>jackson-databind</artifactId>
+					</dependency>
+					<dependency>
+					    <groupId>org.apache.commons</groupId>
+					    <artifactId>commons-lang3</artifactId>
+					    <version>${commons.lang.version}</version>
 					</dependency>
 					«buildMessagingDependency(true)»
 					<!-- Begin Entity Dependencies -->
