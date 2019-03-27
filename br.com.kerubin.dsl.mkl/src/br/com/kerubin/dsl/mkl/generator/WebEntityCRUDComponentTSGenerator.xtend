@@ -110,6 +110,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    } else {
 			      this.create(form);
 			    }
+				«IF !ruleMakeCopies.empty»
+				this.initializeCopiesReferenceFieldOptions();
+				«ENDIF»
 			}
 			
 			create(form: FormControl) {
@@ -194,6 +197,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		    ];
 		
 		    this.copiesReferenceFieldSelected = this.copiesReferenceField;
+		    
+		    this.numberOfCopies = 1;
+		    this.copiesReferenceFieldInterval = 30;
 		}
 		'''
 	}

@@ -80,35 +80,34 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		<!-- BEGIN make copies -->
 		<!-- placeholder="Informe um identificador, exemplo: #luz_2019" -->
 		<!-- <div class="invalid-message" *ngIf="copiesMustHaveGroup && !contaPagar.agrupador">Campo obrigatório para gerar cópias.</div> -->
+		    <p-panel *ngIf="isEditing" class="ui-g-12" header="«title»"  [toggleable]="true" [collapsed]="true">
+			    <div class="ui-g">
+			    
+				      <div class="ui-g-12 ui-fluid">
+				        <div class="ui-g-12 ui-fluid ui-md-2">
+				          <label for="numberOfCopies">Número de cópias</label>
+				          <p-spinner size="30" name="numberOfCopies" [(ngModel)]="numberOfCopies" [min]="«min»" [max]="«max»"></p-spinner>
+				        </div>
+				
+				        <div class="ui-g-12 ui-fluid ui-md-2">
+				          <label for="copiesReferenceField" style="display: block">Campo de referência</label>
+				          <p-dropdown optionLabel="label" name="copiesReferenceField" #copiesReferenceField="ngModel" [options]="copiesReferenceFieldOptions" ngModel [(ngModel)]="copiesReferenceFieldSelected" placeholder="Selecione"></p-dropdown>
+				        </div>
+				
+				        <div class="ui-g-12 ui-md-2 ui-fluid">
+				          <label for="copiesReferenceFieldInterval" style="display: block">Intervalo (dias)</label>
+				          <p-spinner size="30" name="copiesReferenceFieldInterval" [(ngModel)]="copiesReferenceFieldInterval" [min]="1" [max]="1000"></p-spinner>
+				        </div>
+				
+				        <div class="ui-g-12 ui-fluid ui-md-2">
+				          <span style="display: block">&nbsp;</span>
+				          <button pButton (click)="«actionName»()" type="button" pTooltip="«buttonToolTip»" tooltipPosition="top" icon="«buttonIcon»" label="«buttonLabel»" class="ui-button-info"></button>
+				        </div>
+				      </div>
+				      
+			    </div>
 		    
-		    <div *ngIf="isEditing" class="kb-make-copies ui-g-12">
-		
-		      <div class="ui-g-12 ui-fluid">
-		          <label>«title»:</label>
-		      </div>
-		
-		      <div class="ui-g-12 ui-fluid">
-		        <div class="ui-g-12 ui-fluid ui-md-2">
-		          <label for="numberOfCopies">Número de cópias</label>
-		          <p-spinner size="30" name="numberOfCopies" [(ngModel)]="numberOfCopies" [min]="«min»" [max]="«max»"></p-spinner>
-		        </div>
-		
-		        <div class="ui-g-12 ui-fluid ui-md-2">
-		          <label for="copiesReferenceField" style="display: block">Campo de referência</label>
-		          <p-dropdown optionLabel="label" name="copiesReferenceField" #copiesReferenceField="ngModel" [options]="copiesReferenceFieldOptions" ngModel [(ngModel)]="copiesReferenceFieldSelected" placeholder="Selecione"></p-dropdown>
-		        </div>
-		
-		        <div class="ui-g-12 ui-md-2 ui-fluid">
-		          <label for="copiesReferenceFieldInterval" style="display: block">Intervalo (dias)</label>
-		          <p-spinner size="30" name="copiesReferenceFieldInterval" [(ngModel)]="copiesReferenceFieldInterval" [min]="1" [max]="1000"></p-spinner>
-		        </div>
-		
-		        <div class="ui-g-12 ui-fluid ui-md-2">
-		          <span style="display: block">&nbsp;</span>
-		          <button pButton (click)="«actionName»()" type="button" pTooltip="«buttonToolTip»" tooltipPosition="top" icon="«buttonIcon»" label="«buttonLabel»" class="ui-button-info"></button>
-		        </div>
-		      </div>
-		    </div>
+		    </p-panel>
 		    <!-- END make copies -->
 		'''
 	}

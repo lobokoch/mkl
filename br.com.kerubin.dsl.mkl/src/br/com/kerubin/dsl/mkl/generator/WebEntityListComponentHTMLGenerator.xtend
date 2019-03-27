@@ -39,7 +39,6 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		  	<div class="ui-g">
 				«entity.generateEntityTitle»
 				«entity.generateHTMLFilters»
-				«entity.generateHTMLFilterSearchButton»
 				«entity.generateHTMLGrid»
 				«entity.generateHTMLButtons»
 				«entity.generateHTMLExtras»
@@ -53,19 +52,26 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 		
 		<!-- Begin Filters -->
-		<div class="ui-g-12">
-			«entity.slots.filter[it.hasListFilter].generateHTMLSlotsFilters»
-		</div>
+		<p-panel class="ui-g-12" header="Filtro"  [toggleable]="true" [collapsed]="true">
+		
+			<div class="ui-g">
+				<div class="ui-g-12">
+					«entity.slots.filter[it.hasListFilter].generateHTMLSlotsFilters»
+				</div>
+			</div>
+			
+			<p-footer>
+				«entity.generateHTMLFilterSearchButton»
+			</p-footer>
+		
+		</p-panel>
 		<!-- End Filters -->
 		'''
 	}
 	
 	def CharSequence generateHTMLFilterSearchButton(Entity entity) {
 		'''
-		
-		<div class="ui-g-12 ui-md-2 ui-fluid">
 		  <p-button label="Pesquisar" (click)="«entity.toWebEntityFilterSearchMethod»"></p-button>
-		</div>
 		'''
 	}
 	
