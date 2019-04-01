@@ -32,6 +32,13 @@ class WebGenerator extends BaseGenerator {
 			new WebNavbarComponentHTMLGenerator(this),
 			new WebNavbarComponentTSGenerator(this),
 			new WebNavbarComponentCSSGenerator(this),
+			new WebSecurityLoginGenerator(this),
+			new WebSecurityAuthServiceGenerator(this),
+			new WebSecurityHttpClientTokenGenerator(this),
+			new WebSecurityModuleGenerator(this),
+			new WebSecurityRoutingModuleGenerator(this),
+			new WebCoreModuleGenerator(this),
+			new WebCoreMessageHandlerServiceGenerator(this),
 			new WebEnumModelGenerator(this)
 		]
 		

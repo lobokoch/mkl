@@ -32,7 +32,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 		import { NgModule, LOCALE_ID } from '@angular/core';
 		import { AppComponent } from './app.component';
-		import { HttpModule } from '@angular/http';
+		import { HttpClientModule } from '@angular/common/http';
 		
 		import { registerLocaleData } from '@angular/common';
 		import localePt from '@angular/common/locales/pt';
@@ -68,6 +68,9 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		«generateAppImports»
 		
 		import { NavbarComponent } from './navbar/navbar.component';
+		import { LoginComponent } from './security/login/login.component';
+		import { SecurityModule } from './security/security.module';
+		import { CoreModule } from './core/core.module';
 		// Kerubin end
 		
 		registerLocaleData(localePt, 'pt', localeExtraPT);
@@ -84,13 +87,14 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		};
 		
 		const routes: Routes = [
-		  { path: '', redirectTo: 'mainmenu', pathMatch: 'full' },
+		  { path: '', redirectTo: 'login', pathMatch: 'full' },
 		  
 			// Kerubin Begin
 			«generateRoutes»
 			// Kerubin Begin
 		  
-		  { path: 'mainmenu', component: ContaPagarListComponent }
+		  { path: 'mainmenu', component: ContaPagarListComponent },
+		  { path: 'login', component: LoginComponent }
 		];
 		
 		
@@ -100,7 +104,8 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    // Kerubin Begin
 		    «generateEntitiesNgModuleDeclarations»
 		    «toWebNavbarClassName»,
-		    // Kerubin Begin
+		    LoginComponent,
+		    // Kerubin End
 		    AppComponent
 		  ],
 		  imports: [
@@ -108,7 +113,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    BrowserModule,
 		    BrowserAnimationsModule,
 		    FormsModule,
-		    HttpModule,
+		    HttpClientModule,
 		
 		    CurrencyMaskModule,
 		
@@ -128,7 +133,10 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    SpinnerModule,
 		    SelectButtonModule,
 		    DialogModule,
-		    DropdownModule
+		    DropdownModule,
+		    
+		    CoreModule,
+		    SecurityModule
 		  ],
 		  providers: [
 		  	// Kerubin Begin
