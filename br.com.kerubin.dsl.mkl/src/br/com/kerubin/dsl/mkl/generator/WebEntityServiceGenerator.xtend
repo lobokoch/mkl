@@ -73,7 +73,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			// TODO: Provisório
 			url = 'http://localhost:9101/entities/«varName»';
 			
-			constructor(private http: Http) { }
+			constructor(private http: HttpClientWithToken) { }
 			
 			// TODO: Provisório
 			private getHeaders(): Headers {
@@ -86,10 +86,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			create(«varName»: «dtoName»): Promise<«dtoName»> {
 				const headers = this.getHeaders();    
 			
-			    return this.http.post(this.url, JSON.stringify(«varName»), { headers })
+			    return this.http.post(this.url, «varName», { headers })
 			    .toPromise()
 			    .then(response => {
-			      const created = response.json() as «dtoName»;
+			      const created = response as «dtoName»;
 			      «IF entity.hasEntitySlots»this.adjustNullEntitySlots([created]);«ENDIF»
 			      «IF entity.hasDate»this.adjustEntityDates([created]);«ENDIF»
 			      return created;
@@ -99,10 +99,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			update(«varName»: «dtoName»): Promise<«dtoName»> {
 			    const headers = this.getHeaders();
 			
-			    return this.http.put(`${this.url}/${«varName».«entity.id.fieldName»}`, JSON.stringify(«varName»), { headers })
+			    return this.http.put(`${this.url}/${«varName».«entity.id.fieldName»}`, «varName», { headers })
 			    .toPromise()
 			    .then(response => {
-			      const updated = response.json() as «dtoName»;
+			      const updated = response as «dtoName»;
 			      «IF entity.hasEntitySlots»this.adjustNullEntitySlots([updated]);«ENDIF»
 			      «IF entity.hasDate»this.adjustEntityDates([updated]);«ENDIF»
 			      return updated;
@@ -117,10 +117,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			retrieve(id: string): Promise<«dtoName»> {
 			    const headers = this.getHeaders();
-			    return this.http.get(`${this.url}/${id}`, { headers })
+			    return this.http.get<«dtoName»>(`${this.url}/${id}`, { headers })
 			    .toPromise()
 			    .then(response => {
-			      const «varName» = response.json() as «dtoName»;
+			      const «varName» = response as «dtoName»;
 			      «IF entity.hasEntitySlots»this.adjustNullEntitySlots([«varName»]);«ENDIF»
 			      «IF entity.hasDate»this.adjustEntityDates([«varName»]);«ENDIF»
 			      return «varName»;
@@ -163,13 +163,13 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			autoComplete(query: string): Promise<«entity.toAutoCompleteName»[]> {
 			    const headers = this.getHeaders();
 			
-			    const searchParams = new URLSearchParams();
-			    searchParams.set('query', query);
+			    let params = new HttpParams();
+			    params = params.set('query', query);
 			
-			    return this.http.get(`${this.url}/autoComplete`, { headers, search: searchParams })
+			    return this.http.get<«entity.toAutoCompleteName»[]>(`${this.url}/autoComplete`, { headers, params })
 			      .toPromise()
 			      .then(response => {
-			        const result = response.json() as «entity.toAutoCompleteName»[];
+			        const result = response as «entity.toAutoCompleteName»[];
 			        return result;
 			      });
 			
@@ -182,12 +182,12 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			«varName»List(«varName»ListFilter: «dtoName»ListFilter): Promise<any> {
 			    const headers = this.getHeaders();
 			
-			    const searchParams = this.mountAndGetSearchParams(«varName»ListFilter);
+			    const params = this.mountAndGetSearchParams(«varName»ListFilter);
 			
-			    return this.http.get(this.url, { headers, search: searchParams })
+			    return this.http.get<any>(this.url, { headers, params })
 			      .toPromise()
 			      .then(response => {
-			        const data = response.json();
+			        const data = response;
 			        const items = data.content; /* array of «dtoName» */
 			        const totalElements = data.totalElements;
 			
@@ -200,9 +200,6 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			        };
 			
 			        return result;
-			      })
-			      .catch(error => {
-			        console.log(`Error in «varName»PagarList: ${error}`);
 			      });
 			}
 			
@@ -211,27 +208,24 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			get«entitySumFieldsClassName»(«entity.toEntityListFilterName»: «entity.toEntityListFilterClassName»): Promise<«entitySumFieldsClassName»> {
 			    const headers = this.getHeaders();
 			    
-				const searchParams = this.mountAndGetSearchParams(«entity.toEntityListFilterName»);
-				return this.http.get(`${this.url}/«entitySumFieldsClassName.toFirstLower»`, { headers, search: searchParams })
+				const params = this.mountAndGetSearchParams(«entity.toEntityListFilterName»);
+				return this.http.get<any>(`${this.url}/«entitySumFieldsClassName.toFirstLower»`, { headers, params })
 				  .toPromise()
 				  .then(response => {
-				    const result = response.json();
+				    const result = response;
 				    return result;
-				  })
-				  .catch(error => {
-				    console.log(`Error in get«entitySumFieldsClassName»: ${error}`);
 				  });
 			}
 			«ENDIF»
 			
-			mountAndGetSearchParams(«VAR_FILTER»: «dtoName»ListFilter): URLSearchParams {
-			    const params = new URLSearchParams();
+			mountAndGetSearchParams(«VAR_FILTER»: «dtoName»ListFilter): HttpParams {
+			    let params = new HttpParams();
 			    if («VAR_FILTER».pageNumber) {
-			      params.set('page', «VAR_FILTER».pageNumber.toString());
+			      params = params.set('page', «VAR_FILTER».pageNumber.toString());
 			    }
 			
 			    if («VAR_FILTER».pageSize) {
-			      params.set('size', «VAR_FILTER».pageSize.toString());
+			      params = params.set('size', «VAR_FILTER».pageSize.toString());
 			    }
 				
 				«entity.slots.filter[it.hasListFilter].generateSlotsFilters»
@@ -241,7 +235,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			      // search/nameStartsWith?name=K&sort=name,desc
 			      const sortField = «VAR_FILTER».sortField;
 			      const sortValue = `${sortField.field},${sortField.order > 0 ? 'asc' : 'desc'}`;
-			      params.set('sort', sortValue);
+			      params = params.set('sort', sortValue);
 			    }
 			
 			    return params;
@@ -256,21 +250,21 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			    const headers = this.getHeaders();
 			
 			    const payload = new Replicate«dtoName»Payload(id, quantity, groupId);
-			    return this.http.post(`${this.url}/replicate«dtoName»`, JSON.stringify(payload), { headers } )
+			    return this.http.post(`${this.url}/replicate«dtoName»`, payload, { headers } )
 			    .toPromise()
 			    .then(response => {
-			      return response.json() === true;
+			      return response === true;
 			    });
 			}
 				
 			getTotais«VAR_FILTER»«dtoName»(«VAR_FILTER»: «dtoName»rListFilter): Promise<Totais«VAR_FILTER»«dtoName»> {
 			    const headers = this.getHeaders();
 			
-			    const searchParams = this.mountAndGetSearchParams(«VAR_FILTER»);
-			    return this.http.get(`${this.url}/getTotais«VAR_FILTER»«dtoName»`, { headers, search: searchParams })
+			    const params = this.mountAndGetSearchParams(«VAR_FILTER»);
+			    return this.http.get<Totais«VAR_FILTER»«dtoName»>(`${this.url}/getTotais«VAR_FILTER»«dtoName»`, { headers, params })
 			    .toPromise()
 			    .then(response => {
-			      const result = response.json() as Totais«VAR_FILTER»«dtoName»;
+			      const result = response as Totais«VAR_FILTER»«dtoName»;
 			      return result;
 			    });
 			}
@@ -292,7 +286,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		«actionName»(id: string, numberOfCopies: Number, referenceFieldInterval: Number, «grouperField.fieldName»: String): Promise<void> {
 		    const headers = this.getHeaders();
 		      const entityCopy = { id, numberOfCopies, referenceFieldInterval, «grouperField.fieldName» };
-			    return this.http.post(`${this.url}/«actionName»`, JSON.stringify(entityCopy), { headers })
+			    return this.http.post(`${this.url}/«actionName»`, entityCopy, { headers })
 			    .toPromise()
 			    .then( () => null);
 		}
@@ -321,13 +315,13 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		«autoComplateName»(query: string): Promise<any> {
 		    const headers = this.getHeaders();
 		
-		    const searchParams = new URLSearchParams();
-		    searchParams.set('query', query);
+		    let params = new HttpParams();
+		    params = params.set('query', query);
 		
-		    return this.http.get(`${this.url}/«autoComplateName»`, { headers, search: searchParams })
+		    return this.http.get<any>(`${this.url}/«autoComplateName»`, { headers, params })
 		      .toPromise()
 		      .then(response => {
-		        const result = response.json() as «autoComplateName.toFirstUpper»[];
+		        const result = response as «autoComplateName.toFirstUpper»[];
 		        return result;
 		      });
 		
@@ -356,31 +350,31 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		// «fieldName = slot.fieldName»
 		if («VAR_FILTER».«fieldName») {
 			const «fieldName» = «VAR_FILTER».«fieldName».map(item => item.«fieldName»).join(',');
-			params.set('«fieldName»', «fieldName»);
+			params = params.set('«fieldName»', «fieldName»);
 		}
 		«ELSEIF isNotNull && isNull»
 		// «fieldName = slot.fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»
 		if («VAR_FILTER».«fieldName») {
 			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		
 		// «fieldName = slot.fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper»
 		if («VAR_FILTER».«fieldName») {
 			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		«ELSEIF isNotNull»
 		// «fieldName = slot.fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»
 		if («VAR_FILTER».«fieldName») {
 			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		«ELSEIF isNull»
 		// «fieldName = slot.fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper»
 		if («VAR_FILTER».«fieldName») {
 			const value = «VAR_FILTER».«fieldName» ? 'true' : 'false';
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		«ELSEIF isBetween»
 		// «fieldName = slot.fieldName + BETWEEN_FROM»
@@ -390,7 +384,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		«ELSE»
 			const value = «VAR_FILTER».«fieldName»;
 		«ENDIF»
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		
 		// «fieldName = slot.fieldName + BETWEEN_TO»
@@ -400,7 +394,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		«ELSE»
 			const value = «VAR_FILTER».«fieldName»;
 		«ENDIF»
-			params.set('«fieldName»', value);
+			params = params.set('«fieldName»', value);
 		}
 		«ENDIF»
 		'''
@@ -408,10 +402,12 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def void initializeImports(Entity entity) {
 		imports.add('''
-		import { Http, Headers, URLSearchParams } from '@angular/http';
+		import { Headers } from '@angular/http';
 		import { Injectable } from '@angular/core';
+		import { HttpParams } from '@angular/common/http';
 		import * as moment from 'moment';
-		import { Observable } from 'rxjs';
+		
+		import { HttpClientWithToken } from '../../../security/http-client-token';
 		''')
 	}
 	

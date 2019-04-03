@@ -63,6 +63,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		// Rotas
 		import { Routes, RouterModule } from '@angular/router';
+		import { AuthGuard } from './security/auth.guard';
 		
 		// Kerubin begin
 		«generateAppImports»
@@ -93,7 +94,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 			«generateRoutes»
 			// Kerubin Begin
 		  
-		  { path: 'mainmenu', component: ContaPagarListComponent },
+		  { path: 'mainmenu', component: ContaPagarListComponent, canActivate: [AuthGuard] },
 		  { path: 'login', component: LoginComponent }
 		];
 		
@@ -205,9 +206,9 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		
-		{ path: '«entityWebName»/novo', component: «crudComponent» },
-		{ path: '«entityWebName»/:id', component: «crudComponent» },
-		{ path: '«entityWebName»', component: «listComponent» },
+		{ path: '«entityWebName»/novo', component: «crudComponent», canActivate: [AuthGuard] },
+		{ path: '«entityWebName»/:id', component: «crudComponent», canActivate: [AuthGuard] },
+		{ path: '«entityWebName»', component: «listComponent», canActivate: [AuthGuard] },
 		'''
 	}
 	

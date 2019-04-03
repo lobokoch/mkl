@@ -36,13 +36,21 @@ class WebSecurityHttpClientTokenGenerator extends GeneratorExecutor implements I
 		import { Observable, from as observableFromPromise } from 'rxjs';
 		
 		import { AuthService } from './auth.service';
+		import { Router } from '@angular/router';
+		import { MessageHandlerService } from '../core/message-handler.service';
+		
+		export class UserNotAuthenticatedError {
+		
+		}
 		
 		@Injectable()
 		export class HttpClientWithToken extends HttpClient {
 		
 		  constructor(
 		    private auth: AuthService,
-		    private httpHandler: HttpHandler
+		    private httpHandler: HttpHandler,
+		    private messageHandler: MessageHandlerService,
+		    private router: Router
 		  ) {
 		    super(httpHandler);
 		  }
@@ -81,7 +89,14 @@ class WebSecurityHttpClientTokenGenerator extends GeneratorExecutor implements I
 		
 		      const newAccessToken = this.auth.refreshAccessToken()
 		        .then(() => {
+		          if (this.auth.isAccessTokenInvalid()) {
+		            this.messageHandler.showError('Sua sessão expirou, refaça login!');
+		            this.router.navigate(['/login']);
+		            throw new UserNotAuthenticatedError();
+		          }
+		
 		          return fn().toPromise();
+		
 		        });
 		
 		       return observableFromPromise(newAccessToken);
@@ -91,6 +106,7 @@ class WebSecurityHttpClientTokenGenerator extends GeneratorExecutor implements I
 		  }
 		
 		}
+
 		'''
 	}
 	

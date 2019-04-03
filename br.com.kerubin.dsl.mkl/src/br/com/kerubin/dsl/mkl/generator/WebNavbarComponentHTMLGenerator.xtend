@@ -45,7 +45,7 @@ class WebNavbarComponentHTMLGenerator extends GeneratorExecutor implements IGene
 		  </div>
 		
 		  <ul class="navbar-menu" [hidden]="!isMenuShowing">
-		    <li class="navbar-user">Kerubin User</li>
+		    <li class="navbar-user">{{ getCurrentUserName() }}</li>
 		    
 		    <!-- Begin Menu Items -->
 		    «generateMenuItems»

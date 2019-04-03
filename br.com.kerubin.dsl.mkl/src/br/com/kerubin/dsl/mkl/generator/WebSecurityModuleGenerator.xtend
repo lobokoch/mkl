@@ -30,6 +30,7 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence generateSecurityModuleTSContent() {
 		'''
+		import { AuthGuard } from './auth.guard';
 		import { NgModule } from '@angular/core';
 		import { CommonModule } from '@angular/common';
 		import { JwtModule } from '@auth0/angular-jwt';
@@ -52,7 +53,9 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 		    })
 		  ],
 		  declarations: [],
-		  providers: []
+		  providers: [
+		  	AuthGuard
+		  ]
 		})
 		export class SecurityModule { }
 		

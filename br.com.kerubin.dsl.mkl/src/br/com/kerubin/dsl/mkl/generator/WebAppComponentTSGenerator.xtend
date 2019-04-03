@@ -25,10 +25,8 @@ class WebAppComponentTSGenerator extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence generateAppComponent() {
 		'''
-		
-		import { Router, RouterModule } from '@angular/router';
+		import { Router } from '@angular/router';
 		import { Component } from '@angular/core';
-		import { ConfirmationService } from 'primeng/components/common/api';
 		
 		
 		@Component({
@@ -43,6 +41,11 @@ class WebAppComponentTSGenerator extends GeneratorExecutor implements IGenerator
 		  constructor(private router: Router) {
 		    //
 		  }
+		  
+		  isShowingMenu() {
+		      return this.router.url !== '/login';
+		  }
+		    
 		}
 		'''
 	}

@@ -65,9 +65,10 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
-		import {MessageService, ConfirmationService, LazyLoadEvent, SelectItem} from 'primeng/api';
+		import {ConfirmationService, LazyLoadEvent, SelectItem} from 'primeng/api';
 		import { Dropdown } from 'primeng/dropdown';
 		import * as moment from 'moment';
+		import { MessageHandlerService } from 'src/app/core/message-handler.service';
 		''')
 		
 		imports.add('''import { «serviceName» } from './«entity.toEntityWebServiceName»';''')
@@ -127,7 +128,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    private «serviceVar»: «serviceName»,
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    private confirmation: ConfirmationService,
-			    private messageService: MessageService
+			    private messageHandler: MessageHandlerService
 			) { }
 			
 			ngOnInit() {
@@ -148,13 +149,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar»
 			    .«entity.toEntityListListMethod»(this.«listFilterNameVar»)
 			    .then(result => {
-			      this.«entity.toEntityWebListItems» = result.items;
-			      this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
+			      	this.«entity.toEntityWebListItems» = result.items;
+			      	this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
+			      
+					«IF entity.hasSumFields»
+					this.«getMethodEntitySumFields»();
+					«ENDIF»
 			    });
 				
-				«IF entity.hasSumFields»
-				this.«getMethodEntitySumFields»();
-				«ENDIF»
 			}
 			
 			«IF entity.hasSumFields»
@@ -164,7 +166,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 				  this.«entitySumFieldsClassName.toFirstLower» = response;
 				})
 				.catch(error => {
-				  this.showError('Erro ao buscar totais:' + error);
+				  this.messageHandler.showError('Erro ao buscar totais:' + error);
 				});
 			}
 			«ENDIF»
@@ -179,11 +181,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			      accept: () => {
 			        this.«serviceVar».delete(«fieldName».«idVar»)
 			        .then(() => {
-			          this.showSuccess('Registro excluído!');
+			          this.messageHandler.showSuccess('Registro excluído!');
 			          this.«entity.toEntityListListMethod»(0);
 			        })
 			        .catch((e) => {
-			          this.showError('Erro ao excluir registro: ' + e);
+			          this.messageHandler.showError('Erro ao excluir registro: ' + e);
 			        });
 			      }
 			    });
@@ -225,14 +227,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«filterSlots.filter[isBetween].map[generatePeriodIntervalSelectMethod].join»
 			«ENDIF»
-			
-			public showSuccess(msg: string) {
-			    this.messageService.add({severity: 'success', summary: 'Successo', detail: msg});
-			}
-			
-			public showError(msg: string) {
-			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
-			}
 			
 			«IF entity.hasRules»«entity.buildRulesForGridRowStyleClass»«ENDIF»
 			«ruleActions.map[generateRuleActions].join»
@@ -276,12 +270,12 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		«actionName»(«entityVar»: «dtoName») {
 			this.«serviceVar».«actionName»(«entityVar».«idVar»)
 				.then(() => {
-				  this.showSuccess('Ação executada com sucesso!');
+				  this.messageHandler.showSuccess('Ação executada com sucesso!');
 				  this.«entity.toEntityListListMethod»(0);
 				})
 				.catch((e) => {
 					console.log('Erro ao executar a ação «actionName»: ' + e);
-				  	this.showError('Não foi possível executar a ação.');
+				  	this.messageHandler.showError('Não foi possível executar a ação.');
 				});
 		}
 		'''
@@ -468,7 +462,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		      this.«slot.webAutoCompleteSuggestions» = result;
 		    })
 		    .catch(erro => {
-		      this.showError('Erro ao buscar registros com o termo: ' + query);
+		      this.messageHandler.showError('Erro ao buscar registros com o termo: ' + query);
 		    });
 		}
 		
@@ -712,7 +706,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		      this.totaisFiltroContaPagar = response;
 		    })
 		    .catch(erro => {
-		      this.showError('Erro ao buscar totais:' + erro);
+		      this.messageHandler.showError('Erro ao buscar totais:' + erro);
 		    });
 		}
 		
@@ -740,11 +734,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		    this.contasPagarService.update(this.contaPagar)
 		    .then((contaPagar) => {
 		      this.mostrarDialogPagarConta = false;
-		      this.showSuccess(`A conta ${contaPagar.descricao} foi paga.`);
+		      this.messageHandler.showSuccess(`A conta ${contaPagar.descricao} foi paga.`);
 		      this.contaPagarList(0);
 		    })
 		    .catch(erro => {
-		      this.showError('Erro ao pagar a conta: ' + erro);
+		      this.messageHandler.showError('Erro ao pagar a conta: ' + erro);
 		    });
 		}
 		*********************/

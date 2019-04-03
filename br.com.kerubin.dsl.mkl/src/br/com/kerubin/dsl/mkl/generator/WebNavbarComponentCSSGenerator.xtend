@@ -37,7 +37,7 @@ class WebNavbarComponentCSSGenerator extends WebNavbarComponentHTMLGenerator {
 		.navbar-user {
 		  color: #fff;
 		  font-weight: bold;
-		  text-transform: uppercase;
+		  /* text-transform: uppercase; */
 		  padding: 15px;
 		  border-bottom: 1px solid#525151;
 		  margin-bottom: 15px;
