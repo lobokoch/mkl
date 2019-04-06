@@ -34,6 +34,7 @@ class Utils {
 	static val WEB_MODEL_DIR = 'model/'
 	static val WEB_NAVBAR_DIR = 'navbar/'
 	static val WEB_SECURITY_DIR = 'security/'
+	static val WEB_ENVIRONMENTS_DIR = 'environments/'
 	static val WEB_CORE_DIR = 'core/'
 	
 	def static getWebSourceGenDir() {
@@ -52,8 +53,16 @@ class Utils {
 		WEB_SECURITY_DIR.webDir
 	}
 	
+	def static getWebEnvironmentsDir() {
+		WEB_ENVIRONMENTS_DIR.webAppDir
+	}
+	
 	def static getWebCoreDir() {
 		WEB_CORE_DIR.webDir
+	}
+	
+	def static getWebAppDir(String path) {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + path
 	}
 	
 	def static getWebDir(String path) {

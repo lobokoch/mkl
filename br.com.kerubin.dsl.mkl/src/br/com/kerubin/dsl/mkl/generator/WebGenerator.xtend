@@ -42,6 +42,7 @@ class WebGenerator extends BaseGenerator {
 			new WebSecurityAuthGuardGenerator(this),
 			new WebCoreExceptionsGenerator(this),
 			new WebSecurityLogoutServiceGenerator(this),
+			new WebEnvironmentsGenerator(this),
 			new WebEnumModelGenerator(this)
 		]
 		

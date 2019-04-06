@@ -47,8 +47,8 @@ class WebNavbarComponentTSGenerator extends WebNavbarComponentHTMLGenerator {
 		  */
 		  
 		  getCurrentUserName() {
-		      if (this.authService.jwtPayload && this.authService.jwtPayload.nome) {
-		        return this.authService.jwtPayload.nome;
+		      if (this.authService.jwtPayload && this.authService.jwtPayload.name) {
+		        return this.authService.jwtPayload.name;
 		      } else {
 		        return '<Desconhecido>';
 		      }
