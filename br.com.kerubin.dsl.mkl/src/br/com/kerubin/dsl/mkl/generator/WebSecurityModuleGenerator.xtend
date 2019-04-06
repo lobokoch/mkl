@@ -35,6 +35,7 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 		import { CommonModule } from '@angular/common';
 		import { JwtModule } from '@auth0/angular-jwt';
 		import { environment } from 'src/environments/environment';
+		import { LogoutService } from './logout.service';
 		
 		export function tokenGetter() {
 		  return localStorage.getItem('token');
@@ -54,11 +55,14 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 		  ],
 		  declarations: [],
 		  providers: [
-		  	AuthGuard
+		    AuthGuard,
+		    LogoutService
 		  ]
 		})
-		export class SecurityModule { }
 		
+		export class SecurityModule { 
+		
+		}
 		'''
 	}
 	

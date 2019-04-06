@@ -16,7 +16,8 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def generateFiles() {
-		generateTranslationKeysForEntities
+		generateDefaultTranslationKeysForEntities
+		generateDefaultTranslationModule
 		generateTranslationService
 	}
 	
@@ -26,9 +27,20 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		fileName 
 	}
 	
-	def generateTranslationKeysForEntities() {
+	def generateDefaultTranslationKeysForEntities() {
 		val fileName = getDefaultTranslationFileName
 		generateFile(fileName, doGenerateTranslationKeysForEntities)
+	}
+	
+	def generateDefaultTranslationModule() {
+		val fileName = getDefaultTranslationFileName + '.ts'
+		generateFile(fileName, doGenerateDefaultTranslationModule)
+	}
+	
+	def doGenerateDefaultTranslationModule() {
+		'''
+		export default '';
+		'''
 	}
 	
 	def generateTranslationService() {
@@ -43,10 +55,29 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		
 		'''
 		{
-			«keys.map[it].join(',\r\n')»
+			«keys.map[mountKey].join(',\r')»
 		}
 		'''
 	}
+	
+	def mountKey(String value) {
+		'''«value»'''
+	}
+	
+	/*def CharSequence doGenerateTranslationKeysForEntities() {
+		val List<String> keys = newArrayList
+		entities.forEach[it.generateTranslationKeysForEntity(keys)]
+		
+		'''
+		[
+			«keys.map[mountKey].join(',\r')»
+		]
+		'''
+	}
+	
+	def mountKey(String value) {
+		'''{«value»}'''
+	}*/
 	
 	def void generateTranslationKeysForEntity(Entity entity, List<String> keys) {
 		keys.add('"' + entity.translationKey + '": "' + entity.labelValue + '"')
@@ -75,17 +106,18 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		'''
 		import { HttpClientWithToken } from './../../../security/http-client-token';
 		import { Injectable } from '@angular/core';
+		import * as localTranslations from '«fileName»';
 		
 		@Injectable()
 		export class «service.toTranslationServiceClassName» {
 		
-		  translations: Object;
+		  // translations: Object;
 		
 		  constructor(private http: HttpClientWithToken) {
-		    this.loadTranslations();
+		    // this.loadTranslations();
 		  }
 		
-		  loadTranslations() {
+		  /* loadTranslations() {
 		    this.http.get('«fileName»')
 		    .toPromise()
 		    .then(response => {
@@ -94,14 +126,16 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		    .catch(error => {
 		      console.log(`Error loading translations: ${error}`);
 		    });
-		  }
+		  } */
 		
 		  public getTranslation(key: string): string {
-		    const translation = this.translations[key];
-		    if (translation) {
-		      return translation;
-		    }
-		    return key;
+		      if (localTranslations) {
+		        const translation = (<any>localTranslations).default[key];
+		        if (translation) {
+		          return translation;
+		        }
+		      }
+		      return key;
 		  }
 		
 		}

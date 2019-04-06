@@ -17,6 +17,10 @@ class WebNavbarComponentTSGenerator extends WebNavbarComponentHTMLGenerator {
 		'''
 		import { AuthService } from './../security/auth.service';
 		import { Component, OnInit } from '@angular/core';
+		import { LogoutService } from '../security/logout.service';
+		import { MessageHandlerService } from '../core/message-handler.service';
+		import { Router } from '@angular/router';
+		
 		// import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';
 		
 		@Component({
@@ -28,7 +32,10 @@ class WebNavbarComponentTSGenerator extends WebNavbarComponentHTMLGenerator {
 		export class «toWebNavbarClassName» implements OnInit {
 		
 		  constructor(
-		  	private authService: AuthService
+			private authService: AuthService,
+			private logoutService: LogoutService,
+			private messageHandler: MessageHandlerService,
+			private router: Router
 		  	// private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»
 		  ) { }
 		
@@ -45,6 +52,16 @@ class WebNavbarComponentTSGenerator extends WebNavbarComponentHTMLGenerator {
 		      } else {
 		        return '<Desconhecido>';
 		      }
+		  }
+		  
+		  logout() {
+		      this.logoutService.logout()
+		      .then(() => {
+		        this.router.navigate(['/login']);
+		      })
+		      .catch(error => {
+		        this.messageHandler.showError(error);
+		      });
 		  }
 		
 		}

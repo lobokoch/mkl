@@ -273,7 +273,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			
 			«IF entity.hasSumFields»
-			«entity.generateMethodGetContaPagarSumFields»
+			«entity.generateMethodGetContaPagarSumFields(imports)»
 			«ENDIF»
 			
 			«ruleActions.map[generateRuleActionsImpl(imports)].join»
@@ -377,7 +377,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	
 	
 	
-	def CharSequence generateMethodGetContaPagarSumFields(Entity entity) {
+	def CharSequence generateMethodGetContaPagarSumFields(Entity entity, Set<String> imports) {
+		imports.add('import java.math.BigDecimal;');
+		
 		val entityName = entity.toEntityName
 		val entityQueryDSLName = entity.toEntityQueryDSLName
 		
@@ -402,8 +404,12 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	def CharSequence generateSumField(Slot slot) {
-		'''qEntity.«slot.fieldName».sum().as("«slot.sumFieldName»")'''
+		'''qEntity.«slot.fieldName».sum().coalesce(BigDecimal.ZERO).as("«slot.sumFieldName»")'''
 	}
+	
+	/*def CharSequence generateSumField(Slot slot) {
+		'''qEntity.«slot.fieldName».sum().as("«slot.sumFieldName»")'''
+	}*/
 	
 	def CharSequence buildPublishEvent(Entity entity, String eventName) {
 		val publishSlots = entity.getPublishSlots

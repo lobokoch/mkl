@@ -51,7 +51,7 @@ class WebNavbarComponentHTMLGenerator extends GeneratorExecutor implements IGene
 		    «generateMenuItems»
 		    <!-- End Menu Items -->
 		    
-		    <li class="navbar-menuitem"><a href="javascript:;">Logout</a></li>
+		    <li class="navbar-menuitem"><a href="javascript:;" (click)="logout()">Logout</a></li>
 		  </ul>
 		
 		</nav>

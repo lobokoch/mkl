@@ -92,6 +92,11 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		      });
 		  }
 		
+		  cleanAccessToken() {
+		    localStorage.removeItem('token');
+		    this.jwtPayload = null;
+		  }
+		
 		  private storeToken(token: string) {
 		    this.jwtPayload = this.jwtHelper.decodeToken(token);
 		    localStorage.setItem('token', token);
