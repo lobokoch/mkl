@@ -193,6 +193,15 @@ class GeneratorExecutor {
 		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
 	}
 	
+	def String toServiceContextName(Service service) {
+		//service.domainName + service.serviceName + "Constants"
+		'ServiceContext'
+	}
+	
+	def String getImportServiceContext(Service service) {
+		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
+	}
+	
 	def String getServicePackagePath(Service service) {
 		val path = getServicePackage(service).replace('.', '/')
 		path

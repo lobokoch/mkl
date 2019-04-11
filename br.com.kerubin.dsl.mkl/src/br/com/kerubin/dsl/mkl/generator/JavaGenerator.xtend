@@ -37,7 +37,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaClientPageResultGenerator(this),
 			new JavaEntityControllerGenerator(this),
 			new JavaPostgreSQLGenerator(this),
-			new JavaServerCORSGenerator(this)
+			new JavaServerHttpFilterGenerator(this),
+			new JavaServerServiceContextGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 
