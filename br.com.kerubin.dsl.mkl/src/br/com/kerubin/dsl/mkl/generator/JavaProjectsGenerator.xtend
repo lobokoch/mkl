@@ -77,6 +77,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		server:
 		  port: «configuration.servicePort»
 		
+		    rabbitmq:
+		        port: 5672
+		        username: admin
+		        password: admin
+		        host: localhost
+		'''
+	}
+	
+	def generateResourceSpringBootApplication_OLD() {
+		'''
+		server:
+		  port: «configuration.servicePort»
+		
 		spring:
 		    datasource:
 		        driver-class-name: org.postgresql.Driver
@@ -109,10 +122,17 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 		import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 		
-		@SpringBootApplication
+		@SpringBootApplication(
+				exclude = { 
+				        DataSourceAutoConfiguration.class,
+				        HibernateJpaAutoConfiguration.class,
+				        DataSourceTransactionManagerAutoConfiguration.class
+				}
+				, scanBasePackages = { "br.com.kerubin.api" }
+		)
 		@EnableEurekaClient
-		@EnableJpaRepositories("«basePackage»")
-		@EntityScan("«basePackage»")
+		// @EnableJpaRepositories("«basePackage»")
+		// @EntityScan("«basePackage»")
 		public class «mainClassName» {
 		
 			public static void main(String[] args) {
@@ -168,10 +188,6 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
 					<scope>runtime</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.flywaydb</groupId>
-					<artifactId>flyway-core</artifactId>
 				</dependency>
 				<dependency>
 				    <groupId>org.apache.commons</groupId>
@@ -271,6 +287,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		        <dependency>
 				    <groupId>org.apache.commons</groupId>
 				    <artifactId>commons-lang3</artifactId>
+				</dependency>
+		        <dependency>
+				    <groupId>br.com.kerubin.api</groupId>
+				    <artifactId>database-core</artifactId>
 				</dependency>
 		        «buildMessagingDependency»
 				<!-- Begin Entity Dependencies -->
@@ -445,17 +465,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<properties>
 				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 				<maven.compiler.source>1.8</maven.compiler.source>
-				<maven.compiler.target>1.8</maven.compiler.target>		
+				<maven.compiler.target>1.8</maven.compiler.target>
 				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 				<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 				<java.version>1.8</java.version>
 				<springframework.boot.version>2.0.1.RELEASE</springframework.boot.version>
-				<spring-cloud.version>Finchley.RC1</spring-cloud.version>			
-				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>			
-				<querydsl.version>4.2.1</querydsl.version>			
-				<commons.lang.version>3.8.1</commons.lang.version>			
+				<spring-cloud.version>Finchley.RC1</spring-cloud.version>
+				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>
+				<querydsl.version>4.2.1</querydsl.version>
+				<commons.lang.version>3.8.1</commons.lang.version>
+				<database.core.version>1.0.0</database.core.version>
+				<flyway.core.version>5.2.4</flyway.core.version>
 				<kerubin.messaging.version>«IF configuration.messagingVersion.isNotEmpty»«configuration.messagingVersion»«ELSE»0.0.1-SNAPSHOT«ENDIF»</kerubin.messaging.version>
-				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»			
+				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»
 			</properties>
 			<modules>
 				<module>«projectClientName»</module>
@@ -464,7 +486,6 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			</modules>
 			<dependencyManagement>
 				<dependencies>
-					<!-- Override Spring Data release train provided by Spring Boot -->
 					<dependency>
 						<groupId>org.springframework.data</groupId>
 						<artifactId>spring-data-releasetrain</artifactId>
@@ -522,6 +543,17 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					    <artifactId>commons-lang3</artifactId>
 					    <version>${commons.lang.version}</version>
 					</dependency>
+					<dependency>
+						<groupId>org.flywaydb</groupId>
+						<artifactId>flyway-core</artifactId>
+						<version>${flyway.core.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>br.com.kerubin.api</groupId>
+						<artifactId>database-core</artifactId>
+						<version>${database.core.version}</version>
+					</dependency>
+					
 					«buildMessagingDependency(true)»
 					<!-- Begin Entity Dependencies -->
 					«service?.dependencies.map[buildEntityMavenDependency(true)]?.join»

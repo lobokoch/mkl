@@ -46,17 +46,12 @@ class JavaServerHttpFilterGenerator extends GeneratorExecutor implements IGenera
 			// TODO: Configurar para diferentes ambientes
 			private static final String ALLOW_ORIGINS = "http://localhost:4200"; 
 			
-			public static final String HEADER_USER = "X-User-Header";
-			public static final String HEADER_TENANT = "X-Tenant-Header";
-		
 			@Override
 			public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
 					throws IOException, ServletException {
 				
 				HttpServletRequest request = (HttpServletRequest) req;
 				HttpServletResponse response = (HttpServletResponse) resp;
-				
-				updateServiceContext(request);
 				
 				response.setHeader("Access-Control-Allow-Origin", ALLOW_ORIGINS);
 		        response.setHeader("Access-Control-Allow-Credentials", "true");
@@ -70,15 +65,6 @@ class JavaServerHttpFilterGenerator extends GeneratorExecutor implements IGenera
 				} else {
 					chain.doFilter(req, resp);
 				}
-			}
-			
-			private void updateServiceContext(HttpServletRequest request) {
-				String currentTenant = request.getHeader(HEADER_TENANT);
-				String currentUser = request.getHeader(HEADER_USER);
-				
-				ServiceContext.setCurrentTenant(currentTenant);
-				ServiceContext.setCurrentUser(currentUser);
-				
 			}
 			
 			@Override

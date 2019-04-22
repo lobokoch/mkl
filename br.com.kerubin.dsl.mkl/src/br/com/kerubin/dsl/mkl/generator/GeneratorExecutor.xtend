@@ -198,6 +198,16 @@ class GeneratorExecutor {
 		'ServiceContext'
 	}
 	
+	def String toServiceHandlerInterceptorAdapterName(Service service) {
+		//service.domainName + service.serviceName + "Constants"
+		'ServiceHandlerInterceptorAdapter'
+	}
+	
+	def String toServiceWebMvcConfigurerAdapterName(Service service) {
+		//service.domainName + service.serviceName + "Constants"
+		'ServiceWebMvcConfigurerAdapter'
+	}
+	
 	def String getImportServiceContext(Service service) {
 		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
 	}

@@ -38,7 +38,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityControllerGenerator(this),
 			new JavaPostgreSQLGenerator(this),
 			new JavaServerHttpFilterGenerator(this),
-			new JavaServerServiceContextGenerator(this)
+			new JavaServiceHandlerInterceptorAdapterGenerator(this),
+			new JavaServiceWebMvcConfigurerAdapterGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 
