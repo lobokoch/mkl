@@ -270,7 +270,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		        <dependency>
 		          <groupId>org.modelmapper</groupId>
 		          <artifactId>modelmapper</artifactId>
-		          <version>1.1.0</version>
+		          <version>${modelmapper.version}</version>
 		        </dependency>
 		        <dependency>
 		          <groupId>com.querydsl</groupId>
@@ -312,7 +312,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>${build.helper.maven.plugin.version}</version>
             <executions>
               <execution>
                 <id>add-source</id>
@@ -336,7 +336,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
           <plugin>
             <groupId>com.mysema.maven</groupId>
             <artifactId>apt-maven-plugin</artifactId>
-            <version>1.1.1</version>
+            <version>${apt.maven.plugin.version}</version>
             <executions>
               <execution>
                 <goals>
@@ -396,7 +396,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		        	<plugin>
 		        		<groupId>org.codehaus.mojo</groupId>
 		        		<artifactId>templating-maven-plugin</artifactId>
-		        		<version>1.0.0</version>
+		        		<version>${templating.maven.plugin.version}</version>
 		        		<executions>
 		        			<execution>
 		        				<id>generate-version-class</id>
@@ -464,19 +464,22 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			</developers>
 			<properties>
 				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-				<maven.compiler.source>1.8</maven.compiler.source>
-				<maven.compiler.target>1.8</maven.compiler.target>
-				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+				<maven.compiler.source>«configuration.javaVersion»</maven.compiler.source>
+				<maven.compiler.target>«configuration.javaVersion»</maven.compiler.target>
+				<java.version>«configuration.javaVersion»</java.version>
 				<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-				<java.version>1.8</java.version>
-				<springframework.boot.version>2.0.1.RELEASE</springframework.boot.version>
-				<spring-cloud.version>Finchley.RC1</spring-cloud.version>
-				<spring-data-releasetrain.version>Kay-SR6</spring-data-releasetrain.version>
-				<querydsl.version>4.2.1</querydsl.version>
-				<commons.lang.version>3.8.1</commons.lang.version>
-				<database.core.version>1.0.0</database.core.version>
-				<flyway.core.version>5.2.4</flyway.core.version>
-				<kerubin.messaging.version>«IF configuration.messagingVersion.isNotEmpty»«configuration.messagingVersion»«ELSE»0.0.1-SNAPSHOT«ENDIF»</kerubin.messaging.version>
+				<springframework.boot.version>«configuration.springFrameworkBootVersion»</springframework.boot.version>
+				<spring-cloud.version>«configuration.springCloudVersion»</spring-cloud.version>
+				<spring-data-releasetrain.version>«configuration.springDataReleasetrainVersion»</spring-data-releasetrain.version>
+				<querydsl.version>«configuration.queryDSLVersion»</querydsl.version>
+				<commons.lang.version>«configuration.apacheCommonsLangVersion»</commons.lang.version>
+				<database.core.version>«configuration.databaseCoreVersion»</database.core.version>
+				<flyway.core.version>«configuration.flywayCoreVersion»</flyway.core.version>
+				<kerubin.messaging.core.version>«configuration.messagingCoreVersion»</kerubin.messaging.core.version>
+				<modelmapper.version>«configuration.modelMapperVersion»</modelmapper.version>
+				<build.helper.maven.plugin.version>«configuration.buildHelperMavenPluginVersion»</build.helper.maven.plugin.version>
+				<apt.maven.plugin.version>«configuration.aptMavenPluginVersion»</apt.maven.plugin.version>
+				<templating.maven.plugin.version>«configuration.templatingMavenPluginVersion»</templating.maven.plugin.version>
 				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»
 			</properties>
 			<modules>
@@ -599,8 +602,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		'''
 		<dependency>
 			<groupId>br.com.kerubin.api</groupId>
-			<artifactId>messaging</artifactId>
-			«IF withVersion»<version>${kerubin.messaging.version}</version>«ENDIF»
+			<artifactId>messaging-core</artifactId>
+			«IF withVersion»<version>${kerubin.messaging.core.version}</version>«ENDIF»
 		</dependency>
 		'''
 	}

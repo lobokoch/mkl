@@ -246,12 +246,23 @@ class MavenDependency {
 }
 
 class Configuration {
-	String groupId
-	String version
-	int servicePort
-	String cloudConfigUri
-	String messagingVersion
-	
+	String groupId = 'br.com.kerubin.api'
+	String version = '1.0.0-SNAPSHOT'
+	int servicePort = '9001'
+	String cloudConfigUri = 'http://localhost:9091'
+	String messagingCoreVersion = '0.0.1-SNAPSHOT'
+	String javaVersion = '1.8'
+	String springFrameworkBootVersion = '2.0.1.RELEASE'
+	String springCloudVersion = 'Finchley.RC1'
+	String springDataReleasetrainVersion = 'Kay-SR6'
+	String queryDSLVersion = '4.2.1'
+	String apacheCommonsLangVersion = '3.8.1'
+	String databaseCoreVersion = '1.0.0'
+	String flywayCoreVersion = '5.2.4'
+	String modelMapperVersion = '1.1.0'
+	String buildHelperMavenPluginVersion = '3.0.0'
+	String aptMavenPluginVersion = '1.1.1'
+	String templatingMavenPluginVersion = '1.0.0'
 }
 
 abstract class ServiceElement extends Element {
