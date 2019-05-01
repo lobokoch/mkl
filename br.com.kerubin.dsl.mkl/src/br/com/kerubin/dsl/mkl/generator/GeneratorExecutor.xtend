@@ -39,8 +39,44 @@ class GeneratorExecutor {
 		baseGenerator.configuration
 	}
 	
+	def canGenerateEntity(Entity entity) {
+		var can = !entity.isGenerationDisabled
+		can
+	}
+	
+	def canGenerateController(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.controller
+		can
+	}
+	
+	def canGenerateEntityJPA(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.entityJPA
+		can
+	}
+	
+	def canGenerateRepository(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.repository
+		can
+	}
+	
+	def canGenerateServiceImpl(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.serviceImpl
+		can
+	}
+	
+	def canGenerateServiceInterface(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.serviceInterface
+		can
+	}
+	
+	def canGenerateEntityDTO(Entity entity) {
+		var can = entity.notHasDisableGeneration || !entity.disableGeneration.entityDTO
+		can
+	}
+	
+	
 	def getEntities() {
-		baseGenerator.entities
+		baseGenerator.entities.filter[canGenerateEntity]
 	}
 	
 	def getEnums() {

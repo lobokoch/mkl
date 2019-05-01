@@ -3,6 +3,36 @@ package br.com.kerubin.dsl.mkl.model
 import java.util.Set
 import java.util.LinkedHashSet
 
+class DisableServiceGeneration {
+	boolean backend
+	boolean frontend
+	
+	// All means, have no other
+	op boolean isAll() {
+		return !backend &&
+			!frontend
+	}
+}
+
+class DisableEntityGeneration {
+	boolean controller
+	boolean entityJPA
+	boolean repository
+	boolean serviceInterface
+	boolean serviceImpl
+	boolean entityDTO
+	
+	// All means, have no other
+	op boolean isAll() {
+		return !controller &&
+			!entityJPA &&
+			!entityDTO &&
+			!repository &&
+			!serviceInterface &&
+			!serviceImpl 
+	}
+}
+
 // BEGIN Rule
 
 class MakeCopiesExpression {
@@ -224,11 +254,30 @@ class Service extends Element {
 		domainModel.domain
 	}
 	
-	/*resolving*/ 
+	contains DisableServiceGeneration disableGeneration
 	contains Configuration configuration
 	contains MavenDependency[] dependencies
 	contains ServiceElement[] elements opposite service
 	
+	op boolean notHasDisableGeneration() {
+		disableGeneration === null
+	}
+	
+	op boolean canGenerateBackend() {
+		notHasDisableGeneration || !disableGeneration.backend
+	}
+	
+	op boolean canGenerateFrontend() {
+		notHasDisableGeneration || !disableGeneration.frontend
+	}
+	
+	op boolean hasDisableGeneration() {
+		disableGeneration !== null
+	}
+	
+	op boolean isGenerationDisabled() {
+		hasDisableGeneration && disableGeneration.all
+	}
 }
 
 class MavenDependency {
@@ -621,6 +670,19 @@ class Entity extends PublicObject, Rulled {
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
+	contains DisableEntityGeneration disableGeneration
+	
+	op boolean hasDisableGeneration() {
+		disableGeneration !== null
+	}
+	
+	op boolean notHasDisableGeneration() {
+		disableGeneration === null
+	}
+	
+	op boolean isGenerationDisabled() {
+		hasDisableGeneration && disableGeneration.all
+	}
 	
 	//contains Rulled rules
 	

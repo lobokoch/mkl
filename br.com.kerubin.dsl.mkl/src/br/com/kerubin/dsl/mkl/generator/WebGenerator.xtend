@@ -10,7 +10,9 @@ class WebGenerator extends BaseGenerator {
 	}
 	
 	override generate() {
-		generateFiles
+		if (service.canGenerateFrontend) {
+			generateFiles
+		}
 	}
 	
 	def generateFiles() {

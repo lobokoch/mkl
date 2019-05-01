@@ -10,7 +10,9 @@ class JavaGenerator extends BaseGenerator {
 	}
 	
 	override generate() {
-		generateJavaFiles
+		if (canGenerateServiceBackend) {
+			generateJavaFiles
+		}
 	}
 	
 	def generateJavaFiles() {

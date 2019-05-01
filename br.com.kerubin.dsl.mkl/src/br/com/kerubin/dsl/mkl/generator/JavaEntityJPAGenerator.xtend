@@ -27,7 +27,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def generateEntities() {
-		entities.forEach[generateEntity]
+		entities.filter[it.canGenerateEntityJPA].forEach[generateEntity]
 	}
 	
 	def generateEntity(Entity entity) {

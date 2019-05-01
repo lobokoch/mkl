@@ -20,7 +20,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateController]
+		entities.filter[it.canGenerateController].forEach[generateController]
 	}
 	
 	def generateController(Entity entity) {

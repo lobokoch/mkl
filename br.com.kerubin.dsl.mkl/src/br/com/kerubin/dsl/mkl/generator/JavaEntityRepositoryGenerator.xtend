@@ -16,7 +16,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateRepository]
+		entities.filter[it.canGenerateRepository].forEach[generateRepository]
 	}
 	
 	def generateRepository(Entity entity) {

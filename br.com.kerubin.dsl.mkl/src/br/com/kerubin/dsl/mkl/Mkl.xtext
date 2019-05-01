@@ -10,6 +10,7 @@ DomainModel:
  ; 
 
 Service:
+	disableGeneration=DisableServiceGeneration?
 	'service' Name '{'
 		( 
 			(configuration=Configuration)? &
@@ -64,6 +65,7 @@ EnumItem:
 
 Entity:
 	(
+		(disableGeneration=DisableEntityGeneration)? &
 		(externalEntity?='@externalEntity')? &
 		(subscribeEntityEvents=SubscribeEntityEvents)? & 
 		(publishEntityEvents=PublishEntityEvents)? & 
@@ -81,7 +83,30 @@ Entity:
 	'}'
 ;
 
+DisableServiceGeneration:
+{DisableServiceGeneration}	
+	'@disableGeneration' 
+	(
+	'(' 
+		(backend ?= 'backend')? & 
+		(frontend ?= 'frontend')?
+	')'	)?
+;
 
+DisableEntityGeneration:
+{DisableEntityGeneration}
+	'@disableGeneration' 
+	(
+		('(' 
+			(controller ?= 'controller')? &
+			(entityJPA ?= 'entityJPA')? &
+			(entityDTO ?= 'entityDTO')? 
+			(repository ?= 'repository')? &
+			(serviceImpl ?= 'serviceImpl')? & 
+			(serviceInterface ?= 'serviceInterface')? & 
+		')')?
+	)
+;
 
 SubscribeEntityEvents:
 	'@subscribe' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ',' 'events' '=' '[' events=CudEvents ']' ')'

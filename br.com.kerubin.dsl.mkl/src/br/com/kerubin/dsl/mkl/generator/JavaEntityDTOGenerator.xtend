@@ -24,7 +24,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def generateFiles() {
-		entities.forEach[generateDTO]
+		entities.filter[it.canGenerateEntityDTO].forEach[generateDTO]
 	}
 	
 	def generateDTO(Entity entity) {

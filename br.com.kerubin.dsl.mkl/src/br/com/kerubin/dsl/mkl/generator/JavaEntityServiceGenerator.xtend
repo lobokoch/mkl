@@ -20,10 +20,14 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	def generateFiles() {
-		entities.forEach[it |
+		
+		entities.filter[it.canGenerateServiceInterface].forEach[generateServiceInterface]
+		entities.filter[it.canGenerateServiceImpl].forEach[generateServiceInterfaceImpl]
+		
+		/*entities.forEach[it |
 			generateServiceInterface
 			generateServiceInterfaceImpl
-		]
+		]*/
 	}
 	
 	def generateServiceInterface(Entity entity) {

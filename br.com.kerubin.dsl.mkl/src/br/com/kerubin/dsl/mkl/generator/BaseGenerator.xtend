@@ -35,7 +35,17 @@ abstract class BaseGenerator {
 		serviceBooster = new ServiceBoosterImpl();
 	}
 	
+	protected def boolean canGenerateService() {
+		!service.generationDisabled
+	}
 	
+	protected def boolean canGenerateServiceBackend() {
+		service.canGenerateBackend
+	}
+	
+	protected def boolean canGenerateServiceFrontend() {
+		service.canGenerateFrontend
+	}
 	
 	def generateFile(String fileName, CharSequence contents) {
 		/*if (outputConfig === null) {
