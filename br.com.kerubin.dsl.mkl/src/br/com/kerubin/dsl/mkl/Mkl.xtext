@@ -10,7 +10,7 @@ DomainModel:
  ; 
 
 Service:
-	disableGeneration=DisableServiceGeneration?
+	(disableGeneration=DisableServiceGeneration)?
 	'service' Name '{'
 		( 
 			(configuration=Configuration)? &
@@ -85,27 +85,28 @@ Entity:
 
 DisableServiceGeneration:
 {DisableServiceGeneration}	
-	'@disableGeneration' 
-	(
+	'@disableServiceGeneration'
 	'(' 
-		(backend ?= 'backend')? & 
-		(frontend ?= 'frontend')?
-	')'	)?
+		(
+			(backend ?= 'backend')? & 
+			(frontend ?= 'frontend')?
+		)
+	')'	
 ;
 
 DisableEntityGeneration:
 {DisableEntityGeneration}
-	'@disableGeneration' 
-	(
-		('(' 
+	'@disableEntityGeneration' 
+	'(' 
+		(
 			(controller ?= 'controller')? &
 			(entityJPA ?= 'entityJPA')? &
-			(entityDTO ?= 'entityDTO')? 
+			(entityDTO ?= 'entityDTO')? &
 			(repository ?= 'repository')? &
 			(serviceImpl ?= 'serviceImpl')? & 
-			(serviceInterface ?= 'serviceInterface')? & 
-		')')?
-	)
+			(serviceInterface ?= 'serviceInterface')?
+		)
+	')'
 ;
 
 SubscribeEntityEvents:
