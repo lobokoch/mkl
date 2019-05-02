@@ -62,8 +62,11 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		if (entity.hasSumFields) {
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
+		imports.add("import { environment } from 'src/environments/environment';")
+		
 		
 		val ruleMakeCopies = entity.ruleMakeCopies
+		
 		
 		val body = '''
 		
@@ -71,7 +74,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		export class «serviceName» {
 			
 			// TODO: Provisório
-			url = 'http://localhost:9101/entities/«varName»';
+			// url = 'http://localhost:9101/entities/«varName»';
+			url = environment.apiUrl + '/«service.domain»/«service.name»/entities/«varName»';
 			
 			constructor(private http: HttpClientWithToken) { }
 			

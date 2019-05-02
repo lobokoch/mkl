@@ -85,18 +85,20 @@ Entity:
 
 DisableServiceGeneration:
 {DisableServiceGeneration}	
-	'@disableServiceGeneration'
+	('@disableGeneration' |
+	'@disableGeneration'
 	'(' 
 		(
 			(backend ?= 'backend')? & 
 			(frontend ?= 'frontend')?
 		)
-	')'	
+	')')	
 ;
 
 DisableEntityGeneration:
 {DisableEntityGeneration}
-	'@disableEntityGeneration' 
+	('@disableGeneration' |
+	('@disableGeneration'
 	'(' 
 		(
 			(controller ?= 'controller')? &
@@ -106,7 +108,7 @@ DisableEntityGeneration:
 			(serviceImpl ?= 'serviceImpl')? & 
 			(serviceInterface ?= 'serviceInterface')?
 		)
-	')'
+	')'))
 ;
 
 SubscribeEntityEvents:

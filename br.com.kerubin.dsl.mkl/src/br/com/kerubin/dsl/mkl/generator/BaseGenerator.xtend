@@ -40,7 +40,7 @@ abstract class BaseGenerator {
 	}
 	
 	protected def boolean canGenerateServiceBackend() {
-		service.canGenerateBackend
+ 		service.canGenerateBackend
 	}
 	
 	protected def boolean canGenerateServiceFrontend() {

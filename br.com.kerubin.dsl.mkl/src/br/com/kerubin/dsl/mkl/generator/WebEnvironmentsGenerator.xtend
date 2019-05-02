@@ -54,12 +54,11 @@ class WebEnvironmentsGenerator extends GeneratorExecutor implements IGeneratorEx
 		
 		export const environment = {
 		  production: false,
-		  apiUrl: 'http://localhost:9101',
-		  authApiUrl: 'http://localhost:9002',
+		  apiUrl: 'http://localhost:9090/api',
+		  authApiUrl: 'http://localhost:9090/api',
 		
 		  tokenWhitelistedDomains: [
-		    new RegExp('localhost:9101'),
-		    new RegExp('localhost:9002')
+		    new RegExp('localhost:9090')
 		  ],
 		
 		  tokenBlacklistedRoutes: [

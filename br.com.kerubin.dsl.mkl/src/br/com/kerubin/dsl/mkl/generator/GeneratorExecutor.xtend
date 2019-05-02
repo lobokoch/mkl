@@ -45,33 +45,33 @@ class GeneratorExecutor {
 	}
 	
 	def canGenerateController(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.controller
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.controller)
+		!not
 	}
 	
 	def canGenerateEntityJPA(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.entityJPA
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.entityJPA)
+		!not
 	}
 	
 	def canGenerateRepository(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.repository
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.repository)
+		!not
 	}
 	
 	def canGenerateServiceImpl(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.serviceImpl
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.serviceImpl)
+		!not
 	}
 	
 	def canGenerateServiceInterface(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.serviceInterface
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.serviceInterface)
+		!not
 	}
 	
 	def canGenerateEntityDTO(Entity entity) {
-		var can = entity.notHasDisableGeneration || !entity.disableGeneration.entityDTO
-		can
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.entityDTO)
+		!not
 	}
 	
 	

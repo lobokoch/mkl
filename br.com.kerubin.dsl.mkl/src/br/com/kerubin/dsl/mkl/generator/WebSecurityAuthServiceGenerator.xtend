@@ -33,6 +33,7 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		import { JwtHelperService } from '@auth0/angular-jwt';
 		import { Injectable } from '@angular/core';
 		import { HttpClient, HttpHeaders } from '@angular/common/http';
+		import { environment } from 'src/environments/environment';
 		
 		
 		@Injectable({
@@ -40,7 +41,7 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		})
 		export class AuthService {
 		
-		  oauthTokenUrl = 'http://localhost:9002/oauth/token';
+		  oauthTokenUrl = environment.apiUrl + '/oauth/token';
 		  jwtPayload: any;
 		
 		  constructor(

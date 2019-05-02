@@ -264,11 +264,13 @@ class Service extends Element {
 	}
 	
 	op boolean canGenerateBackend() {
-		notHasDisableGeneration || !disableGeneration.backend
+		val not = isGenerationDisabled() || (hasDisableGeneration && disableGeneration.backend)
+		!not
 	}
 	
 	op boolean canGenerateFrontend() {
-		notHasDisableGeneration || !disableGeneration.frontend
+		val not = isGenerationDisabled() || (hasDisableGeneration && disableGeneration.frontend)
+		!not
 	}
 	
 	op boolean hasDisableGeneration() {
