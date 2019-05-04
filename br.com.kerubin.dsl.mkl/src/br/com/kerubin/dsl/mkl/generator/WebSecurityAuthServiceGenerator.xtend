@@ -59,7 +59,8 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		  refreshAccessToken(): Promise<void> {
 		    const headers = new HttpHeaders()
 		    .append('Content-Type', 'application/x-www-form-urlencoded')
-		    .append('Authorization', 'Basic a2VydWJpbi1mZTpBbmdlbCE4MQ==');
+		    // .append('Authorization', 'Basic a2VydWJpbi1mZTpBbmdlbCE4MQ==');
+		    .append('Authorization', 'Basic a2VydWJpbi1mZToxMjM=');
 		
 		    const body = 'grant_type=refresh_token';
 		
@@ -79,7 +80,8 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		  login(username: string, password: string): Promise<void> {
 		    const headers = new HttpHeaders()
 		    .append('Content-Type', 'application/x-www-form-urlencoded')
-		    .append('Authorization', 'Basic a2VydWJpbi1mZTpBbmdlbCE4MQ=='); // Dev da API passa isso.
+		    // .append('Authorization', 'Basic a2VydWJpbi1mZTpBbmdlbCE4MQ=='); // Dev da API passa isso.
+		    .append('Authorization', 'Basic a2VydWJpbi1mZToxMjM='); // Dev da API passa isso.
 		
 		    const body = `username=${username}&password=${password}&grant_type=password`;
 		

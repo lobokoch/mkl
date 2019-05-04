@@ -61,6 +61,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		import org.springframework.web.bind.annotation.RestController;
 		import org.springframework.web.bind.annotation.RequestMapping;
 		import org.springframework.web.bind.annotation.ResponseStatus;
+		import org.springframework.transaction.annotation.Transactional;
 		import org.springframework.http.ResponseEntity;
 		import org.springframework.http.HttpStatus;
 		
@@ -86,12 +87,14 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			@Autowired
 			«entityDTOName»DTOConverter «entityDTOVar»DTOConverter;
 			
+			@Transactional
 			@PostMapping
 			public ResponseEntity<«entityDTOName»> create(@Valid @RequestBody «entityDTOName» «entityDTOVar») {
 				«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
 				return ResponseEntity.status(HttpStatus.CREATED).body(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
 			}
 			
+			@Transactional(readOnly=true)
 			@GetMapping("/{«idVar»}")
 			public ResponseEntity<«entityDTOName»> read(@PathVariable «idType» «idVar») {
 				try {
@@ -103,6 +106,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				}
 			}
 			
+			@Transactional
 			@PutMapping("/{«idVar»}")
 			public ResponseEntity<«entityDTOName»> update(@PathVariable «idType» «idVar», @Valid @RequestBody «entityDTOName» «entityDTOVar») {
 				try {
@@ -114,12 +118,13 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				}
 			}
 			
-			@DeleteMapping("/{«idVar»}")
 			@ResponseStatus(HttpStatus.NO_CONTENT)
+			@DeleteMapping("/{«idVar»}")
 			public void delete(@PathVariable «idType» «idVar») {
 				«entityServiceVar».delete(«idVar»);
 			}
 			
+			@Transactional(readOnly=true)
 			@GetMapping
 			public PageResult<«entityDTOName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
 				Page<«entityName»> page = «entityServiceVar».list(«entity.toEntityListFilterName.toFirstLower», pageable);
@@ -129,6 +134,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			}
 			
 			«IF entity.hasAutoComplete»
+			@Transactional(readOnly=true)
 			@GetMapping("/autoComplete")
 			public Collection<«entity.toAutoCompleteName»> autoComplete(@RequestParam("query") String query) {
 				Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».autoComplete(query);
