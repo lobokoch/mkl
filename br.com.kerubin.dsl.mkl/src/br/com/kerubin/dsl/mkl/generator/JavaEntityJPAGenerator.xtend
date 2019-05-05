@@ -49,7 +49,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		@Entity
 		@Table(name = "«entity.databaseName»")
-		public class «entity.toEntityName» {
+		public class «entity.toEntityName» «IF entity.isAuditing»extends AuditingEntity«ENDIF» {
 		
 			«entity.generateFields»
 			«entity.generateGetters»
@@ -74,7 +74,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def CharSequence generateFields(Entity entity) {
 		'''
-		«entity.slots.map[generateField(entity)].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateField(entity)].join('\r\n')»
 		'''
 		
 	}
@@ -410,7 +410,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateGetters(Entity entity) {
 		'''
 		
-		«entity.slots.map[generateGetter].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateGetter].join('\r\n')»
 		'''
 		
 	}
@@ -467,7 +467,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateSetters(Entity entity) {
 		'''
 		
-		«entity.slots.map[generateSetter].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateSetter].join('\r\n')»
 		'''
 	}
 	
@@ -599,6 +599,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		entity.addImport('import javax.persistence.Table;')
 		entity.addImport('import javax.persistence.Id;')
 		entity.addImport('import javax.persistence.Column;')
+		if (entity.isAuditing) {
+			entity.addImport('import br.com.kerubin.api.database.entity.AuditingEntity;')
+		}
 	}
 	
 	def CharSequence getSlotsEntityImports(Entity entity) {

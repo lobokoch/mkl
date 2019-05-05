@@ -75,6 +75,43 @@ class ServiceBoosterImpl implements ServiceBooster {
 			
 			entity.slots.add(deletedSlot)
 		}
+		
+		if (entity.isAuditing) {
+			entity.createAuditingFields
+		}
+	}
+	
+	def void getCreateAuditingFields(Entity entity) {
+		val createdBy = createAuditingField('createdBy', false);
+		entity.slots.add(createdBy)
+		
+		val createdDate = createAuditingField('createdDate', true);
+		entity.slots.add(createdDate)
+		
+		val lastModifiedBy = createAuditingField('lastModifiedBy', false);
+		entity.slots.add(lastModifiedBy)
+		
+		val lastModifiedDate = createAuditingField('lastModifiedDate', true);
+		entity.slots.add(lastModifiedDate)
+	}
+	
+	def Slot createAuditingField(String name, boolean isDate) {
+		val slot = ModelFactory.eINSTANCE.createSlot
+		slot.name = name
+		slot.label = slot.name
+		slot.implicit = true
+		slot.mapped = true
+		slot.hidden = true
+		slot.optional = true
+		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
+		if (isDate) {
+			basicTypeReference.basicType = ModelFactory.eINSTANCE.createDateTimeType
+		}
+		else {
+			basicTypeReference.basicType = ModelFactory.eINSTANCE.createStringType
+		}
+		slot.slotType = basicTypeReference
+		slot
 	}
 	
 	private def createAutoCompleteForSlot(Slot slot) {

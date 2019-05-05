@@ -454,6 +454,7 @@ class Slot extends Element {
 	boolean indexed
 	Boolean hidden
 	boolean publish = 'false'
+	boolean mapped = 'false'
 	
 	boolean lookupKey
     boolean lookupResult
@@ -664,7 +665,7 @@ class PublicObject extends Record, ServiceObject {
 class Entity extends PublicObject, Rulled {
 	refers Entity parent
 	boolean secure
-	boolean audit
+	boolean auditing
 	boolean mapped
 	boolean baseRepository
 	boolean enableReplication

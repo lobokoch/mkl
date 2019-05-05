@@ -60,7 +60,7 @@ Enumeration:
 ;
 
 EnumItem:
-	name=ID ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
+	name=ID_KEYWORD ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
 ;
 
 Entity:
@@ -73,7 +73,7 @@ Entity:
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
 		(baseRepository?='@baseRepository')? &
-		(audit?='@audit')? &
+		(auditing?='@auditing')? &
 		('@parent' '(' parent=[Entity] ')')? &
 		('@label' '(' label=STRING ')')?
 	)
@@ -112,7 +112,7 @@ DisableEntityGeneration:
 ;
 
 SubscribeEntityEvents:
-	'@subscribe' '(' 'domain' '=' externalDomain=ID ',' 'service' '=' externalService=ID ',' 'events' '=' '[' events=CudEvents ']' ')'
+	'@subscribe' '(' 'domain' '=' externalDomain=ID_KEYWORD ',' 'service' '=' externalService=ID_KEYWORD ',' 'events' '=' '[' events=CudEvents ']' ')'
 ;
 
 PublishEntityEvents:
@@ -140,8 +140,14 @@ PublicObject:
 	'}'
 ;
 
+
+// All conflict keywords can go here. So we can skip use of "^" skip symbol.
+ID_KEYWORD:
+	ID | 'name'
+;
+
  fragment Name returns Named:
-	name=ID ('alias' _alias=ID)?
+	name=ID_KEYWORD ('alias' _alias=ID_KEYWORD)?
 ;
 
 fragment Slots returns Slotted:
@@ -186,7 +192,8 @@ Rule:
 ;
 
 RuleAction:
-	'name' ':' actionName = ID 
+	//'name' ':' actionName = ID 
+	'name' ':' actionName = ID_KEYWORD 
 	'button' '(' actionButton = ActionButton ')'
 ;
 
