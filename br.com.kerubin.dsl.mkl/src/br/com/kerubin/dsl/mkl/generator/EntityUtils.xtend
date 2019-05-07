@@ -997,7 +997,8 @@ class EntityUtils {
 			"java.time.LocalTime"
 		}
 		else if (basicType instanceof DateTimeType) {
-			"java.util.Date"
+			// "java.util.Date"
+			"java.time.LocalDateTime"
 		}
 		else if (basicType instanceof UUIDType) {
 			"java.util.UUID"
