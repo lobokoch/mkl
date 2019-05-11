@@ -58,6 +58,10 @@ class Utils {
 		WEB_ACCOUNT_DIR.webDir
 	}
 	
+	def static getWebSrcDir() {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR
+	}
+	
 	def static getWebEnvironmentsDir() {
 		WEB_ENVIRONMENTS_DIR.webAppDir
 	}

@@ -17,7 +17,7 @@ class WebStylesGenerator extends GeneratorExecutor implements IGeneratorExecutor
 	}
 	
 	def generateFiles() {
-		val path = getWebSourceGenDir
+		val path = getWebSrcDir
 		path.generateFiles
 	}
 	
