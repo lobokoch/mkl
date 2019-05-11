@@ -81,7 +81,7 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 	
 	def void generateTranslationKeysForEntity(Entity entity, List<String> keys) {
 		keys.add('"' + entity.translationKey + '": "' + entity.labelValue + '"')
-		entity.slots.forEach[
+		entity.slots.filter[!mapped].forEach[
 			val key = it.translationKey
 			keys.add('"' + key + '": "' + it.labelValue + '"')
 			

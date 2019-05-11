@@ -136,7 +136,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateEntityFields(Entity entity) {
 		'''
-		«entity.slots.map[generateField(entity)].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateField(entity)].join('\r\n')»
 		'''
 		
 	}

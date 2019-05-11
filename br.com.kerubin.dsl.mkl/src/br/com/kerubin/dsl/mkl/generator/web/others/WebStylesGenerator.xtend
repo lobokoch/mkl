@@ -282,6 +282,10 @@ class WebStylesGenerator extends GeneratorExecutor implements IGeneratorExecutor
 		  border-top: 1px solid gray;
 		  border-bottom: 1px solid gray;
 		}
+		
+		.ui-accordion-content {
+		  width: 99.7% !important;
+		}
 		'''
 	}
 	

@@ -145,7 +145,7 @@ class WebNewAccountGenerator extends GeneratorExecutor implements IGeneratorExec
 		      <div class="ui-g-12">
 		          <div class="ui-inputgroup">
 		              <span class="ui-inputgroup-addon"><i class="pi pi-pencil"></i></span>
-		              <input [disabled]="disabled" pInputText type="text" placeholder="Nome completo" pInputText #name="ngModel" ngModel [(ngModel)]="userAccount.name" name="name" required>
+		              <input appFocus [disabled]="disabled" pInputText type="text" placeholder="Nome completo" pInputText #name="ngModel" ngModel [(ngModel)]="userAccount.name" name="name" required>
 		            </div>
 		            <div class="invalid-message" *ngIf="name.invalid && name.dirty">Informe o nome completo.</div>
 		      </div>

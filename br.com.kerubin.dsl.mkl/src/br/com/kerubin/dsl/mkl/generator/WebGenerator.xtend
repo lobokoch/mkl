@@ -7,6 +7,7 @@ import br.com.kerubin.dsl.mkl.generator.web.account.WebConfirmAccountGenerator
 import br.com.kerubin.dsl.mkl.generator.web.account.WebNewAccountGenerator
 import br.com.kerubin.dsl.mkl.generator.web.account.WebUserAccountServiceGenerator
 import br.com.kerubin.dsl.mkl.generator.web.others.WebStylesGenerator
+import br.com.kerubin.dsl.mkl.generator.web.diretive.WebFocusDirectiveGenerator
 
 class WebGenerator extends BaseGenerator {
 	
@@ -55,7 +56,8 @@ class WebGenerator extends BaseGenerator {
 			new WebConfirmAccountGenerator(this),
 			new WebNewAccountGenerator(this),
 			new WebUserAccountServiceGenerator(this),
-			new WebStylesGenerator(this)
+			new WebStylesGenerator(this),
+			new WebFocusDirectiveGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

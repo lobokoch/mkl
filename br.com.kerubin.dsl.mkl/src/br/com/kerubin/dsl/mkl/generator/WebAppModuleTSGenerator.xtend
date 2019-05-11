@@ -78,6 +78,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		import { ConfirmAccountComponent } from './account/confirmaccount/confirmaccount.component';
 		import { ConfigNewAccountComponent } from './account/confignewaccount/confignewaccount.component';
 		import { UserAccountService } from './account/useraccount.service';
+		import { FocusDirective } from './directive/focus.directive';
 		
 		// Kerubin end
 		
@@ -119,6 +120,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    NewAccountComponent,
 		    ConfirmAccountComponent,
 		    ConfigNewAccountComponent,
+		    FocusDirective,
 		    // Kerubin End
 		    
 		    AppComponent

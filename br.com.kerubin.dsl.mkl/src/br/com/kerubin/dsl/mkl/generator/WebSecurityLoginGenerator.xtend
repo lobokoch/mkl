@@ -94,7 +94,7 @@ class WebSecurityLoginGenerator extends GeneratorExecutor implements IGeneratorE
 		          <div class="ui-g-12">
 		            <div class="ui-inputgroup">
 		              <span class="ui-inputgroup-addon"><i class="pi pi-user"></i></span>
-		              <input pInputText type="email" name="username" placeholder="Seu e-mail" ngModel required #username>
+		              <input appFocus pInputText type="email" name="username" placeholder="Seu e-mail" ngModel required #username>
 		            </div>
 		          </div>
 		

@@ -37,6 +37,7 @@ class Utils {
 	static val WEB_ACCOUNT_DIR = 'account/'
 	static val WEB_ENVIRONMENTS_DIR = 'environments/'
 	static val WEB_CORE_DIR = 'core/'
+	static val WEB_DIRECTIVE_DIR = 'directive/'
 	
 	def static getWebSourceGenDir() {
 		WEB_SOURCE_GEN_BASE_DIR
@@ -48,6 +49,10 @@ class Utils {
 	
 	def static getWebComponentDir(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
+	}
+	
+	def static getWebDirectiveDir() {
+		WEB_DIRECTIVE_DIR.webDir
 	}
 	
 	def static getWebSecurityDir() {

@@ -33,7 +33,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		«generateSortFieldModel»
 		«generatePaginationFilterModel»
 		«IF entity.hasListFilterMany»
-		«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteModel].join»
+		«entity.slots.filter[!mapped].filter[it.isListFilterMany].map[generateListFilterAutoCompleteModel].join»
 		«ENDIF»
 		«entity.generateEntityListFilterModel»
 		«entity.generateEntityDTOModel»
@@ -49,7 +49,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def CharSequence generateEntityDefaultAutoComplete(Entity entity) {
-		val autoCompleteSlots = entity.slots.filter[isAutoCompleteResult]
+		val autoCompleteSlots = entity.slots.filter[!mapped].filter[isAutoCompleteResult]
 		'''
 		
 		export class «entity.toAutoCompleteName» {
@@ -96,7 +96,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	
 	def CharSequence generateFields(Entity entity) {
 		'''
-		«entity.slots.map[generateField(entity)].join»
+		«entity.slots.filter[!mapped].map[generateField(entity)].join»
 		'''
 		
 	}
@@ -128,7 +128,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	def CharSequence generateGetters(Entity entity) {
 		'''
 		
-		«entity.slots.map[generateGetter].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateGetter].join('\r\n')»
 		'''
 		
 	}
@@ -149,7 +149,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	def CharSequence generateSetters(Entity entity) {
 		'''
 		
-		«entity.slots.map[generateSetter].join('\r\n')»
+		«entity.slots.filter[!mapped].map[generateSetter].join('\r\n')»
 		'''
 	}
 	
@@ -224,7 +224,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def CharSequence generateListFilterFields(Entity entity) {
-		val slots = entity.slots.filter[it.hasListFilter]
+		val slots = entity.slots.filter[!mapped].filter[it.hasListFilter]
 		
 		'''
 		

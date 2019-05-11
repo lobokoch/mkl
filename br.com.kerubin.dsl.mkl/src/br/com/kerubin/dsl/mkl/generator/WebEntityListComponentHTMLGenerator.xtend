@@ -62,7 +62,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			
 				<div class="ui-g">
 					<div class="ui-g-12">
-						«entity.slots.filter[it.hasListFilter].generateHTMLSlotsFilters»
+						«entity.slots.filter[!mapped].filter[it.hasListFilter].generateHTMLSlotsFilters»
 					</div>
 					
 					<div>
@@ -85,7 +85,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 			<div class="ui-g">
 				<div class="ui-g-12">
-					«entity.slots.filter[it.hasListFilter].generateHTMLSlotsFilters»
+					«entity.slots.filter[!mapped].filter[it.hasListFilter].generateHTMLSlotsFilters»
 				</div>
 			</div>
 			
@@ -105,7 +105,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLGrid(Entity entity) {
-		val slots = entity.slots.filter[it.isShowOnGrid]
+		val slots = entity.slots.filter[!mapped].filter[it.isShowOnGrid]
 		val hasSum = slots.exists[hasSumField]
 		
 		val ruleActions = entity.ruleActions

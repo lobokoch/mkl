@@ -43,6 +43,7 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		
 		  oauthTokenUrl = environment.apiUrl + '/oauth/token';
 		  jwtPayload: any;
+		  tenant: string = null;
 		
 		  constructor(
 		    private http: HttpClient,
@@ -89,6 +90,7 @@ class WebSecurityAuthServiceGenerator extends GeneratorExecutor implements IGene
 		      .toPromise()
 		      .then(response => {
 		        this.storeToken(response.access_token);
+		        this.tenant = response.tenant;
 		      })
 		      .catch(response => {
 		        return Promise.reject(response);
