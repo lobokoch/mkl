@@ -56,7 +56,12 @@ class WebSecurityLoginGenerator extends GeneratorExecutor implements IGeneratorE
 		  login(username: string, password: string) {
 		    this.auth.login(username, password)
 		    .then(() => {
-		      this.router.navigate(['/mainmenu']);
+		      const tenant = this.auth.tenant;
+		      if (tenant) {
+		        this.router.navigate(['/mainmenu']);
+		      } else {
+		        this.router.navigate(['/confignewaccount']);
+		      }
 		    })
 		    .catch (error => {
 		      this.messageHandler.showError(error);
@@ -74,51 +79,56 @@ class WebSecurityLoginGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def CharSequence generateLoginHTMLContent() {
 		'''
-		<div class="container" style="max-width: 400px; margin: auto">
+		<section>
+		  <article>
 		    <!--{{ auth.jwtPayload | json }}-->
 		
-		    <form #loginForm="ngForm">
-		      <div class="ui-g ui-fluid">
+		    <p-card [style]="{width: '360px', height: '350px'}" styleClass="ui-card-shadow">
+		      <form #loginForm="ngForm">
+		        <div class="ui-g ui-fluid">
 		
-		        <div class="ui-g-12">
-		          <h1>Acessar o Kerubin</h1>
-		        </div>
+		          <div class="ui-g-12">
+		            <div class="kb-login-title">Acessar o Kerubin</div>
+		          </div>
 		
-		        <div class="ui-g-12">
+		          <div class="ui-g-12">
 		            <div class="ui-inputgroup">
-		                <span class="ui-inputgroup-addon"><i class="pi pi-user"></i></span>
-		                <input pInputText type="email" name="username" placeholder="Seu e-mail" ngModel required #username>
+		              <span class="ui-inputgroup-addon"><i class="pi pi-user"></i></span>
+		              <input pInputText type="email" name="username" placeholder="Seu e-mail" ngModel required #username>
 		            </div>
-		        </div>
+		          </div>
 		
-		        <div class="ui-g-12">
+		          <div class="ui-g-12">
 		            <div class="ui-inputgroup">
-		                <span class="ui-inputgroup-addon"><i class="pi pi-key"></i></span>
+		              <span class="ui-inputgroup-addon"><i class="pi pi-key"></i></span>
 		              <input pInputText type="password" name="password" placeholder="Sua senha" ngModel required #password>
 		            </div>
-		        </div>
-		
-		        <div class="ui-g-12">
-		          <button pButton type="submit" label="Entrar"
-		            [disabled]="!loginForm.valid"
-		            (click)="login(username.value, password.value); password.value = '';">
-		          </button>
-		        </div>
-		
-		        <div class="ui-g-12">
-		          <div class="ui-g-12 ui-fluid ui-md-6">
-		            <a routerLink="/mainmenu" pButton class="ui-button-success" label="Criar nova conta"></a>
 		          </div>
 		
-		          <div class="ui-g-12 ui-fluid ui-md-6">
-		            <a routerLink="/mainmenu" pButton style="border: 1px solid silver" class="ui-button-secondary" label="Recuperar conta"></a>
+		          <div class="ui-g-12">
+		            <button pButton style="font-weight: bold; border: 1px solid black; height: 150%" type="submit"
+		              label="Entrar" (click)="login(username.value, password.value); password.value = '';">
+		            </button>
 		          </div>
+		
+		          <div style="margin-top: 20px" class="ui-g-12">
+		            <div class="ui-g-12 ui-fluid ui-md-6">
+		              <a routerLink="/newaccount" pButton style="font-weight: bold; border: 1px solid darkgreen"
+		                class="ui-button-success" label="Criar uma conta"></a>
+		            </div>
+		
+		            <div class="ui-g-12 ui-fluid ui-md-6">
+		              <a routerLink="/mainmenu" pButton style="border: 1px solid silver" class="ui-button-secondary"
+		                label="Esqueci a senha"></a>
+		            </div>
+		          </div>
+		
 		        </div>
+		      </form>
+		    </p-card>
 		
-		      </div>
-		    </form>
-		
-		  </div>
+		  </article>
+		</section>
 		'''
 	}
 	
@@ -128,8 +138,28 @@ class WebSecurityLoginGenerator extends GeneratorExecutor implements IGeneratorE
 	}
 	
 	def CharSequence generateLoginCSSContent() {
-		'''
-		/* CSS heare */ 
+		'''		
+		section{
+		  position: absolute;
+		  top: 0;
+		  left: 0;
+		  width: 100%;
+		  height: 100%;
+		}
+		
+		article{
+		  margin: 0 auto;
+		  align-items: center;
+		  display: flex;
+		  justify-content: center;
+		  height: 80%;
+		  width: 100%;
+		}
+		
+		.kb-login-title {
+		  font-size: 2em;
+		  font-weight: bold;
+		}
 		'''
 	}
 	

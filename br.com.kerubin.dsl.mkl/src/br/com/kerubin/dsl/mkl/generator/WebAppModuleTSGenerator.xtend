@@ -56,6 +56,8 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		import {SelectButtonModule} from 'primeng/selectbutton';
 		import {DialogModule} from 'primeng/dialog';
 		import {DropdownModule} from 'primeng/dropdown';
+		import {CardModule} from 'primeng/card';
+		
 		
 		// CurrencyMask
 		import { CurrencyMaskModule } from 'ng2-currency-mask';
@@ -72,6 +74,11 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		import { LoginComponent } from './security/login/login.component';
 		import { SecurityModule } from './security/security.module';
 		import { CoreModule } from './core/core.module';
+		import { NewAccountComponent } from './account/newaccount/newaccount.component';
+		import { ConfirmAccountComponent } from './account/confirmaccount/confirmaccount.component';
+		import { ConfigNewAccountComponent } from './account/confignewaccount/confignewaccount.component';
+		import { UserAccountService } from './account/useraccount.service';
+		
 		// Kerubin end
 		
 		registerLocaleData(localePt, 'pt', localeExtraPT);
@@ -95,7 +102,10 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 			// Kerubin Begin
 		  
 		  { path: 'mainmenu', component: ContaPagarListComponent, canActivate: [AuthGuard] },
-		  { path: 'login', component: LoginComponent }
+		  { path: 'login', component: LoginComponent },
+		  { path: 'confignewaccount', component: ConfigNewAccountComponent },
+		  { path: 'newaccount', component: NewAccountComponent },
+		  { path: 'confirmaccount', component: ConfirmAccountComponent }
 		];
 		
 		
@@ -106,7 +116,11 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    «generateEntitiesNgModuleDeclarations»
 		    «toWebNavbarClassName»,
 		    LoginComponent,
+		    NewAccountComponent,
+		    ConfirmAccountComponent,
+		    ConfigNewAccountComponent,
 		    // Kerubin End
+		    
 		    AppComponent
 		  ],
 		  imports: [
@@ -135,6 +149,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		    SelectButtonModule,
 		    DialogModule,
 		    DropdownModule,
+		    CardModule,
 		    
 		    CoreModule,
 		    SecurityModule
@@ -143,7 +158,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		  	// Kerubin Begin
 		  	«generateEntitiesServiceProvidersDeclaration»
 		  	«service.toTranslationServiceClassName»,
-		  	
+		  	UserAccountService,
 		  	// Kerubin End
 		  	
 		    MessageService,

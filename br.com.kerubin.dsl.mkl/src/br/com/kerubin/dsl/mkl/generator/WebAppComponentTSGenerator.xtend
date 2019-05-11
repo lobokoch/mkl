@@ -28,7 +28,6 @@ class WebAppComponentTSGenerator extends GeneratorExecutor implements IGenerator
 		import { Router } from '@angular/router';
 		import { Component } from '@angular/core';
 		
-		
 		@Component({
 		  selector: 'app-root',
 		  templateUrl: './app.component.html',
@@ -37,15 +36,16 @@ class WebAppComponentTSGenerator extends GeneratorExecutor implements IGenerator
 		
 		export class AppComponent {
 		  title = 'Kerubin';
-		
+		  urls = ['/login', '/newaccount', '/confirmaccount'];
 		  constructor(private router: Router) {
 		    //
 		  }
-		  
-		  isShowingMenu() {
-		      return this.router.url !== '/login';
+		
+		  canShowMenu() {
+		    const url = this.router.url.toLowerCase();
+		    const exists = this.urls.some(it => url.includes(it));
+		    return !exists;
 		  }
-		    
 		}
 		'''
 	}
