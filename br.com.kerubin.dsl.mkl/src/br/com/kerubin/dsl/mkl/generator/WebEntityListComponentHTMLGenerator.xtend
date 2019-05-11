@@ -49,6 +49,35 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLFilters(Entity entity) {
+		entity.generateHTMLFiltersWithAccordion
+		// entity.generateHTMLFiltersWithPanel
+	}
+	
+	def CharSequence generateHTMLFiltersWithAccordion(Entity entity) {
+		'''
+		
+		<!-- Begin Filters -->
+		<p-accordion class="ui-g-12">
+			<p-accordionTab header="Filtro">
+			
+				<div class="ui-g">
+					<div class="ui-g-12">
+						«entity.slots.filter[it.hasListFilter].generateHTMLSlotsFilters»
+					</div>
+					
+					<div>
+						«entity.generateHTMLFilterSearchButton»
+					</div>
+				</div>
+				
+			
+			</p-accordionTab>
+		</p-accordion>
+		<!-- End Filters -->
+		'''
+	}
+	
+	def CharSequence generateHTMLFiltersWithPanel(Entity entity) {
 		'''
 		
 		<!-- Begin Filters -->

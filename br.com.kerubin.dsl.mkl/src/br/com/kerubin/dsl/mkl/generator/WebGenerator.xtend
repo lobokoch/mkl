@@ -2,6 +2,10 @@ package br.com.kerubin.dsl.mkl.generator
 
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
+import br.com.kerubin.dsl.mkl.generator.web.account.WebConfigNewAccountGenerator
+import br.com.kerubin.dsl.mkl.generator.web.account.WebConfirmAccountGenerator
+import br.com.kerubin.dsl.mkl.generator.web.account.WebNewAccountGenerator
+import br.com.kerubin.dsl.mkl.generator.web.account.WebUserAccountServiceGenerator
 
 class WebGenerator extends BaseGenerator {
 	
@@ -45,7 +49,11 @@ class WebGenerator extends BaseGenerator {
 			new WebCoreExceptionsGenerator(this),
 			new WebSecurityLogoutServiceGenerator(this),
 			new WebEnvironmentsGenerator(this),
-			new WebEnumModelGenerator(this)
+			new WebEnumModelGenerator(this),
+			new WebConfigNewAccountGenerator(this),
+			new WebConfirmAccountGenerator(this),
+			new WebNewAccountGenerator(this),
+			new WebUserAccountServiceGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

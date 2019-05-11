@@ -34,6 +34,7 @@ class Utils {
 	static val WEB_MODEL_DIR = 'model/'
 	static val WEB_NAVBAR_DIR = 'navbar/'
 	static val WEB_SECURITY_DIR = 'security/'
+	static val WEB_ACCOUNT_DIR = 'account/'
 	static val WEB_ENVIRONMENTS_DIR = 'environments/'
 	static val WEB_CORE_DIR = 'core/'
 	
@@ -51,6 +52,10 @@ class Utils {
 	
 	def static getWebSecurityDir() {
 		WEB_SECURITY_DIR.webDir
+	}
+	
+	def static getWebAccountDir() {
+		WEB_ACCOUNT_DIR.webDir
 	}
 	
 	def static getWebEnvironmentsDir() {
