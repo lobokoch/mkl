@@ -19,6 +19,8 @@ class JavaServiceHandlerInterceptorAdapterGenerator extends GeneratorExecutor im
 	}
 	
 	def CharSequence generateCORS() {
+		val domaAndService = service.toServiceConstantsName
+		
 		'''
 		package «service.servicePackage»;
 		
@@ -50,6 +52,9 @@ class JavaServiceHandlerInterceptorAdapterGenerator extends GeneratorExecutor im
 				
 				ServiceContext.setTenant(currentTenant);
 				ServiceContext.setUser(currentUser);
+				
+				ServiceContext.setDomain(«domaAndService».DOMAIN);
+				ServiceContext.setService(«domaAndService».SERVICE);
 				
 			}
 			

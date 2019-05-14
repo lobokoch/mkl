@@ -29,19 +29,32 @@ class JavaEnumGenerator extends GeneratorExecutor implements IGeneratorExecutor 
 	
 	def CharSequence generateFile(Enumeration enumeration) {
 		enumeration.items
+		val enumName = enumeration.name.toFirstUpper
 		
 		'''
 		package «service.servicePackage»;
 		
-		public enum «enumeration.name.toFirstUpper» {
-			«enumeration.items.map[it.buildEnumItem].join(',\r\n')»
+		public enum «enumName» {
+			«enumeration.items.map[it.buildEnumItem].join(',\r\n')»;
+			«IF enumeration.hasSomeValueStr»
+			
+			private String value;
+			
+			private «enumName»(String value) {
+				this.value = value;
+			}
+			
+			public String getValue() {
+				return value;
+			}
+			«ENDIF»
 		}
 		
 		'''
 	}
 	
-	def String buildEnumItem(EnumItem item) {
-		item.name
+	def CharSequence buildEnumItem(EnumItem item) {
+		'''«item.name»«IF item.hasValueStr»("«item.valueStr»")«ENDIF»'''
 	}
 	
 }

@@ -114,6 +114,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	
 	
 	def private generateApplicationMain(String mainClassName) {
+		val domaAndService = service.toServiceConstantsName
+		
 		'''
 		package «service.servicePackage»;
 		
@@ -136,7 +138,14 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		public class «mainClassName» {
 		
 			public static void main(String[] args) {
+				init();
 				SpringApplication.run(«mainClassName».class, args);
+			}
+			
+			private static void init() {
+				ServiceContext.setDomain(«domaAndService».DOMAIN);
+				ServiceContext.setService(«domaAndService».SERVICE);
+				// ServiceConnectionProvider.INSTANCE.setMigrateDefaultTenant(true);
 			}
 		}
 		'''

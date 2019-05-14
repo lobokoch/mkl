@@ -93,7 +93,7 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 				val enumerarion = it.asEnum
 				enumerarion.items.forEach[ enumItem |
 					val enumKey = key + '_' + enumItem.name.toLowerCase
-					val enumValue = enumItem.valueStr ?: it.name
+					val enumValue = if (enumItem.hasLabel) enumItem.label else enumItem.name
 					keys.add('"' + enumKey + '": "' + enumValue + '"')
 				]
 			}

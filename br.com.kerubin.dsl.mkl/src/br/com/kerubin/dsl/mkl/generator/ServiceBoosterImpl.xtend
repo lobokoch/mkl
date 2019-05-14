@@ -31,6 +31,10 @@ class ServiceBoosterImpl implements ServiceBooster {
 	private def void augmentEntity(Entity entity) {
 		val entityHasAutoComplete = entity.hasAutoComplete;
 		
+		if (!entity.hasId) {
+			entity.createImplicitId
+		}
+		
 		if (! entity.id.hasAutoComplete) {
 			entity.id.createAutoCompleteOnlyResutForSlot
 		}
@@ -79,6 +83,23 @@ class ServiceBoosterImpl implements ServiceBooster {
 		if (entity.isAuditing) {
 			entity.createAuditingFields
 		}
+	}
+	
+	def void createImplicitId(Entity entity) {
+		val idSlot = createImplicitId
+		entity.slots.add(0, idSlot)
+	}
+	
+	def Slot createImplicitId() {
+		val slot = ModelFactory.eINSTANCE.createSlot
+		slot.name = 'id'
+		slot.label = '#id'
+		slot.implicit = true
+		slot.hidden = true
+		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
+		basicTypeReference.basicType = ModelFactory.eINSTANCE.createUUIDType
+		slot.slotType = basicTypeReference
+		slot
 	}
 	
 	def void getCreateAuditingFields(Entity entity) {

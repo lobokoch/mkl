@@ -60,7 +60,7 @@ Enumeration:
 ;
 
 EnumItem:
-	name=ID_KEYWORD ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
+	name=ID_KEYWORD ('label' ':' label=STRING)? ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
 ;
 
 Entity:
@@ -143,7 +143,7 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name'
+	ID | 'name' | 'parent'
 ;
 
  fragment Name returns Named:
