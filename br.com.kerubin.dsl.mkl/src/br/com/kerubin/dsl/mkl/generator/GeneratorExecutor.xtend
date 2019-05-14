@@ -222,7 +222,7 @@ class GeneratorExecutor {
 	}
 	
 	def String toServiceConstantsName(Service service) {
-		service.domainName + service.serviceName + "Constants"
+		service.domain.toCamelCase + service.name.toCamelCase + "Constants"
 	}
 	
 	def String getImportServiceConstants(Service service) {

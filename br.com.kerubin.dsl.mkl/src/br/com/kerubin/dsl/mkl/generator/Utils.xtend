@@ -165,6 +165,12 @@ class Utils {
 		result
 	}
 	
+	def static String toCamelCase(String name) {
+		// foo_baa > FooBaa
+		val result = name.split('_').map[toFirstUpper].join
+		result
+	}
+	
 	def static String webName(String str) {
 		var result = str.toLowerCase.replace('_', '')
 		result

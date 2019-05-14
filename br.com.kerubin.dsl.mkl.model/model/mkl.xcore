@@ -629,12 +629,25 @@ class EnumTypeReference extends TypeReference {
 
 class Enumeration extends ServiceObject {
 	contains EnumItem[] items
+	
+	op boolean hasSomeValueStr() {
+		items.exists[hasValueStr]
+	}
 }
 
 class EnumItem {
 	String name
 	String valueStr
+	String label
 	int valueInt
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.isEmpty
+	}
+	
+	op boolean hasValueStr() {
+		valueStr !== null && !valueStr.trim.isEmpty
+	}
 }
 
 enum EnumType {
@@ -760,6 +773,13 @@ class Entity extends PublicObject, Rulled {
 	
 	op Slot getId() {
 		return slots.head
+	}
+	
+	op boolean hasId() {
+		val idSlot =  slots.head
+		
+		val result = idSlot !== null && 'id'.equals(idSlot.name.toLowerCase) && idSlot.isUUID
+		return result
 	}
 	
 	op Slot[] getTailSlots() {
