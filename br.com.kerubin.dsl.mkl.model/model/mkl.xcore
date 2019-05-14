@@ -688,6 +688,14 @@ class Entity extends PublicObject, Rulled {
 	contains PublishEntityEvents publishEntityEvents
 	contains DisableEntityGeneration disableGeneration
 	
+	op boolean isNotSameName(Entity otherEntity) {
+		!name.equalsIgnoreCase(otherEntity.name)
+	}
+	
+	op boolean isSameName(Entity otherEntity) {
+		name.equalsIgnoreCase(otherEntity.name)
+	}
+	
 	op boolean hasDisableGeneration() {
 		disableGeneration !== null
 	}

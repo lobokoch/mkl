@@ -108,7 +108,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		//else if (slot.isDTOLookupResult) {
-		else if (slot.isEntity) {
+		else if (slot.isEntity && slot.asEntity.isNotSameName(entity)) {
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		else if (slot.isEnum) { 

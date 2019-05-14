@@ -88,9 +88,12 @@ class GeneratorExecutor {
 	}
 	
 	def String textUnderToTextCamel(String text) {
-		val names = text.split("_")
-		val result = names.map[toFirstUpper].join
-		result		
+		text.toCamelCase
+	}
+	
+	def String getServiceNameCamelCase(Service service) {
+		val result = service.domain.toCamelCase + service.name.toCamelCase
+		result
 	}
 	
 	def String getWebServicePath(Service service) {

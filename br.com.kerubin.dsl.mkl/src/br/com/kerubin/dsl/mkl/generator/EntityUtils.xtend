@@ -671,7 +671,7 @@ class EntityUtils {
 	}
 	
 	def static toTranslationServiceClassName(Service service) {
-		val name = service.domain.toFirstUpper + service.name.toFirstUpper + 'TranslationService'
+		val name = service.domain.toCamelCase + service.name.toCamelCase + 'TranslationService'
 		name
 	}
 	
@@ -681,7 +681,7 @@ class EntityUtils {
 	}
 	
 	def static toTranslationServiceVarName(Service service) {
-		val name = service.domain.toFirstLower + service.name.toFirstUpper + 'TranslationService'
+		val name = service.domain.toCamelCase.toFirstLower + service.name.toCamelCase + 'TranslationService'
 		name
 	}
 	

@@ -49,7 +49,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «entity.toAutoCompleteName» } from './«entity.toEntityWebModelName»';''')
-		slots.filter[it.isEntity].forEach[
+		slots.filter[it.isEntity && it.asEntity.isNotSameName(entity)].forEach[
 			imports.add('''import { «it.asEntity.toDtoName» } from './«entity.toEntityWebModelNameWithPah(it)»';''')
 		]
 		

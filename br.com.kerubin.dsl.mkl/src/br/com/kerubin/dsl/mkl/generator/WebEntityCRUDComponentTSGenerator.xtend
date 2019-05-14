@@ -44,7 +44,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
-		entity.slots.filter[it.isEntity].forEach[
+		entity.slots.filter[it.isEntity && it.asEntity.isNotSameName(entity)].forEach[ // Is a field of type this entity
 			val slotAsEntity = it.asEntity
 			imports.newLine
 			imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
@@ -80,7 +80,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			constructor(
 			    private «serviceVar»: «serviceName»,
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
-			    «entity.slots.filter[isEntity].map[mountServiceConstructorInject].join('\n\r')»
+			    «entity.slots.filter[isEntity && it.asEntity.isNotSameName(entity)].map[mountServiceConstructorInject].join('\n\r')»
 			    private route: ActivatedRoute,
 			    private messageService: MessageService
 			) { 
