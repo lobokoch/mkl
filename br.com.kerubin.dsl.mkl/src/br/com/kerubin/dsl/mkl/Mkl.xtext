@@ -60,7 +60,9 @@ Enumeration:
 ;
 
 EnumItem:
-	name=ID_KEYWORD ('label' ':' label=STRING)? ('as' valueStr=STRING)? ('=' valueInt=INT)? | (',' EnumItem)
+{EnumItem}
+	(name=ID_KEYWORD ( ('as' valueStr=STRING)? ('=' valueInt=INT)? ('label' ':' label=STRING)?) )
+	|  (',' EnumItem)
 ;
 
 Entity:
