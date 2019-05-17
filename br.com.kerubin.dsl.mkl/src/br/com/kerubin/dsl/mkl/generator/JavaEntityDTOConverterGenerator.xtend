@@ -53,9 +53,9 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		builder
 		.add('@Component')
 		.add('public class ').concat(entity.toDTOConverterName).concat(' {')
-		.add('	@Inject').ln
+		.ln
+		.add('	@Inject')
 		.add('	private ObjectMapper mapper;').ln
-		//.addIndent(entity.generateConstructor).ln
 		.addIndent(entity.generateEntityToDto).ln
 		.addIndent(entity.generateDtoToEntity).ln
 		
