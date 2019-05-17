@@ -85,7 +85,7 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSE»
-		private «slot.toJavaTypeDTO» «slot.name.toFirstLower»;
+		private «slot.toJavaTypeDTO» «slot.name.toFirstLower»«IF slot.hasDefaultValue» = «slot.defaultValue»«ENDIF»;
 		«ENDIF»
 		'''
 	}

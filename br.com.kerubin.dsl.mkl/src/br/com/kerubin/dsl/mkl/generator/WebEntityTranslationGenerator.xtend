@@ -93,11 +93,18 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 				val enumerarion = it.asEnum
 				enumerarion.items.forEach[ enumItem |
 					val enumKey = key + '_' + enumItem.name.toLowerCase
-					val enumValue = if (enumItem.hasLabel) enumItem.label else enumItem.name
-					keys.add('"' + enumKey + '": "' + enumValue + '"')
+                    val enumValue = if (enumItem.hasLabel) enumItem.label else enumItem.name
+                    keys.add('"' + enumKey + '": "' + enumValue + '"')
 				]
+				if (it.optional) { // Enum opcional, precisa gerar um item para a opção null
+					val enumKey = key + '_' + 'null'
+					val enumValue = ''
+					keys.add('"' + enumKey + '": "' + enumValue + '"')
+				}
 			}
 		]
+		
+		
 	}
 	
 	def CharSequence doGenerateTranslationService() {
@@ -131,7 +138,7 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		  public getTranslation(key: string): string {
 		      if (localTranslations) {
 		        const translation = (<any>localTranslations).default[key];
-		        if (translation) {
+		        if (translation !== null) {
 		          return translation;
 		        }
 		      }

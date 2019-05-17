@@ -467,7 +467,14 @@ StringType: name='string' ('[' length=INT ']')?;
 IntegerType: name='integer' (generated ?='generated')?;
 DoubleType: name='double';
 MoneyType: name='money';
-BooleanType: name='boolean';
+
+BooleanType: 
+	name='boolean' 
+	('default' ':' defaultValue = ('false' | 'true') )? &
+	('displayFalse' ':' displayFalse = STRING)? &
+	('displayTrue' ':' displayTrue = STRING)? 
+;
+
 DateType: name='date';
 TimeType: name='time';
 DateTimeType: name='dateTime';

@@ -471,6 +471,9 @@ class Slot extends Element {
 	String label
 	String labelGrid
 	String mask
+	
+	// String defaultValue
+	
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
@@ -574,6 +577,22 @@ class Slot extends Element {
 		}
 		
 		false
+	}
+	
+	op boolean hasDefaultValue() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType.hasDefaultValue
+		}
+		return false
+	}
+	
+	op String getDefaultValue() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType.defaultValue
+		}
+		return null
 	}
 	
 	op boolean isBoolean() {
@@ -833,13 +852,21 @@ class ManyToMany extends RelationshipFeatured {
 }
 
 abstract class BasicType extends Named {
+	String defaultValue
+	
 	op String getJavaType() {
 		return ""
 	}
+	
+	op boolean hasDefaultValue() {
+		defaultValue !== null && !defaultValue.trim.isEmpty
+	}
+	
 }
 
 abstract class generatedType extends BasicType {
 	boolean generated
+	
 }
 
 class StringType extends generatedType {
@@ -859,6 +886,17 @@ class MoneyType extends BasicType {
 }
 
 class BooleanType extends BasicType {
+	
+	String displayFalse = 'false'
+	String displayTrue = 'true'
+	
+	op boolean hasDisplayTrue() {
+		displayTrue !== null && !displayTrue.trim.isEmpty
+	}
+	
+	op boolean hasDisplayFalse() {
+		displayFalse !== null && !displayFalse.trim.isEmpty
+	}
 	
 }
 

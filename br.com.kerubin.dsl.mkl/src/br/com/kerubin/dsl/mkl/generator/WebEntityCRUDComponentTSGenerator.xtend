@@ -44,11 +44,14 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
-		entity.slots.filter[it.isEntity && it.asEntity.isNotSameName(entity)].forEach[ // Is a field of type this entity
+		entity.slots.filter[it.isEntity].forEach[ 
 			val slotAsEntity = it.asEntity
 			imports.newLine
-			imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
-			imports.add('''import { «slotAsEntity.toDtoName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+			
+			if (slotAsEntity.isNotSameName(entity)) { // Is not a field of same type of mine entity
+				imports.add('''import { «slotAsEntity.toEntityWebServiceClassName» } from './«slotAsEntity.toEntityWebServiceNameWithPath»';''')
+				imports.add('''import { «slotAsEntity.toDtoName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
+			}
 			imports.add('''import { «slotAsEntity.toAutoCompleteName» } from './«slotAsEntity.toEntityWebModelNameWithPah»';''')
 		]
 		entity.slots.filter[it.isEnum].forEach[

@@ -113,7 +113,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		private Set<«slot.toJavaType»> «slot.name.toFirstLower» = new HashSet<>();
 		«ENDIF»
 		«ELSE»
-		private «slot.toJavaType» «slot.name.toFirstLower»;
+		private «slot.toJavaType» «slot.name.toFirstLower»«IF slot.hasDefaultValue» = «slot.defaultValue»«ENDIF»;
 		«ENDIF»
 		'''
 	}

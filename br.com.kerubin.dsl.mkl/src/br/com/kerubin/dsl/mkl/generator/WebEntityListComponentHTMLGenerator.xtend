@@ -9,6 +9,8 @@ import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.FieldObject
+import br.com.kerubin.dsl.mkl.model.BasicTypeReference
+import br.com.kerubin.dsl.mkl.model.BooleanType
 
 class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -317,16 +319,25 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			{{«fieldName» | date:'dd/MM/yyyy'}}
 			«ELSEIF slot.isMoney»
 			{{«fieldName» | currency:'BRL':'symbol':'1.2-2':'pt' }}
+			«ELSEIF slot.isBoolean»
+			{{«fieldName»«slot.booleanValue» }}
 			«ELSEIF slot.isEntity»
 			{{«slot.webAutoCompleteFieldConverter»(«fieldName»)}}
 			«ELSEIF slot.isEnum»
-			«slot.getTranslationKeyFunc(fieldName + '.toLowerCase()')»
+			«slot.getTranslationKeyFunc(fieldName + '?.toLowerCase()')»
 			«ELSE»
 			{{«fieldName»}}
 			«ENDIF»
 			«IF hasStyleClass»</div">«ENDIF»
 		</td>
 		'''
+	}
+	
+	def CharSequence getBooleanValue(Slot slot) {
+		val basicType = (slot.slotType as BasicTypeReference).basicType
+		val bool = basicType as BooleanType
+		
+		'''? '«bool.displayTrue»': '«bool.displayFalse»'«»'''
 	}
 	
 	def String buildBodyRowStyleCss(Slot slot) {

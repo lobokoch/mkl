@@ -46,15 +46,16 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		builder = new StringConcatenationExt()
 		builder.addPackage(entity.package)
 		
+		builder.addImport('import javax.inject.Inject')
 		builder.addImport('org.springframework.stereotype.Component')
-		.addImport('org.modelmapper.ModelMapper')
-		.addImport('org.modelmapper.convention.MatchingStrategies')
+		.addImport('''«service.servicePackage».ObjectMapper''')
 		
 		builder
 		.add('@Component')
 		.add('public class ').concat(entity.toDTOConverterName).concat(' {')
-		.add('	private final ModelMapper mapper;').ln
-		.addIndent(entity.generateConstructor).ln
+		.add('	@Inject').ln
+		.add('	private ObjectMapper mapper;').ln
+		//.addIndent(entity.generateConstructor).ln
 		.addIndent(entity.generateEntityToDto).ln
 		.addIndent(entity.generateDtoToEntity).ln
 		

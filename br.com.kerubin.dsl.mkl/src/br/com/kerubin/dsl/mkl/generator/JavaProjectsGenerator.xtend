@@ -143,8 +143,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			}
 			
 			private static void init() {
-				ServiceContext.setDomain(«domaAndService».DOMAIN);
-				ServiceContext.setService(«domaAndService».SERVICE);
+				ServiceContext.setDefaultDomain(«domaAndService».DOMAIN);
+				ServiceContext.setDefaultService(«domaAndService».SERVICE);
 				// ServiceConnectionProvider.INSTANCE.setMigrateDefaultTenant(true);
 			}
 		}

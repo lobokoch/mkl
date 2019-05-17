@@ -140,6 +140,10 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 			builder.append(' NOT NULL')
 		}
 		
+		if (slot.hasDefaultValue) {
+			builder.append(' DEFAULT ' + slot.defaultValue)
+		}
+		
 		if (fieldName != slot.name) {
 			builder.append(' /* ')
 			builder.append(slot.name)

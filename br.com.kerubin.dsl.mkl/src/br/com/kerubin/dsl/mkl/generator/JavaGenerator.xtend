@@ -34,6 +34,7 @@ class JavaGenerator extends BaseGenerator {
 			new JavaEntityListFilterGenerator(this),
 			new JavaEntityAutoCompleteGenerator(this),
 			new JavaEntityListFilterAutoCompleteGenerator(this),
+			new JavaObjectMapperGenerator(this),
 			new JavaEntityDTOConverterGenerator(this),
 			new JavaServiceConstantsGenerator(this),
 			new JavaClientPageResultGenerator(this),
