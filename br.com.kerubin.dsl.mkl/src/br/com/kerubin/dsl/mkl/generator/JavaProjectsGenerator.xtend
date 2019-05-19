@@ -126,6 +126,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 		import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 		
+		import br.com.kerubin.api.database.core.ServiceContext;
+		
 		@SpringBootApplication(
 				exclude = { 
 				        DataSourceAutoConfiguration.class,

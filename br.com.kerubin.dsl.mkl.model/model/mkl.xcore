@@ -864,6 +864,33 @@ abstract class BasicType extends Named {
 	
 }
 
+class BooleanType extends BasicType {
+	
+	String displayFalse = 'Não'
+	String displayTrue = 'Sim'
+	
+	//simulate @Override
+	op boolean hasDefaultValue() {
+		// == null must be true by default
+		// == none is empty default value
+		super.defaultValue === null || super.defaultValue != 'none'
+	}
+	
+	//simulate @Override
+	op String getDefaultValue() {
+		if (super.defaultValue !== null) super.defaultValue else 'true'
+	}
+	
+	op boolean hasDisplayTrue() {
+		displayTrue !== null && !displayTrue.trim.isEmpty
+	}
+	
+	op boolean hasDisplayFalse() {
+		displayFalse !== null && !displayFalse.trim.isEmpty
+	}
+	
+}
+
 abstract class generatedType extends BasicType {
 	boolean generated
 	
@@ -882,21 +909,6 @@ class DoubleType extends BasicType {
 }
 
 class MoneyType extends BasicType {
-	
-}
-
-class BooleanType extends BasicType {
-	
-	String displayFalse = 'false'
-	String displayTrue = 'true'
-	
-	op boolean hasDisplayTrue() {
-		displayTrue !== null && !displayTrue.trim.isEmpty
-	}
-	
-	op boolean hasDisplayFalse() {
-		displayFalse !== null && !displayFalse.trim.isEmpty
-	}
 	
 }
 

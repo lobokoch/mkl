@@ -470,7 +470,7 @@ MoneyType: name='money';
 
 BooleanType: 
 	name='boolean' 
-	('default' ':' defaultValue = ('false' | 'true') )? &
+	('default' ':' defaultValue = ('true' | 'false' | 'none') )? &
 	('displayFalse' ':' displayFalse = STRING)? &
 	('displayTrue' ':' displayTrue = STRING)? 
 ;
