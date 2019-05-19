@@ -6,6 +6,8 @@ import br.com.kerubin.dsl.mkl.model.MavenDependency
 
 class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
+	static val DEFAULT_DATABASE_TYPE = 'PostgreSql'
+	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
 	}
@@ -59,6 +61,16 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		generateFileForApp(appSourceFolder + path + '/' + mainClassName + '.java', generateApplicationMain(mainClassName))
 		generateFileForApp(getApplicationResourcesFolder + 'bootstrap.yml', generateResourceSpringBootApplicationBootstrap())
 		generateFileForApp(getApplicationResourcesFolder + 'application.yml', generateResourceSpringBootApplication())
+		
+		val dbMigrationPath = getApplicationResourcesFolder + 'db/migration/' + service.domain + '/' + service.name + '/' + DEFAULT_DATABASE_TYPE + '/'
+		generateFileForApp(dbMigrationPath + 'V1__Creation_Tables_PostgreSQL.sql', generateResourceDBMigration)
+	}
+	
+	def CharSequence generateResourceDBMigration() {
+		'''
+		-- Add your «DEFAULT_DATABASE_TYPE» SQL commands here. 
+		-- For example, you can copy generated tables SQL and paste here.
+		'''
 	}
 	
 	def generateResourceSpringBootApplicationBootstrap() {

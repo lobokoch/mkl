@@ -119,7 +119,7 @@ SubscribeEntityEvents:
 
 PublishEntityEvents:
 {PublishEntityEvents}
-	'@publish' ('(' 'events' '=' '[' events=CudEvents ']' ')')?
+	'@publishEvents' ('(' 'events' '=' '[' events=CudEvents ']' ')')?
 ;
 
 CudEvents:
@@ -175,7 +175,7 @@ Slot:
 			(sumField = SumField)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
-			(publish ?= 'publish')? &
+			(publish ?= 'publishedInEvents')? &
 			(grid = Grid)? &
 			(web = Web)? 
 		)
