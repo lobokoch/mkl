@@ -648,9 +648,14 @@ class EnumTypeReference extends TypeReference {
 
 class Enumeration extends ServiceObject {
 	contains EnumItem[] items
+	String label
 	
 	op boolean hasSomeValueStr() {
 		items.exists[hasValueStr]
+	}
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.isEmpty
 	}
 }
 

@@ -307,7 +307,15 @@ class EntityUtils {
 	}
 	
 	def static String getLabelValue(Slot slot) {
-		val label = slot.label ?: slot.translationKey
+		var slotLabel = slot.label
+		if (isEmpty(slotLabel) && slot.isEnum) {
+			val slotAsEnum = slot.asEnum
+			if (slotAsEnum.hasLabel) {
+				slotLabel = slotAsEnum.label
+			}
+		}
+		
+		val label = slotLabel ?: slot.translationKey
 		label
 	}
 	

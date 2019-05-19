@@ -54,6 +54,7 @@ Configuration:
 ;
 
 Enumeration:
+	('@label' '(' label=STRING ')')?
 	'enum' Name '{'
 		items+=EnumItem*
 	'}'
