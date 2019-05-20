@@ -14,7 +14,7 @@ Service:
 	'service' Name '{'
 		( 
 			(configuration=Configuration)? &
-			(dependencies+=MavenDependency)? & 
+			(dependencies+=MavenDependency)* & 
 			(elements+=(Entity | PublicObject | Enumeration)*) 
 		)
 	'}'

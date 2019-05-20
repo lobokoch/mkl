@@ -27,7 +27,8 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 	
 	def CharSequence generateEntitySubscriberEventHandler(Entity entity) {
 		val entityDTOName = entity.toDtoName
-		val entityDTONameLower = entityDTOName.toLowerCase
+		// val entityDTONameLower = entityDTOName.toLowerCase
+		val entityDTONameFirstLower = entityDTOName.toFirstLower
 		
 		'''
 		package «entity.package»;
@@ -45,10 +46,6 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		import org.springframework.stereotype.Service;
 		
 		«entity.getImportExternalEntityEvent»
-		/*import br.com.kerubin.api.cadastro.fornecedor.events.FornecedorEvent;
-		import br.com.kerubin.api.financeiro.contaspagar.entity.fornecedor.FornecedorEntity;
-		import br.com.kerubin.api.financeiro.contaspagar.entity.fornecedor.FornecedorRepository;
-		import br.com.kerubin.api.financeiro.contaspagar.entity.fornecedor.FornecedorService;*/
 		
 		import br.com.kerubin.api.messaging.core.DomainEventEnvelope;
 		
@@ -58,12 +55,12 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			private static final Logger log = LoggerFactory.getLogger(«entity.toSubscriberEventHandlerName».class);
 			
 			@Autowired
-			private «entityDTOName»Repository «entityDTOName.toFirstLower»Repository;
+			private «entityDTOName»Repository «entityDTONameFirstLower»Repository;
 			
 			@Autowired
-			private «entityDTOName»Service «entityDTONameLower»Service;
+			private «entityDTOName»Service «entityDTONameFirstLower»Service;
 			
-			@RabbitListener(queues = "#{«entityDTONameLower»Queue.name}")
+			@RabbitListener(queues = "#{«entityDTONameFirstLower»Queue.name}")
 			public void onReceiveEvent(DomainEventEnvelope<«entityDTOName»Event> envelope) {
 				switch (envelope.getPrimitive()) {
 				«IF entity.hasSubscribeCreated»
@@ -91,14 +88,14 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			}
 			
 			«IF entity.hasSubscribeDeleted»
-			private void save«entityDTOName»(«entityDTOName»Event «entityDTONameLower»Event) {
-				save«entityDTOName»(«entityDTONameLower»Event, false);
+			private void save«entityDTOName»(«entityDTOName»Event «entityDTONameFirstLower»Event) {
+				save«entityDTOName»(«entityDTONameFirstLower»Event, false);
 			}
 			«ENDIF»
 			
-			private void save«entityDTOName»(«entityDTOName»Event «entityDTONameLower»Event«IF entity.hasSubscribeDeleted», boolean isDeleted«ENDIF») {
-				«entityDTOName»Entity entity = build«entityDTOName»Entity(«entityDTONameLower»Event);
-				Optional<«entityDTOName»Entity> optionalEntity = «entityDTONameLower»Repository.findById(«entityDTONameLower»Event.getId());
+			private void save«entityDTOName»(«entityDTOName»Event «entityDTONameFirstLower»Event«IF entity.hasSubscribeDeleted», boolean isDeleted«ENDIF») {
+				«entityDTOName»Entity entity = build«entityDTOName»Entity(«entityDTONameFirstLower»Event);
+				Optional<«entityDTOName»Entity> optionalEntity = «entityDTONameFirstLower»Repository.findById(«entityDTONameFirstLower»Event.getId());
 				if (optionalEntity.isPresent()) {
 					«IF entity.hasSubscribeDeleted»
 					if (isDeleted) {
@@ -106,27 +103,27 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 						entity.setDeleted(true);
 					}
 					«ENDIF»
-					«entityDTONameLower»Service.update(entity.getId(), entity);
+					«entityDTONameFirstLower»Service.update(entity.getId(), entity);
 				}
 				else {
-					«entityDTONameLower»Service.create(entity);
+					«entityDTONameFirstLower»Service.create(entity);
 				}
 			}
 			
 			«IF entity.hasSubscribeDeleted»
-			private void delete«entityDTOName»(«entityDTOName»Event «entityDTONameLower»Event) {
+			private void delete«entityDTOName»(«entityDTOName»Event «entityDTONameFirstLower»Event) {
 				try {
-					«entityDTONameLower»Service.delete(«entityDTONameLower»Event.getId());
+					«entityDTONameFirstLower»Service.delete(«entityDTONameFirstLower»Event.getId());
 				}
 				catch(DataIntegrityViolationException e) {
-					save«entityDTOName»(«entityDTONameLower»Event, true);
+					save«entityDTOName»(«entityDTONameFirstLower»Event, true);
 				}
 			}
 			«ENDIF»
 		
-			private «entityDTOName»Entity build«entityDTOName»Entity(«entityDTOName»Event «entityDTONameLower»Event) {
+			private «entityDTOName»Entity build«entityDTOName»Entity(«entityDTOName»Event «entityDTONameFirstLower»Event) {
 				«entityDTOName»Entity entity = new «entityDTOName»Entity();
-				BeanUtils.copyProperties(«entityDTONameLower»Event, entity);
+				BeanUtils.copyProperties(«entityDTONameFirstLower»Event, entity);
 				return entity;
 			}
 		

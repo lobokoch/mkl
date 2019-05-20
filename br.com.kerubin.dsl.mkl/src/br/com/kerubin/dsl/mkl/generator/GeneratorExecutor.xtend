@@ -203,13 +203,14 @@ class GeneratorExecutor {
 	}
 	
 	def String getNameExt(String name) {
-		name.removeUnderline.toFirstUpper
+		//name.removeUnderline.toFirstUpper
+		name.toCamelCase
 	}
 	
 	def String toExternalServiceConstantsName(Entity entity) {
 		val domainName = entity?.subscribeEntityEvents?.externalDomain
 		val serviceName = entity?.subscribeEntityEvents?.externalService
-		domainName?.getNameExt + serviceName?.getNameExt + "Constants"
+		domainName?.toCamelCase + serviceName?.toCamelCase + "Constants"
 	}
 	
 	def String getImportExternalServiceConstants(Entity entity) {
