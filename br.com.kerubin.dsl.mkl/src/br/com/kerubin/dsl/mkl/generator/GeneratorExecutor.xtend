@@ -243,6 +243,10 @@ class GeneratorExecutor {
 		'ServiceHandlerInterceptorAdapter'
 	}
 	
+	def String toMessageAfterReceivePostProcessorsName(Service service) {
+		'MessageAfterReceivePostProcessors'
+	}
+	
 	def String toServiceWebMvcConfigurerAdapterName(Service service) {
 		//service.domainName + service.serviceName + "Constants"
 		'ServiceWebMvcConfigurerAdapter'

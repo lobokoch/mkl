@@ -169,6 +169,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import br.com.kerubin.api.messaging.core.DomainEvent;
 		import br.com.kerubin.api.messaging.core.DomainEventEnvelope;
 		import br.com.kerubin.api.messaging.core.DomainEventEnvelopeBuilder;
+		import br.com.kerubin.api.database.core.ServiceContext;
 		«service.getImportServiceConstants»
 		«ENDIF»
 		'''
@@ -177,6 +178,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		 
 		@Service
 		public class «entity.toServiceImplName» implements «entity.toServiceName» {
+			«IF entity.hasPublishEntityEvents»
+			private static final String ENTITY_KEY = "entity.«entity.name»";
+			«ENDIF»
 			
 			«IF entity.hasSumFields»
 			@PersistenceContext
@@ -242,6 +246,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 						.getBuilder(eventName, event)
 						.domain(«service.toServiceConstantsName».DOMAIN)
 						.service(«service.toServiceConstantsName».SERVICE)
+						.key(ENTITY_KEY)
+						.tenant(ServiceContext.getTenant())
+						.user(ServiceContext.getUser())
 						.build();
 				
 				publisher.publish(envelope);

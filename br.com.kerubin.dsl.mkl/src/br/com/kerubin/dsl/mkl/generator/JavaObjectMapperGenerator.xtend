@@ -29,6 +29,7 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 		import java.math.BigDecimal;
 		import java.time.Instant;
 		import java.time.LocalDate;
+		import java.time.LocalDateTime;
 		import java.time.LocalTime;
 		import java.util.Arrays;
 		import java.util.Date;
@@ -51,8 +52,8 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			private static Logger log = LoggerFactory.getLogger(«CLASS_NAME».class);
 			
-			private static final List<?> DSL_PRIMITIVE_TYPES = Arrays.asList(LocalDate.class, LocalTime.class, Date.class, 
-		            Instant.class, String.class, Long.class, 
+			private static final List<?> DSL_PRIMITIVE_TYPES = Arrays.asList(LocalDate.class, LocalTime.class, LocalDateTime.class,
+					Date.class, Instant.class, String.class, Long.class, 
 		            Boolean.class, UUID.class, BigDecimal.class, Double.class);
 			
 			

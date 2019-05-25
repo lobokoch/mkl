@@ -40,7 +40,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 	}
 	
 	def private getApplicationId() {
-		val result = mountName(newArrayList(service.domain, service.name, projectApplicationName))
+		//val result = mountName(newArrayList(service.domain, service.name, projectApplicationName))
+		val result = mountName(newArrayList(service.domain, service.name))
 		result
 	}
 	

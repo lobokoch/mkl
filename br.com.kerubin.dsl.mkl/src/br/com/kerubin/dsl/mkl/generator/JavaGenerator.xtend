@@ -42,7 +42,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaPostgreSQLGenerator(this),
 			new JavaServerHttpFilterGenerator(this),
 			new JavaServiceHandlerInterceptorAdapterGenerator(this),
-			new JavaServiceWebMvcConfigurerAdapterGenerator(this)
+			new JavaServiceWebMvcConfigurerAdapterGenerator(this),
+			new JavaMessagingAfterReceivePostProcessorsGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

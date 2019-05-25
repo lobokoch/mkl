@@ -33,6 +33,7 @@ class Utils {
 	static val WEB_PROJECT_APPLICATION = 'app/'
 	static val WEB_MODEL_DIR = 'model/'
 	static val WEB_NAVBAR_DIR = 'navbar/'
+	static val WEB_MENU_DIR = 'menu/'
 	static val WEB_SECURITY_DIR = 'security/'
 	static val WEB_ACCOUNT_DIR = 'account/'
 	static val WEB_ENVIRONMENTS_DIR = 'environments/'
@@ -89,6 +90,10 @@ class Utils {
 	
 	def static getWebNavbarDir() {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + WEB_NAVBAR_DIR
+	}
+	
+	def static getWebMenuDir() {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + WEB_MENU_DIR
 	}
 	// WEB
 	
