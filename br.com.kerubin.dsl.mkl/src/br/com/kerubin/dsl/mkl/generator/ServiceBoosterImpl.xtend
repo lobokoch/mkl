@@ -75,6 +75,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 			deletedSlot.optional = true
 			val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
 			basicTypeReference.basicType = ModelFactory.eINSTANCE.createBooleanType
+			basicTypeReference.basicType.defaultValue = 'false'
 			deletedSlot.slotType = basicTypeReference
 			
 			entity.slots.add(deletedSlot)
@@ -82,6 +83,16 @@ class ServiceBoosterImpl implements ServiceBooster {
 		
 		if (entity.isAuditing) {
 			entity.createAuditingFields
+		}
+		
+		entity.boostSlotAtivo
+	}
+	
+	private def boostSlotAtivo(Entity entity) {
+		// Slot with name "ativo" and of type boolean, will be "true" by default
+		val slotAtivo = entity.slots.findFirst[it.name == 'ativo' && it.isBoolean]
+		if (slotAtivo !== null) {
+			slotAtivo.basicType.defaultValue = 'true'
 		}
 	}
 	

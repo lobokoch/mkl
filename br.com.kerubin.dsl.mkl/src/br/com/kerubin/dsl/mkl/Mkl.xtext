@@ -146,7 +146,7 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name' | 'parent'
+	ID | 'name' | 'parent' | 'optional' | 'many'
 ;
 
  fragment Name returns Named:
@@ -161,7 +161,7 @@ Slot:
 	Name ':' (associationType=AssociationType)? 
 		(parent ?= 'parent')?
 		slotType=TypeReference 
-		(optional?='?')? (many?='*')? 
+		(optional?= ('?' | 'optional'))? (many?= ('*' | 'many'))? 
 		(relationship = Relationship)? 
 		(
 			(autoComplete = AutoComplete)? &
@@ -471,7 +471,7 @@ MoneyType: name='money';
 
 BooleanType: 
 	name='boolean' 
-	('default' ':' defaultValue = ('true' | 'false' | 'none') )? &
+	('default' ':' defaultValue = ('false' | 'true' | 'none') )? &
 	('displayFalse' ':' displayFalse = STRING)? &
 	('displayTrue' ':' displayTrue = STRING)? 
 ;

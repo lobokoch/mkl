@@ -37,6 +37,7 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		
 		import org.slf4j.Logger;
 		import org.slf4j.LoggerFactory;
+		import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 		import org.springframework.amqp.rabbit.annotation.RabbitListener;
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
@@ -62,28 +63,33 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			
 			@RabbitListener(queues = "#{«entityDTONameFirstLower»Queue.name}")
 			public void onReceiveEvent(DomainEventEnvelope<«entityDTOName»Event> envelope) {
-				switch (envelope.getPrimitive()) {
-				«IF entity.hasSubscribeCreated»
-				case «entityDTOName»Event.«entity.toEntityEventConstantName('created')»:
-				«ENDIF»
-				«IF entity.hasSubscribeUpdated»
-				case «entityDTOName»Event.«entity.toEntityEventConstantName('updated')»:
-				«ENDIF»
-				«IF entity.hasSubscribeCreated || entity.hasSubscribeUpdated»
-				
-					save«entityDTOName»(envelope.getPayload());
-					break;
-				«ENDIF»
-				«IF entity.hasSubscribeDeleted»
-				
-				case «entityDTOName»Event.«entity.toEntityEventConstantName('deleted')»:
-					delete«entityDTOName»(envelope.getPayload());
-					break;
-				«ENDIF»
-				
-				default:
-					log.warn("Unexpected entity event: {} for: {}.", envelope.getPrimitive(), "«entity.externalEntityPakage + '.' + entity.toDtoName»");
-					break;
+				try {
+					switch (envelope.getPrimitive()) {
+					«IF entity.hasSubscribeCreated»
+					case «entityDTOName»Event.«entity.toEntityEventConstantName('created')»:
+					«ENDIF»
+					«IF entity.hasSubscribeUpdated»
+					case «entityDTOName»Event.«entity.toEntityEventConstantName('updated')»:
+					«ENDIF»
+					«IF entity.hasSubscribeCreated || entity.hasSubscribeUpdated»
+					
+						save«entityDTOName»(envelope.getPayload());
+						break;
+					«ENDIF»
+					«IF entity.hasSubscribeDeleted»
+					
+					case «entityDTOName»Event.«entity.toEntityEventConstantName('deleted')»:
+						delete«entityDTOName»(envelope.getPayload());
+						break;
+					«ENDIF»
+					
+					default:
+						log.warn("Unexpected entity event: {} for: {}.", envelope.getPrimitive(), "«entity.externalEntityPakage + '.' + entity.toDtoName»");
+						break;
+					}
+				} catch(Exception e) {
+					log.error("Error receiven event with envelope: " + envelope, e);
+					throw new AmqpRejectAndDontRequeueException(e);
 				}
 			}
 			

@@ -1,11 +1,12 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Enumeration
 import br.com.kerubin.dsl.mkl.model.Service
+import org.eclipse.xtext.generator.IFileSystemAccess2
+
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import org.eclipse.xtext.generator.IFileSystemAccess2
-import br.com.kerubin.dsl.mkl.model.Enumeration
 
 class GeneratorExecutor {
 	

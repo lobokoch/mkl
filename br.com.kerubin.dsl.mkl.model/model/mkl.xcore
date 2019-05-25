@@ -876,14 +876,14 @@ class BooleanType extends BasicType {
 	
 	//simulate @Override
 	op boolean hasDefaultValue() {
-		// == null must be true by default
+		// == null must be false by default
 		// == none is empty default value
 		super.defaultValue === null || super.defaultValue != 'none'
 	}
 	
 	//simulate @Override
 	op String getDefaultValue() {
-		if (super.defaultValue !== null) super.defaultValue else 'true'
+		if (super.defaultValue !== null) super.defaultValue else 'false'
 	}
 	
 	op boolean hasDisplayTrue() {
