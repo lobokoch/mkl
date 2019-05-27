@@ -657,6 +657,20 @@ class Enumeration extends ServiceObject {
 	op boolean hasLabel() {
 		label !== null && !label.trim.isEmpty
 	}
+	
+	op boolean hasDefault () {
+		items.exists[isDefault]
+	}
+	
+	op int getDefaultIndex() {
+		for (var i = 0; i < items.size(); i++) {
+			if (items.get(i).isDefault) {
+				return i
+			}
+		}
+		
+		return -1
+	}
 }
 
 class EnumItem {
@@ -664,6 +678,7 @@ class EnumItem {
 	String valueStr
 	String label
 	int valueInt
+	boolean ^default='false'
 	
 	op boolean hasLabel() {
 		label !== null && !label.trim.isEmpty
@@ -784,6 +799,10 @@ class Entity extends PublicObject, Rulled {
 			publishEntityEvents.events.cud ||
 			publishEntityEvents.events.deleted
 		)
+	}
+	
+	op boolean hasEnumSlotsWithDefault() {
+		slots.exists[hasDefaultValue]
 	}
 	
 	op Slot getFirstSlot() {

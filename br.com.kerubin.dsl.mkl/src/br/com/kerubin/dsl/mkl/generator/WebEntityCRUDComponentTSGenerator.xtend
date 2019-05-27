@@ -94,6 +94,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			ngOnInit() {
+				«IF entity.hasEnumSlotsWithDefault»
+				this.initializeEnumFieldsWithDefault();
+				«ENDIF»
 			    const id = this.route.snapshot.params['id'];
 			    if (id) {
 			      this.get«dtoName»ById(id);
@@ -104,6 +107,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    form.reset();
 			    setTimeout(function() {
 			      this.«fieldName» = new «dtoName»();
+			      «IF entity.hasEnumSlotsWithDefault»
+			      this.initializeEnumFieldsWithDefault();
+			      «ENDIF»
 			    }.bind(this), 1);
 			}
 			
@@ -151,6 +157,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			get isEditing() {
 			    return Boolean(this.«fieldName».id);
 			}
+			
+			«IF entity.hasEnumSlotsWithDefault»
+			«entity.initializeEnumSlotsWithDefault»
+			«ENDIF»
+			
 			«IF entity.isEnableReplication»
 			
 			replicar«dtoName»() {
@@ -205,6 +216,32 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		    this.copiesReferenceFieldInterval = 30;
 		}
 		'''
+	}
+	
+	
+	def CharSequence initializeEnumSlotsWithDefault(Entity entity) {
+		'''
+		initializeEnumFieldsWithDefault() {
+			«entity.slots.filter[isEnum].map[it.initializeSelectedDropDownItem].join»
+		}
+		'''
+	}
+	
+	def CharSequence initializeSelectedDropDownItem(Slot slot) {
+		val enumerarion = slot.asEnum
+		var index = -1;
+		if (enumerarion.hasDefault) {
+			index = enumerarion.defaultIndex
+		}
+		
+		if (index == -1) {
+			return ''
+		}
+		
+		'''
+		this.«slot.ownerEntity.fieldName».«slot.fieldName» = this.«slot.webDropdownOptions»[«index»];
+		'''
+		
 	}
 	
 	def CharSequence generateRuleMakeCopiesActions(Rule rule) {

@@ -350,7 +350,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence generateHTMLButtons(Entity entity) {
 		'''
 		
-		<div class="ui-g-12">
+		<div class="ui-g-12 ui-md-2 ui-fluid">
 			<a routerLink="/«entity.toWebName»/novo" pButton label="Novo registro"></a>
 		</div>
 		'''

@@ -43,12 +43,19 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def CharSequence generateDTOConverter(Entity entity) {
+		val hasSubscribeEntityEvents = entity.hasSubscribeEntityEvents
+		
 		builder = new StringConcatenationExt()
 		builder.addPackage(entity.package)
 		
 		builder.addImport('import javax.inject.Inject')
 		builder.addImport('org.springframework.stereotype.Component')
-		.addImport('''«service.servicePackage».ObjectMapper''')
+		builder.addImport('''«service.servicePackage».ObjectMapper''')
+		
+		if (hasSubscribeEntityEvents) {
+			builder.addImport('''«entity.getImportExternalEntityEvent»''')
+		}
+		
 		
 		builder
 		.add('@Component')
@@ -58,6 +65,10 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		.add('	private ObjectMapper mapper;').ln
 		.addIndent(entity.generateEntityToDto).ln
 		.addIndent(entity.generateDtoToEntity).ln
+		
+		if (hasSubscribeEntityEvents) {
+			builder.addIndent(entity.generateEventDtoToEntity).ln
+		}
 		
 		builder
 		.add('}')
@@ -82,6 +93,18 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 	def CharSequence generateDtoToEntity(Entity entity) {
 		'''
 		public «entity.toEntityName» «TO_ENTITY»(«entity.toEntityDTOName» «DTO») {
+			«entity.toEntityName» «ENTITY» = null;
+			if («DTO» != null) {
+				«ENTITY» = mapper.map(«DTO», «entity.toEntityName».class);
+			}
+			return «ENTITY»;
+		}
+		'''
+	}
+	
+	def CharSequence generateEventDtoToEntity(Entity entity) {
+		'''
+		public «entity.toEntityName» «TO_ENTITY»(«entity.toEntityEventName» «DTO») {
 			«entity.toEntityName» «ENTITY» = null;
 			if («DTO» != null) {
 				«ENTITY» = mapper.map(«DTO», «entity.toEntityName».class);

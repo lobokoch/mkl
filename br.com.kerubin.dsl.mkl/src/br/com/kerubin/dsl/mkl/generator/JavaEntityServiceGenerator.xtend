@@ -241,7 +241,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			«IF entity.hasPublishEntityEvents»
 			private void publishEvent(«entityName» entity, String eventName) {
-				«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', ')»);
+				«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', \r\n\t')»);
+				
 				DomainEventEnvelope<DomainEvent> envelope = DomainEventEnvelopeBuilder
 						.getBuilder(eventName, event)
 						.domain(«service.toServiceConstantsName».DOMAIN)
@@ -426,7 +427,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val publishSlots = entity.getPublishSlots
 		val entityEventName = entity.toEntityEventName
 		'''
-		«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', ')»);
+		«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', \r\n\t')»);
+		
 		DomainEventEnvelope<DomainEvent> envelope = DomainEventEnvelopeBuilder
 				.getBuilder(«entityEventName».«entity.toEntityEventConstantName('created')», event)
 				.domain(«service.toServiceConstantsName».DOMAIN)
@@ -443,6 +445,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			result = 'entity'.buildMethodGetEntityId(slot)
 		else
 			result = 'entity'.buildMethodGet(slot)
+		
+		if (slot.name != '')
+			
 		result
 	}
 	

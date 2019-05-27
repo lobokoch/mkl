@@ -99,7 +99,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				          <p-spinner size="30" name="copiesReferenceFieldInterval" [(ngModel)]="copiesReferenceFieldInterval" [min]="1" [max]="1000"></p-spinner>
 				        </div>
 				
-				        <div class="ui-g-12 ui-fluid ui-md-2">
+				        <div class="ui-g-12 ui-md-2 ui-fluid">
 				          <span style="display: block">&nbsp;</span>
 				          <button pButton (click)="«actionName»()" type="button" pTooltip="«buttonToolTip»" tooltipPosition="top" icon="«buttonIcon»" label="«buttonLabel»" class="ui-button-info"></button>
 				        </div>
@@ -116,9 +116,13 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 		
 		<div class="ui-g-12">
-			<div class="ui-g-12 ui-md-4">
+			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<button [disabled]="!form1.valid" class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
-				<button pButton (click)="begin(form1)" type="button" label="Novo" class="botao-margem-direita ui-button-info"></button>
+			</div>
+			<div class="ui-g-12 ui-md-2 ui-fluid">
+				<button pButton (click)="begin(form1)" type="button" label="Novo"></button>
+			</div>
+			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<a routerLink="/«entity.toWebName»" pButton label="Pesquisar"></a>
 			</div>
 		</div>
@@ -251,7 +255,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (slot.isEnum){
 			webComponentType = 'p-dropdown'
-			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" placeholder="Selecione"''')
+			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" optionLabel="label" placeholder="Selecione um item..."''')
 			return
 		}
 		

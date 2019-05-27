@@ -39,7 +39,6 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		import org.slf4j.LoggerFactory;
 		import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 		import org.springframework.amqp.rabbit.annotation.RabbitListener;
-		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
 		«IF entity.hasSubscribeDeleted»
 		import org.springframework.dao.DataIntegrityViolationException;
@@ -60,6 +59,9 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			
 			@Autowired
 			private «entityDTOName»Service «entityDTONameFirstLower»Service;
+			
+			@Autowired
+			«entityDTOName»DTOConverter «entity.toDTOConverterVar»;
 			
 			@RabbitListener(queues = "#{«entityDTONameFirstLower»Queue.name}")
 			public void onReceiveEvent(DomainEventEnvelope<«entityDTOName»Event> envelope) {
@@ -128,8 +130,7 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			«ENDIF»
 		
 			private «entityDTOName»Entity build«entityDTOName»Entity(«entityDTOName»Event «entityDTONameFirstLower»Event) {
-				«entityDTOName»Entity entity = new «entityDTOName»Entity();
-				BeanUtils.copyProperties(«entityDTONameFirstLower»Event, entity);
+				«entityDTOName»Entity entity = «entity.toDTOConverterVar».convertDtoToEntity(«entityDTONameFirstLower»Event);
 				return entity;
 			}
 		

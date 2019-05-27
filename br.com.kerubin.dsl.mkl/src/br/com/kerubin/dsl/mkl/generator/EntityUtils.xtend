@@ -820,7 +820,11 @@ class EntityUtils {
 		obj + '.' + slot.name.buildMethodGet
 	}
 	
-	def static buildMethodGetEntityId(String obj, Slot slot) {
+	def static String buildMethodGetEntityId(String obj, Slot slot) {
+		'''«obj.buildMethodGet(slot)» != null ? «obj.buildMethodGet(slot)».«slot.asEntity.id.buildMethodGet» : null'''
+	}
+	
+	def static buildMethodGetEntityId2(String obj, Slot slot) {
 		obj.buildMethodGet(slot) + '.' + slot.asEntity.id.buildMethodGet
 	}
 	

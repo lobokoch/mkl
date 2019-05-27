@@ -45,6 +45,8 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 			@Override
 			public Message postProcessMessage(Message message) throws AmqpException {
 				
+				log.info(«domainAndService».DOMAIN + "." + «domainAndService».SERVICE + " receiving message: " + message);
+				
 				Object tenant = message.getMessageProperties().getHeaders().get(HEADER_TENANT);
 				Object user = message.getMessageProperties().getHeaders().get(HEADER_USER);
 				

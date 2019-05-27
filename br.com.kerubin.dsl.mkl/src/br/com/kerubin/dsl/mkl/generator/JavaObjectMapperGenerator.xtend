@@ -39,6 +39,8 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 		import java.util.Optional;
 		import java.util.UUID;
 		
+		import javax.persistence.Id;
+		
 		import org.hibernate.Hibernate;
 		import org.hibernate.collection.spi.PersistentCollection;
 		import org.hibernate.proxy.HibernateProxy;
@@ -115,24 +117,40 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 		                        }
 		                    }
 		                    else { // Is another entity reference, call recursive if needed.
-		                    	Object sourceFieldValue = getFieldValue(source, sourceField);
-		                    	if (isProxy(sourceFieldValue)) {
-		                    		sourceFieldValue = Hibernate.unproxy(sourceFieldValue);
-		                    	}
-		                    	
-		                        if (sourceFieldValue != null) {
-		                            Object targetFieldValue = null;
-		                            if (visited.containsKey(sourceFieldValue)) {
-		                                targetFieldValue = visited.get(sourceFieldValue);
-		                            }
-		                            else {
-		                                targetFieldValue = BeanUtils.instantiateClass(targetFieldType);
-		                                copyProperties(sourceFieldValue, targetFieldValue, visited);
-		                            }
-		                            
-		                            setFieldValue(target, targetField, targetFieldValue);
-		                        }
-		                    }
+								Object sourceFieldValue = getFieldValue(source, sourceField);
+								if (isProxy(sourceFieldValue)) {
+									sourceFieldValue = Hibernate.unproxy(sourceFieldValue);
+								}
+								
+							    if (sourceFieldValue != null) {
+							        Object targetFieldValue = null;
+							        if (visited.containsKey(sourceFieldValue)) {
+							            targetFieldValue = visited.get(sourceFieldValue);
+							        }
+							        else {
+							        	
+							            targetFieldValue = BeanUtils.instantiateClass(targetFieldType);
+							            
+							            // Source field can has an entity name, but with uuid value instead of an entity object
+							            // Also, source field and target field can be objects with field names matching, but with different class names.
+							            boolean isSourceFieldAnEntityWithOnlyId = sourceFieldType.equals(UUID.class) && !targetFieldType.equals(UUID.class);
+							            
+							            if (!isSourceFieldAnEntityWithOnlyId) { // both should be objets
+							            	copyProperties(sourceFieldValue, targetFieldValue, visited);
+							            }
+							            else {
+						            		Field targetFieldValueIdField = getEntityIdField(targetFieldValue.getClass());
+						            		if (targetFieldValueIdField == null) {
+						            			throw new IllegalStateException(targetField.getClass().getName() + " should be an entity class with a field annoted with @Id.");
+						            		}
+						            		setFieldValue(targetFieldValue, targetFieldValueIdField, sourceFieldValue);
+							            }
+							            
+							        }
+							        
+							        setFieldValue(target, targetField, targetFieldValue);
+							    }
+							}
 		                } catch (Exception e) {
 		                	throw new IllegalStateException("Error copying properties from '" + source.getClass().getName() + "' to '" + target.getClass().getName() + "'.", e);
 		                }
@@ -153,6 +171,16 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 		        }
 		        return false;
 		    }
+		    
+		    private Field getEntityIdField(Class<?> entityClass) {
+				Field idField = Arrays.asList(entityClass.getDeclaredFields())
+						.stream()
+						.filter(field -> field.isAnnotationPresent(Id.class))
+						.findFirst()
+						.orElse(null);
+				
+				return idField;
+			}
 		
 		    
 		    private void setFieldValue(Object obj, Field field, Object value) {
