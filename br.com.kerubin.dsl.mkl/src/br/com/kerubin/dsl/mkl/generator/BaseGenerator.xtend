@@ -11,6 +11,8 @@ import org.osgi.framework.FrameworkUtil
 
 abstract class BaseGenerator {
 	
+	val static LIKE_JAVA_FILES = #['.java', '.ts', '.css']
+	
 	protected Resource resource
 	protected IFileSystemAccess2 fsa
 	protected Service service
@@ -21,6 +23,7 @@ abstract class BaseGenerator {
 	protected var bundleVersion = null
 	
 	protected var String codeGenerationHeader = null
+	protected var String codeGenerationHTMLHeader = null
 	
 	ServiceBooster serviceBooster
 	
@@ -39,10 +42,6 @@ abstract class BaseGenerator {
 	
 	def getBundleVersion() {
 		if (bundleVersion === null) {
-			/*val bundle = Platform.getBundle("br.com.kerubin.dsl.mkl");
-			val version = bundle?.getVersion() ?: "x";
-			println(version)*/
-			
 			try {
 				bundleVersion = FrameworkUtil.getBundle(getClass())?.getVersion() ?: "0.0.0";
 			} catch(Exception e) {
@@ -78,8 +77,11 @@ abstract class BaseGenerator {
 		}*/
 		
 		var contents_ = contents
-		if (fileName.endsWith('.java')) { // In Java files, add copy right header
+		if (LIKE_JAVA_FILES.exists[fileName.endsWith(it)]) { // In some files, add copy right header
 			contents_ = getCodeGenerationHeader + contents
+		}
+		else if (fileName.endsWith('.html')) { // In some files, add copy right header
+			contents_ = getCodeGenerationHTMLHeader + contents
 		}
 		
 		fsa.generateFile(fileName, contents_)
@@ -102,6 +104,27 @@ abstract class BaseGenerator {
 			codeGenerationHeader = header.toString
 		}
 		codeGenerationHeader
+	}
+	
+	def String getCodeGenerationHTMLHeader() {
+		if (codeGenerationHTMLHeader === null) {
+			val version = getBundleVersion
+			val header = new StringBuilder
+			header.append('<!--\r\n')
+			header.append('**********************************************************************************************')
+			header.append('\r\nCode generated with MKL Plug-in version: ')
+			header.append(version)
+			header.append('\r\nCode generated at time stamp: ')
+			header.append(LocalDateTime.now)
+			header.append('\r\nCopyright: Kerubin - logokoch@gmail.com\r\n')
+			header.append('\r\nWARNING: DO NOT CHANGE THIS CODE BECAUSE THE CHANGES WILL BE LOST IN THE NEXT CODE GENERATION.\r\n')
+			header.append('***********************************************************************************************\r\n')
+			header.append('-->')
+			header.append('\r\n\r\n')
+			
+			codeGenerationHTMLHeader = header.toString
+		}
+		codeGenerationHTMLHeader
 	}
 	
 	def generateFile(String fileName, CharSequence contents, String outputConfigurationName) {
