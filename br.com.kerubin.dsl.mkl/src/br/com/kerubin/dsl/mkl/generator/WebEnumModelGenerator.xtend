@@ -27,16 +27,18 @@ class WebEnumModelGenerator extends GeneratorExecutor implements IGeneratorExecu
 	
 	def CharSequence doGenerateEnumModel() {
 		'''
+		import { SelectItem } from 'primeng/api';
+		
 		«enums.map[it.generateEnum].join»
 		'''		
 	}
 	
 	def CharSequence generateEnum(Enumeration enumeration) {
 		'''
-		export interface «enumeration.toDtoName» {
+		export interface «enumeration.toDtoName» extends SelectItem {
 			
-		  label: string;
-		  value: string;
+		  label?: string;
+		  value: any;
 		  
 		}
 		

@@ -91,7 +91,7 @@ class EntityUtils {
 	}
 	
 	
-	def static Entity asEntity(Slot slot) {
+	/*def static Entity asEntity(Slot slot) {
 		val reference = slot.slotType as ObjectTypeReference
 		reference.referencedType as Entity
 	}
@@ -99,7 +99,7 @@ class EntityUtils {
 	def static Enumeration asEnum(Slot slot) {
 		val reference = slot.slotType as ObjectTypeReference
 		reference.referencedType as Enumeration
-	}
+	}*/
 	
 	def static boolean hasEntitySlots(Entity entity) {
 		entity.slots.exists[it.isEntity]
@@ -109,7 +109,7 @@ class EntityUtils {
 		entity.slots.exists[it.isDate]
 	}
 	
-	def static boolean isEntity(Slot slot) {
+	/*def static boolean isEntity(Slot slot) {
 		if (slot?.slotType instanceof ObjectTypeReference) {
 			val reference = (slot.slotType as ObjectTypeReference)
 			return reference.referencedType instanceof Entity
@@ -123,7 +123,7 @@ class EntityUtils {
 			return reference.referencedType instanceof Enumeration
 		}
 		return false
-	}
+	}*/
 	
 	def static String toWebTypeDTO(Slot slot) {
 		if (slot.isDTOLookupResult) {

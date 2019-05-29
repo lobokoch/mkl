@@ -255,7 +255,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (slot.isEnum){
 			webComponentType = 'p-dropdown'
-			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" optionLabel="label" placeholder="Selecione um item..."''')
+			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."''')
 			return
 		}
 		

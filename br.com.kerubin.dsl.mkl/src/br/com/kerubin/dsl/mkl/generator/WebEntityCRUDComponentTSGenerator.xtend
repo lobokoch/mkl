@@ -239,7 +239,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		}
 		
 		'''
-		this.«slot.ownerEntity.fieldName».«slot.fieldName» = this.«slot.webDropdownOptions»[«index»];
+		this.«slot.ownerEntity.fieldName».«slot.fieldName» = this.«slot.webDropdownOptions»[«index»].value;
 		'''
 		
 	}

@@ -549,6 +549,42 @@ class Slot extends Element {
 		false
 	}
 	
+	op boolean isEnum() {
+		if (this.slotType instanceof ObjectTypeReference) {
+			val reference = (this.slotType as ObjectTypeReference)
+			return reference.referencedType instanceof Enumeration
+		}
+		
+		false
+	}
+	
+	op boolean isEntity() {
+		if (this.slotType instanceof ObjectTypeReference) {
+			val reference = (this.slotType as ObjectTypeReference)
+			return reference.referencedType instanceof Entity
+		}
+		
+		false
+	}
+	
+	op Entity asEntity() {
+		if (isEntity) {
+			val reference = (this.slotType as ObjectTypeReference)
+			return reference.referencedType as Entity
+		}
+		
+		return null
+	}
+	
+	op Enumeration asEnum() {
+		if (isEnum) {
+			val reference = (this.slotType as ObjectTypeReference)
+			return reference.referencedType as Enumeration
+		}
+		
+		return null
+	}
+	
 	op boolean isDate() {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
@@ -659,12 +695,12 @@ class Enumeration extends ServiceObject {
 	}
 	
 	op boolean hasDefault () {
-		items.exists[isDefault]
+		items.exists[isDefaultItem]
 	}
 	
 	op int getDefaultIndex() {
 		for (var i = 0; i < items.size(); i++) {
-			if (items.get(i).isDefault) {
+			if (items.get(i).isDefaultItem) {
 				return i
 			}
 		}
@@ -678,7 +714,7 @@ class EnumItem {
 	String valueStr
 	String label
 	int valueInt
-	boolean ^default='false'
+	boolean defaultItem = 'false'
 	
 	op boolean hasLabel() {
 		label !== null && !label.trim.isEmpty
@@ -802,7 +838,7 @@ class Entity extends PublicObject, Rulled {
 	}
 	
 	op boolean hasEnumSlotsWithDefault() {
-		slots.exists[hasDefaultValue]
+		slots.filter[isEnum].exists[asEnum.hasDefault]
 	}
 	
 	op Slot getFirstSlot() {

@@ -16,7 +16,6 @@ import br.com.kerubin.dsl.mkl.model.PublicObject
 import br.com.kerubin.dsl.mkl.model.StringType
 import br.com.kerubin.dsl.mkl.model.TimeType
 import br.com.kerubin.dsl.mkl.model.UUIDType
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class JavaPostgreSQLGenerator extends JavaSQLGenerator {
 	

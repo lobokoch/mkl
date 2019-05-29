@@ -62,7 +62,7 @@ Enumeration:
 
 EnumItem:
 {EnumItem}
-	(name=ID_KEYWORD ( ('as' valueStr=STRING)? ('=' valueInt=INT)? ('label' ':' label=STRING)? (default?='default')? ) )
+	(name=ID_KEYWORD ( ('as' valueStr=STRING)? ('=' valueInt=INT)? ('label' ':' label=STRING)? (defaultItem?='default')? ) )
 	|  (',' EnumItem)
 ;
 
