@@ -20,6 +20,10 @@ import br.com.kerubin.dsl.mkl.model.FieldAndValue
 import br.com.kerubin.dsl.mkl.model.NullObject
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
+import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
+import br.com.kerubin.dsl.mkl.model.Enumeration
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
 
 class RuleUtils {
 	
@@ -68,8 +72,10 @@ class RuleUtils {
 		var isObjStr = false
 		var isObjDate = false
 		var isNumber = false
+		var Entity entity = null;
 		if (expression.left.whenObject instanceof FieldObject) {
 			val slot = (expression.left.whenObject as FieldObject).getField
+			entity = slot.ownerEntity
 			objName = slot.ownerEntity.fieldName + '.' + slot.buildMethodGet
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
@@ -129,6 +135,20 @@ class RuleUtils {
 				//	resultStrExp.concatSB('''«objName» == «value»''')					
 				//}
 			}
+			else if (op instanceof RuleWhenOpIsEquals) {
+				val opIsEquals = op as RuleWhenOpIsEquals
+				val value = opIsEquals.valueToCompare.getRuleWhenEqualsValueForJava(entity, imports)
+				val envelopeObjectName = objName.replace(entity.fieldName, 'envelope.getPayload()')
+				
+				val isNotEquals = op instanceof RuleWhenOpIsNotEquals
+				
+				if (isNotEquals) {
+					resultStrExp.concatSB('''!(«envelopeObjectName».equals(«value»))''')
+				}
+				else {
+					resultStrExp.concatSB('''«envelopeObjectName».equals(«value»)''')
+				}
+			}
 			else if (op instanceof RuleWhenOpIsBefore) {
 				val opIsBefore = op as RuleWhenOpIsBefore
 				val value = opIsBefore.valueToCompare.getTemporalValueForJava(imports)
@@ -163,6 +183,30 @@ class RuleUtils {
 				opValue
 			}
 		}
+	}
+	
+	def static String getRuleWhenEqualsValueForJava(RuleWhenEqualsValue ruleWhenEqualsValue, Entity entity, Set<String> imports) {
+		var objStr = 'UNKNOWN_VALUE'
+		if (ruleWhenEqualsValue.enumObject !== null) {
+			val enumObject = ruleWhenEqualsValue.enumObject
+			val enumeration = enumObject.enumeration
+			val enumItem = enumObject.enumItem
+			objStr = enumeration.name + '.' + enumItem
+			val importValue = entity.getImportExternalEnumeration(enumeration)
+			imports.add(importValue)
+		}
+		objStr
+	}
+	
+	def static String getImportExternalEnumeration(Entity entity, Enumeration enumeration) {
+		'import ' + entity.getExternalServicePackage + '.' + enumeration.name + ';'
+	}
+	
+	def static String getExternalServicePackage(Entity entity) {
+		val domainName = entity?.subscribeEntityEvents?.externalDomain
+		val serviceName = entity?.subscribeEntityEvents?.externalService
+		val basePackage = entity.service.configuration.groupId
+		basePackage + '.' + domainName?.removeUnderline + '.' + serviceName?.removeUnderline
 	}
 	
 	def static String getTemporalValueForJava(RuleWhenTemporalValue temporalValue, Set<String> imports) {

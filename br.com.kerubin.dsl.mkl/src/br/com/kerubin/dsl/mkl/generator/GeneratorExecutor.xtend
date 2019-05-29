@@ -222,6 +222,14 @@ class GeneratorExecutor {
 		'import ' + entity.getExternalEntityPakage + '.' + entity.toEntityEventName + ';'
 	}
 	
+	def String getImportExternalEnumeration(Entity entity, Enumeration enumeration) {
+		'import ' + entity.getExternalEntityPakage + '.' + enumeration.name + ';'
+	}
+	
+	/*def String getImportExternalEntityEvent(Entity entity) {
+		'import ' + entity.getExternalEntityPakage + '.' + entity.toEntityEventName + ';'
+	}*/
+	
 	def String getExternalEntityPakage(Entity entity) {
 		entity.getExternalServicePackage + '.entity.' + entity.name.toLowerCase
 	}

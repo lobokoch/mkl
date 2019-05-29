@@ -487,6 +487,10 @@ class EntityUtils {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
 	}
 	
+	def static getRuleSubscribe(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.SUBSCRIBE]] 
+	}
+	
 	def static getRuleMakeCopies(Entity entity) {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.apply.hasMakeCopiesExpression]
 	}

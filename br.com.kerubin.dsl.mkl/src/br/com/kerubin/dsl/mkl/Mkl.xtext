@@ -228,7 +228,9 @@ RuleWhenAbstractObjectOperation:
 	RuleWhenOpIsSame | 
 	RuleWhenOpIsBefore | 
 	RuleWhenOpIsNull |
-	RuleWhenOpIsNotNull
+	RuleWhenOpIsNotNull |
+	RuleWhenOpIsEquals |
+	RuleWhenOpIsNotEquals
 ;
 
 RuleWhenOpIsNull:
@@ -259,7 +261,28 @@ NullObject:
 	nullValue = 'null'
 ;
 
+RuleWhenOpIsEquals:
+{RuleWhenOpIsEquals}
+	methodName = 'isEquals' '(' valueToCompare = RuleWhenEqualsValue ')'
+;
+
+RuleWhenOpIsNotEquals:
+{RuleWhenOpIsNotEquals}
+	methodName = 'isNotEquals' '(' valueToCompare = RuleWhenEqualsValue ')'
+;
+
+RuleWhenEqualsValue:
+{RuleWhenEqualsValue}	
+	enumObject=EnumObject// | fieldObject=FieldObject 
+;
+
+EnumObject:
+{EnumObject}
+	enumeration=[Enumeration] '.' enumItem=ID_KEYWORD
+;
+
 FieldObject:
+{FieldObject}	
 	field=[Slot]
 ;
 
@@ -334,7 +357,8 @@ enum RuleTarget:
 	 GRID_ROW_CELL='grid.row.cell' | 
 	 GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell' |
 	 GRID_ACTIONS = 'grid.actions' |
-	 FORM = 'form'
+	 FORM = 'form' |
+	 SUBSCRIBE = 'subscribe' 
 ;
 
 //END Rule

@@ -116,6 +116,11 @@ class FieldObject extends AbstractObject {
 	refers Slot field
 }
 
+/*class EnumObject extends AbstractObject {
+	refers Enumeration enumeration
+	String enumItem
+}*/
+
 class NumberObject extends AbstractObject {
 	Double value
 }
@@ -149,6 +154,14 @@ class RuleWhenOpIsBefore extends RuleWhenAbstractObjectOperation {
 	contains RuleWhenTemporalValue valueToCompare
 }
 
+class RuleWhenOpIsEquals extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenEqualsValue valueToCompare
+}
+
+class RuleWhenOpIsNotEquals extends RuleWhenOpIsEquals {
+	
+}
+
 class RuleWhenOpIsNull extends RuleWhenAbstractObjectOperation {
 	
 }
@@ -157,6 +170,15 @@ class RuleWhenOpIsNotNull extends RuleWhenAbstractObjectOperation {
 	
 }
 
+class RuleWhenEqualsValue /*extends RuleWhenTemporalValue*/ {
+	contains FieldObject fieldObject
+	contains EnumObject enumObject
+}
+
+class EnumObject extends AbstractObject {
+	refers Enumeration enumeration
+	String enumItem
+}
 
 class RuleWhenTemporalValue {
 	contains TemporalObject temporalObject
@@ -217,6 +239,7 @@ enum RuleTarget {
 	GRID_SUMROW_LAST_CELL as 'grid.sum.lastCell'
 	GRID_ACTIONS as 'grid.actions'
 	FORM as 'form'
+	SUBSCRIBE as 'subscribe'
 }
 
 // END Rule

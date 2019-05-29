@@ -1,9 +1,13 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Rule
+import java.util.Set
+
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 
 class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -29,6 +33,12 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		val entityDTOName = entity.toDtoName
 		// val entityDTONameLower = entityDTOName.toLowerCase
 		val entityDTONameFirstLower = entityDTOName.toFirstLower
+		val ruleSubscribe = entity.getRuleSubscribe
+		val imports = newLinkedHashSet
+		var String ruleSubscribeCode = null;
+		if (!ruleSubscribe.empty) {
+			ruleSubscribeCode = ruleSubscribe.generateRuleSubscribe(imports)
+		}
 		
 		'''
 		package «entity.package»;
@@ -44,6 +54,9 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		import org.springframework.dao.DataIntegrityViolationException;
 		«ENDIF»
 		import org.springframework.stereotype.Service;
+		«IF !imports.empty»
+		«imports.join»
+		«ENDIF»
 		
 		«entity.getImportExternalEntityEvent»
 		
@@ -65,6 +78,9 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			
 			@RabbitListener(queues = "#{«entityDTONameFirstLower»Queue.name}")
 			public void onReceiveEvent(DomainEventEnvelope<«entityDTOName»Event> envelope) {
+				«IF ruleSubscribeCode !== null»
+				«ruleSubscribeCode»
+				«ENDIF»
 				try {
 					switch (envelope.getPrimitive()) {
 					«IF entity.hasSubscribeCreated»
@@ -137,4 +153,21 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 		}
 		'''
 	}
+	
+	def String generateRuleSubscribe(Iterable<Rule> rules, Set<String> imports) {
+		val rule = rules.head
+		
+		val whenExpression = rule.buildRuleWhenExpressionForJava(imports)
+		'''
+		// Begin code from Subscribe Rule
+		boolean accepted = «whenExpression»;
+		if (!accepted) {
+			return; // Rejects this subscribe.
+		}
+		// End code from Subscribe Rule
+		
+		'''.toString
+		
+	}
+	
 }
