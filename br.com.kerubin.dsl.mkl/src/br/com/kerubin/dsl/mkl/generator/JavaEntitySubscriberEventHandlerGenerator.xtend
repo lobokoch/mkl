@@ -136,11 +136,13 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			
 			«IF entity.hasSubscribeDeleted»
 			private void delete«entityDTOName»(«entityDTOName»Event «entityDTONameFirstLower»Event) {
-				try {
-					«entityDTONameFirstLower»Service.delete(«entityDTONameFirstLower»Event.getId());
-				}
-				catch(DataIntegrityViolationException e) {
-					save«entityDTOName»(«entityDTONameFirstLower»Event, true);
+				Optional<«entityDTOName»Entity> optionalEntity = «entityDTONameFirstLower»Repository.findById(«entityDTONameFirstLower»Event.getId());
+				if (optionalEntity.isPresent()) {
+					try {
+						«entityDTONameFirstLower»Service.delete(«entityDTONameFirstLower»Event.getId());
+					} catch(DataIntegrityViolationException e) {
+						save«entityDTOName»(«entityDTONameFirstLower»Event, true);
+					}
 				}
 			}
 			«ENDIF»
