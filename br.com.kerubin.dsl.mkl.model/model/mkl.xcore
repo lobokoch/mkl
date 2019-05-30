@@ -258,8 +258,14 @@ abstract class Named {
 
 class DomainModel extends Named {
 	
+	String label
+	
 	op String domain() {
 		name
+	}
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.empty
 	}
 	
 	contains Service service opposite domainModel
@@ -271,10 +277,16 @@ abstract class Element extends Named {
 
 
 class Service extends Element {
+	String label
+	
 	container DomainModel domainModel opposite service
 	op String domain() {
 		//(eContainer as DomainModel).domain
 		domainModel.domain
+	}
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.empty
 	}
 	
 	contains DisableServiceGeneration disableGeneration
@@ -399,6 +411,23 @@ class CudEvents {
 class AutoComplete {
 	boolean key
 	boolean result
+	contains Sort sort
+	
+	op boolean hasSort() {
+		sort !== null && !sort.order.trim.empty
+	}
+	
+	op boolean isSortASC() {
+		hasSort && sort.order == 'asc'
+	}
+	
+	op boolean isSortDESC() {
+		hasSort && sort.order == 'desc'
+	}
+}
+
+class Sort {
+	String order
 }
 
 enum FilterOperatorEnum {

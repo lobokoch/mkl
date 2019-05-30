@@ -29,14 +29,18 @@ class WebMenuGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	}
 	
 	protected def CharSequence doGenerateMenu() {
+		service.domainModel
+		val domainLabel = if (service.domainModel.hasLabel) service.domainModel.label else service.domain.toCamelCase
+		val serviceLabel = if (service.hasLabel) service.label else service.name.toCamelCase
+		
 		'''
 		{
-			label: '«service.domain.toCamelCase»',
+			label: '«domainLabel»',
 			icon: 'pi pi-pw',
 			items: [
 				
 				{
-					label: '«service.name.toCamelCase»',
+					label: '«serviceLabel»',
 					icon: 'pi pi-fw ',
 					items: [
 						«generateEntitiesMenuItems»

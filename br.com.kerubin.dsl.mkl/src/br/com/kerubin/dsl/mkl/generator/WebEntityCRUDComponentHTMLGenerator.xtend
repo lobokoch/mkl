@@ -23,6 +23,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	var webComponentType = ''
 	
 	boolean isOpenTagClosed
+	boolean hasFocus = false
 	 
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -139,6 +140,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateEntityFields(Entity entity) {
+		hasFocus = false
 		'''
 		«entity.slots.filter[!mapped].map[generateField(entity)].join('\r\n')»
 		'''
@@ -194,12 +196,26 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def void decoreWebComponent(Slot slot, StringConcatenationExt builder) {
 		slot.decorateWebComponentType(builder)
+		slot.decorateWebComponentAppFocus(builder)
 		slot.decorateWebComponentNgModel(builder)
 		slot.decorateWebComponentName(builder)
 		slot.decorateWebComponentRules(builder)
 		
 		// Tem que ser por último, porque fecha a tag.
 		slot.decorateWebComponentAutoCompleteTemplate(builder)
+	}
+	
+	def void decorateWebComponentAppFocus(Slot slot, StringConcatenationExt builder) {
+		if (!hasFocus && !slot.isHiddenSlot && slot !== slot.ownerEntity.id) {
+			if (!slot.isEntity) { // Autocomplete não pode receber focu assim, tem que ver outro jeito.
+				builder.concat(''' appFocus''')
+			}
+			hasFocus = true;
+		}
+	}
+	
+	def void decorateWebComponentName(Slot slot, StringConcatenationExt builder) {
+		builder.concat(''' name="«slot.fieldName»"''')
 	}
 	
 	def void decorateWebComponentRules(Slot slot, StringConcatenationExt builder) {
@@ -212,9 +228,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 	}
 	
-	def void decorateWebComponentName(Slot slot, StringConcatenationExt builder) {
-			builder.concat(''' name="«slot.fieldName»"''')
-	}
 	
 	def void decorateWebComponentNgModel(Slot slot, StringConcatenationExt builder) {
 			builder.concat(''' #«slot.fieldName»="ngModel" ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
@@ -232,7 +245,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				isOpenTagClosed = true
 				builder.addIndent('''
 					<ng-template let-«slot.fieldName» pTemplate="item">
-						«««<div class="ui-helper-clearfix">«resultSlots.map['''{{ «slot.fieldName».«it.fieldName» }}'''].join(' - ')»</div>
 						<div class="ui-helper-clearfix">{{ «slot.webAutoCompleteFieldConverter»(«slot.fieldName») }}</div>
 					</ng-template>
 				''')

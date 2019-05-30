@@ -73,6 +73,9 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def String generateAutoCompleteSQL(Entity entity, Iterable<Slot> slotResultFields, Iterable<Slot> slotKeyFields) {
+		
+		val sortSlots = entity.slots.filter[it.hasAutoComplete && it.autoComplete.hasSort]
+		
 		val alias = "ac"
 		val sql = new StringBuilder("select distinct ")
 		val resultFields = slotResultFields.map[it | alias + "." + it.name.toFirstLower + " as " + it.name.toFirstLower].join(", ")
@@ -83,7 +86,15 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :query, '%')) )"
 		].join(" or ")
 		sql.append(keyFields)
-		sql.append(" order by 1 asc")
+		
+		// Sort
+		if (!sortSlots.isEmpty) {
+			val orderBy = ' order by ' + sortSlots.map[alias + '.' + it.fieldName + ' ' + it.autoComplete.sort.order].join(', ')
+			sql.append(orderBy)
+		}
+		else {
+			sql.append(" order by 1 asc")
+		}
 		sql.toString
 	}
 	
