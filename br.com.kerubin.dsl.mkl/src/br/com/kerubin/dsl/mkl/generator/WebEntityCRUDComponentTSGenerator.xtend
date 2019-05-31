@@ -113,18 +113,35 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    }.bind(this), 1);
 			}
 			
+			validateAllFormFields(form: FormGroup) {
+			    Object.keys(form.controls).forEach(field => {
+			      const control = form.get(field);
+			
+			      if (control instanceof FormControl) {
+			        control.markAsDirty({ onlySelf: true });
+			      } else if (control instanceof FormGroup) {
+			        this.validateAllFormFields(control);
+			      }
+			    });
+			}
+			
 			save(form: FormControl) {
+				if (!form.valid) {
+			      this.validateAllFormFields(form);
+			      return;
+			    }
+				    
 			    if (this.isEditing) {
-			      this.update(form);
+			      this.update();
 			    } else {
-			      this.create(form);
+			      this.create();
 			    }
 				«IF !ruleMakeCopies.empty»
 				this.initializeCopiesReferenceFieldOptions();
 				«ENDIF»
 			}
 			
-			create(form: FormControl) {
+			create() {
 			    this.«serviceVar».create(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
@@ -135,7 +152,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    });
 			}
 			
-			update(form: FormControl) {
+			update() {
 			    this.«serviceVar».update(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
@@ -367,7 +384,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	def void initializeImports(Entity entity) {
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
-		import { FormControl } from '@angular/forms';
+		import { FormControl, FormGroup } from '@angular/forms';
 		import { ActivatedRoute, Router } from '@angular/router';
 		import {MessageService} from 'primeng/api';
 		''')

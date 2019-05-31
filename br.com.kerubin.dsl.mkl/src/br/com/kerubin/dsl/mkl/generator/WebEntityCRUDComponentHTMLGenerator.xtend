@@ -49,7 +49,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 		<div class="container">
 		
-		  <form #form1="ngForm" (ngSubmit)="save(form1)">
+		  <form #form1="ngForm" (ngSubmit)="save(form1.form)">
 		  	<div class="ui-g">
 		  	
 				«entity.generateEntityTitle»
@@ -118,7 +118,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		<div class="ui-g-12">
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<button [disabled]="!form1.valid" class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
+				<button class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<button pButton (click)="begin(form1)" type="button" label="Novo"></button>
@@ -160,7 +160,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.isToMany
 		«ELSE»
 		<div class="«slot.webClass»">
-			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»</label>
+			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»</label>«IF !slot.isOptional && !slot.isHiddenSlot»<label class="kb-label-required">*</label>«ENDIF»
 			«slot.generateWebComponent»
 		</div>
 		«ENDIF»
