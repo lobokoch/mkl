@@ -53,7 +53,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		}
 		
 		val PROJECT_SERVER = projectServerName
-		val mainClassName = /*service.domain.textUnderToTextCamel + */service.name.textUnderToTextCamel + 'Application'
+		val mainClassName = service.domain.textUnderToTextCamel + service.name.textUnderToTextCamel + 'Application'
 		
 		generateFileForApp(pomFileName, generateApplicationPOM(PROJECT_SERVER))
 		
@@ -82,6 +82,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		  cloud:
 		    config:
 		      uri: «service.configuration.cloudConfigUri»
+		
+		eureka:
+		  client:
+		    serviceUrl:
+		      defaultZone: http://localhost:8761/eureka/
 		'''
 	}
 	
