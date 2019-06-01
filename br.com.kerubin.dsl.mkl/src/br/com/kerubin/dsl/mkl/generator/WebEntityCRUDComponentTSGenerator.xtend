@@ -125,7 +125,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    });
 			}
 			
-			save(form: FormControl) {
+			save(form: FormGroup) {
 				if (!form.valid) {
 			      this.validateAllFormFields(form);
 			      return;
