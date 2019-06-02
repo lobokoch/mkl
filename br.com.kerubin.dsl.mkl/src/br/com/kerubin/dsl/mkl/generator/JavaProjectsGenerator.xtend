@@ -230,39 +230,26 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				«buildMessagingDependency»
 			</dependencies>
 			
-			<!--
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>org.springframework.cloud</groupId>
-						<artifactId>spring-cloud-dependencies</artifactId>
-						<version>${spring-cloud.version}</version>
-						<type>pom</type>
-						<scope>import</scope>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-		
+			<!-- Spring Boot package plug-in for service deploy -->
 			<build>
+				<finalName>${project.artifactId}-${project.version}</finalName>
 				<plugins>
 					<plugin>
 						<groupId>org.springframework.boot</groupId>
 						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<addResources>true</addResources>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>repackage</goal>
+								</goals>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
-		
-			<repositories>
-				<repository>
-					<id>spring-milestones</id>
-					<name>Spring Milestones</name>
-					<url>https://repo.spring.io/milestone</url>
-					<snapshots>
-						<enabled>false</enabled>
-					</snapshots>
-				</repository>
-			</repositories>
-			-->
 		
 		
 		</project>
