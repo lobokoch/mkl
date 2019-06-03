@@ -58,7 +58,10 @@ class WebGenerator extends BaseGenerator {
 			new WebNewAccountGenerator(this),
 			new WebUserAccountServiceGenerator(this),
 			new WebStylesGenerator(this),
-			new WebFocusDirectiveGenerator(this)
+			new WebFocusDirectiveGenerator(this),
+			new WebEntityRoutingModuleGenerator(this),
+			new WebEntityModuleGenerator(this),
+			new WebAppRoutingModuleGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

@@ -111,29 +111,13 @@ class WebEntityTranslationGenerator extends GeneratorExecutor implements IGenera
 		val fileName = getDefaultTranslationFileName.replace('web/src-gen', 'src')
 		
 		'''
-		import { HttpClientWithToken } from './../../../security/http-client-token';
 		import { Injectable } from '@angular/core';
 		import * as localTranslations from '«fileName»';
 		
 		@Injectable()
 		export class «service.toTranslationServiceClassName» {
 		
-		  // translations: Object;
-		
-		  constructor(private http: HttpClientWithToken) {
-		    // this.loadTranslations();
-		  }
-		
-		  /* loadTranslations() {
-		    this.http.get('«fileName»')
-		    .toPromise()
-		    .then(response => {
-		      this.translations = response;
-		    })
-		    .catch(error => {
-		      console.log(`Error loading translations: ${error}`);
-		    });
-		  } */
+		  constructor() { }
 		
 		  public getTranslation(key: string): string {
 		      if (localTranslations) {

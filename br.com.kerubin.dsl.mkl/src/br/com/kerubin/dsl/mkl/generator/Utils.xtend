@@ -31,6 +31,7 @@ class Utils {
 	static val WEB_BASE_DIR = 'web/'
 	static val WEB_SOURCE_GEN_BASE_DIR = 'src-gen/'
 	static val WEB_PROJECT_APPLICATION = 'app/'
+	static val WEB_MODULES_DIR = 'modules/'
 	static val WEB_MODEL_DIR = 'model/'
 	static val WEB_NAVBAR_DIR = 'navbar/'
 	static val WEB_MENU_DIR = 'menu/'
@@ -80,8 +81,12 @@ class Utils {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + path
 	}
 	
-	def static getWebDir(String path) {
+	def static getWebDir_OLD(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
+	}
+	
+	def static getWebDir(String path) {
+		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + WEB_MODULES_DIR + path
 	}
 	
 	def static getWebAppDir() {

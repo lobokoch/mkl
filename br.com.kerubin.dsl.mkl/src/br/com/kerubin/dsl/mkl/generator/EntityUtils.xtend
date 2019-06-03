@@ -373,6 +373,10 @@ class EntityUtils {
 		'app.module'
 	}
 	
+	def static toWebAppRoutingModuleName() {
+		'app-routing.module'
+	}
+	
 	def static buildTranslationMethod(Service service) {
 		'''
 		// TODO: temporário, só para testes.
@@ -396,6 +400,14 @@ class EntityUtils {
 	
 	def static toEntityWebServiceClassName(Entity entity) {
 		entity.toDtoName + 'Service'
+	}
+	
+	def static toEntityWebModuleClassName(Entity entity) {
+		entity.toDtoName + 'Module'
+	}
+	
+	def static toEntityWebRoutingModuleClassName(Entity entity) {
+		entity.toDtoName + 'RoutingModul'
 	}
 	
 	def static toEntityWebComponentClassName(Entity entity) {
@@ -453,6 +465,18 @@ class EntityUtils {
 	def static toEntityWebServiceName(Entity entity) {
 		val webName = entity.toWebName 
 		val name = webName + '.service'
+		name
+	}
+	
+	def static toEntityWebModuleName(Entity entity) {
+		val webName = entity.toWebName 
+		val name = webName + '.module'
+		name
+	}
+	
+	def static toEntityWebRoutingModuleName(Entity entity) {
+		val webName = entity.toWebName 
+		val name = webName + '-routing.module'
 		name
 	}
 	

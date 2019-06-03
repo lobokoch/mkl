@@ -128,6 +128,13 @@ class GeneratorExecutor {
 		fullPath
 	}
 	
+	/*def String getWebEntityModulesPath(Entity entity) {
+		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
+		// web/src-gen/app/
+		val fullPath = path.webModulesDir
+		fullPath
+	}*/
+	
 	def String getWebEntityPathShort(Entity entity) {
 		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
 		path

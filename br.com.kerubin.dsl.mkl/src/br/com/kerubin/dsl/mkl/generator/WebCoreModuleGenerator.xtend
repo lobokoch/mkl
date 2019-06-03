@@ -30,31 +30,82 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def CharSequence generateCoreModuleTSContent() {
 		'''
+		// Angular
+		import { HttpClientModule } from '@angular/common/http';
+		import { NgModule, LOCALE_ID } from '@angular/core';
+		import { CommonModule, registerLocaleData } from '@angular/common';
+		import { RouterModule } from '@angular/router';
+		import localePt from '@angular/common/locales/pt';
+		import localeExtraPT from '@angular/common/locales/extra/pt';
+		
+		// PrimeNG
+		import { ConfirmDialogModule } from 'primeng/confirmdialog';
+		import { MessageService, ConfirmationService } from 'primeng/api';
+		import { ToastModule } from 'primeng/toast';
+		
+		// CurrencyMask
+		import { CurrencyMaskConfig, CURRENCY_MASK_CONFIG } from 'ng2-currency-mask/src/currency-mask.config';
+		
+		// auth0
 		import { JwtHelperService } from '@auth0/angular-jwt';
 		
-		// Angular
-		import { NgModule } from '@angular/core';
-		import { CommonModule } from '@angular/common';
-		
-		// Kerubin
+		// Kerubin - BEGIN
+		import { NavbarComponent } from './../navbar/navbar.component';
+		import { KerubinMenuModule } from './../menu/kerubin-menu-module';
+		import { FocusDirective } from './../directive/focus.directive';
 		import { MessageHandlerService } from './message-handler.service';
 		import { HttpClientWithToken } from '../security/http-client-token';
+		import { UserAccountService } from '../account/useraccount.service';
+		import { SecurityModule } from './../security/security.module';
+		import { KerubinAccountModule } from './../account/kerubin-account.module';
+		// Kerubin - END
 		
 		
+		registerLocaleData(localePt, 'pt', localeExtraPT);
+		
+		export const CustomCurrencyMaskConfig: CurrencyMaskConfig = {
+		  align: 'right',
+		  allowNegative: true,
+		  decimal: ',',
+		  precision: 2,
+		  // prefix: 'R$ ',
+		  prefix: '',
+		  suffix: '',
+		  thousands: '.'
+		};
 		
 		@NgModule({
 		  imports: [
-		    CommonModule
+		    CommonModule,
+		    HttpClientModule,
+		    RouterModule,
+		    ConfirmDialogModule,
+		    KerubinMenuModule,
+		    KerubinAccountModule,
+		    SecurityModule,
 		  ],
+		
 		  declarations: [
+		    NavbarComponent,
+		    FocusDirective
 		  ],
-		  exports: [ // app.module precisa desses modulos
+		
+		  exports: [
+		    NavbarComponent,
+		    ToastModule,
+		    KerubinMenuModule,
+		    ConfirmDialogModule
 		  ],
+		
 		  providers: [
+		    UserAccountService,
 		    MessageHandlerService,
 		    HttpClientWithToken,
-		  	// Kerubin End
-		    JwtHelperService
+		    JwtHelperService,
+		    MessageService,
+		    ConfirmationService,
+		    { provide: LOCALE_ID, useValue: 'pt' },
+		    { provide: CURRENCY_MASK_CONFIG, useValue: CustomCurrencyMaskConfig }
 		  ]
 		})
 		export class CoreModule { }

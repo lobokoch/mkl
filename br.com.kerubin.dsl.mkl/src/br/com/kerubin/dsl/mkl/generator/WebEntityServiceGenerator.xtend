@@ -411,7 +411,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		import { HttpParams } from '@angular/common/http';
 		import * as moment from 'moment';
 		
-		import { HttpClientWithToken } from '../../../security/http-client-token';
+		import { HttpClientWithToken } from '../../../../security/http-client-token';
 		''')
 	}
 	
