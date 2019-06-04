@@ -44,83 +44,122 @@ class WebNewAccountGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def CharSequence generateTSContent() {
 		'''
-		import { ActivatedRoute } from '@angular/router';
-		import { LogoutService } from 'src/app/security/logout.service';
-		import { AuthService } from './../../security/auth.service';
+		// Angular
+		import { FormControl, FormGroup } from '@angular/forms';
 		import { Component, OnInit } from '@angular/core';
+		import { Router } from '@angular/router';
+		
+		// PrimeNG
+		import { SelectItem } from 'primeng/api';
+		
+		// Kerubin
+		import { AuthService } from './../../security/auth.service';
 		import { UserAccountService } from '../useraccount.service';
+		import { UserAccount, AccountCreatedDTO } from './useraccount.model';
+		import { MessageHandlerService } from 'src/app/core/message-handler.service';
+		import { LogoutService } from 'src/app/security/logout.service';
 		
 		@Component({
-		  selector: 'app-confirmaccount',
-		  templateUrl: './confirmaccount.component.html',
-		  styleUrls: ['./confirmaccount.component.css']
+		  selector: 'app-newaccount',
+		  templateUrl: './newaccount.component.html',
+		  styleUrls: ['./newaccount.component.css']
 		})
-		export class ConfirmAccountComponent implements OnInit {
+		export class NewAccountComponent implements OnInit {
 		
+		  userAccount = new UserAccount();
 		  connected = false;
-		  btnLabel = 'Ir para página inicial';
-		  confirmationAccountResult = '';
-		  id = null;
+		  createdAccountResult = '';
+		  accountCreated = false;
+		  btnLabel = 'Criar conta';
+		  disabled = false;
+		  touched = false;
+		
+		  accountTypeSelected: SelectItem;
+		  accountTypeFieldOptions: SelectItem[];
 		
 		  constructor(
 		    private userAccountService: UserAccountService,
+		    private messageHandler: MessageHandlerService,
 		    private auth: AuthService,
 		    private logout: LogoutService,
-		    private route: ActivatedRoute
+		    private router: Router
 		  ) { }
 		
 		  ngOnInit() {
 		    this.doLoginAnonymous();
-		    this.id = this.route.snapshot.queryParams['id'];
+		    this.accountTypeFieldOptions = [
+		      { label: 'Conta pessoal, sou pessoa física', value: 'PERSONAL' },
+		      { label: 'Conta organizacional, sou pessoa jurídica', value: 'CORPORATE' }
+		    ];
 		  }
 		
-		  confirmAccount(id: string) {
-		    if (!id) {
-		      console.log('Id inválido: ' + id);
-		      this.confirmationAccountResult = 'O identificador da confirmação é inválido.';
-		      this.logout.logout();
+		  validateAllFormFields(form: FormGroup) {
+		    Object.keys(form.controls).forEach(field => {
+		      const control = form.get(field);
+		      if (control instanceof FormControl) {
+		        control.markAsDirty({ onlySelf: true });
+		      } else if (control instanceof FormGroup) {
+		        this.validateAllFormFields(control);
+		      }
+		    });
+		  }
+		
+		  createAccount(form: FormGroup) {
+		    if (!form.valid) {
+		      this.validateAllFormFields(form);
 		      return;
 		    }
 		
-		    this.userAccountService.confirmAccount(id)
-		    .then((user) => {
-		      this.btnLabel = 'Fazer login';
-		      console.log('Account confirmation successed: ' + user);
-		      this.confirmationAccountResult = `<h3>Parabéns <strong>${this.getFirstName(user.name)}</strong></h3>` +
-		      '<p>Sua conta foi ativada com sucesso!</p>' +
-		      '<p>Faça seu login para acessar o Kerubin.</p>';
-		      this.logout.logout();
-		    })
-		    .catch((e) => {
-		      console.log('Account confirmation error: '  + e);
-		      this.confirmationAccountResult = '<h3>Ops :(</h3>' +
-		        '<p>Ocorreu um erro na ativação da conta. Entre em contato com o serviço de suporte.</p>';
-		      this.logout.logout();
-		    });
+		    this.disabled = true;
+		    this.btnLabel = 'Criando a conta, aguarde...';
+		    this.userAccount.accountType = this.accountTypeSelected.value;
+		    this.userAccountService.createAccount(this.userAccount)
+		      .then((response) => {
+		        this.disabled = false;
+		        this.btnLabel = 'Conta criada!';
+		        this.createdAccountResult = response.text;
+		        this.accountCreated = true;
+		        this.logout.logout();
+		      })
+		      .catch((e) => {
+		        console.log('Error at createAccount: ' + e);
+		        this.disabled = false;
+		        this.btnLabel = 'Erro!';
 		
-		  }
-		
-		  private getFirstName(fullName: string): string {
-		    if (!fullName) {
-		      return fullName;
-		    }
-		    const result = fullName.substring(0, fullName.indexOf(' ')).trim();
-		    return result;
+		        if (e.message && (e.message as string).toLowerCase().indexOf('http') === -1) {
+		          this.createdAccountResult = '<h3>Ocorreu um erro.</h3><p>' + e.message + '</p>';
+		        } else {
+		          this.createdAccountResult = '<h3>Ops :(</h3>' +
+		            '<p>Ocorreu um erro inesperado ao tentar criar a conta. Por favor tente novamente mais tarde.</p>';
+		        }
+		        this.accountCreated = true;
+		        this.logout.logout();
+		      });
 		  }
 		
 		  private doLoginAnonymous() {
 		    this.auth.doLoginAnonymous()
-		    .then((result) => {
-		      console.log('Anonymous connected!');
-		      this.connected = true;
-		      this.confirmAccount(this.id);
-		    })
-		    .catch((e) => {
-		      this.connected = false;
-		      console.log('Anonymous error: ' + e);
-		    });
+		      .then((result) => {
+		        console.log('Anonymous connected!');
+		        this.connected = true;
+		      })
+		      .catch((e) => {
+		        this.connected = false;
+		        this.messageHandler.showError(e);
+		      });
 		  }
-		}
+		
+		  goBack() {
+		    this.logout.logout()
+		      .then(() => {
+		        this.router.navigate(['/mainmenu']);
+		      })
+		      .catch(() => {
+		        this.router.navigate(['/mainmenu']);
+		      });
+		  }
+		
+		}		
 		
 		'''
 	}
