@@ -407,7 +407,7 @@ class EntityUtils {
 	}
 	
 	def static toEntityWebRoutingModuleClassName(Entity entity) {
-		entity.toDtoName + 'RoutingModul'
+		entity.toDtoName + 'RoutingModule'
 	}
 	
 	def static toEntityWebComponentClassName(Entity entity) {

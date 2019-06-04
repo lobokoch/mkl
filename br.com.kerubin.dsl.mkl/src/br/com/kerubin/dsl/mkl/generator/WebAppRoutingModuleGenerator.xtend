@@ -1,7 +1,7 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Entity
 
 class WebAppRoutingModuleGenerator extends GeneratorExecutor implements IGeneratorExecutor {
@@ -71,15 +71,20 @@ class WebAppRoutingModuleGenerator extends GeneratorExecutor implements IGenerat
 	}
 	
 	def CharSequence generateAllEntityRoutes() {
-		val source = entities.map[generateEntityRoutes].join
-		source
+		'''
+		
+		// BEGIN ENTITIES FOR SERVICE: «service.domain.webName».«service.name.webName»
+		«entities.filter[isNotExternalEntity].map[generateEntityRoutes].join»
+		// END ENTITIES FOR SERVICE: «service.domain».«service.name»
+		
+		'''
 	}
 	
 	def CharSequence generateEntityRoutes(Entity entity) {
 		val entityWebName = entity.toWebName
 		
 		'''
-		{ path: '«entityWebName»', loadChildren: './modules/«service.domain»/«service.name»/«entityWebName»/«entityWebName».module#«entity.toEntityWebModuleClassName»' },
+		{ path: '«entityWebName»', loadChildren: './modules/«service.domain.webName»/«service.name.webName»/«entityWebName»/«entityWebName».module#«entity.toEntityWebModuleClassName»' },
 		'''
 	}
 	

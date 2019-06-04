@@ -81,11 +81,11 @@ class Utils {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + path
 	}
 	
-	def static getWebDir_OLD(String path) {
+	def static getWebDir(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + path
 	}
 	
-	def static getWebDir(String path) {
+	def static getWebModulesDir(String path) {
 		WEB_BASE_DIR + WEB_SOURCE_GEN_BASE_DIR + WEB_PROJECT_APPLICATION + WEB_MODULES_DIR + path
 	}
 	

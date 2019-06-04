@@ -7,7 +7,7 @@ import br.com.kerubin.dsl.mkl.generator.BaseGenerator
 
 class WebNewAccountGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
-	static val NEW_ACCOUNT = 'newccount'
+	static val NEW_ACCOUNT = 'newaccount'
 	static val USER_ACCOUNT_MODEL = 'useraccount.model'
 	
 	new(BaseGenerator baseGenerator) {

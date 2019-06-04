@@ -105,26 +105,26 @@ class GeneratorExecutor {
 	
 	def String getWebServiceI18nPath(Service service) {
 		val path = service.servicePath + 'i18n/'
-		val fullPath = path.webDir
+		val fullPath = path./*webDir*/webModulesDir
 		fullPath
 	}
 	
 	def String getWebServiceEnumPath(Service service) {
 		val path = service.servicePath + ENUMS_PATH_NAME + '/'
-		val fullPath = path.webDir
+		val fullPath = path./*webDir*/webModulesDir
 		fullPath
 	}
 	
 	def String getWebServiceNavbarPath(Service service) {
 		val path = service.servicePath + NAVBAR + '/'
-		val fullPath = path.webDir
+		val fullPath = path./*webDir*/webModulesDir
 		fullPath
 	}
 
 	
 	def String getWebEntityPath(Entity entity) {
 		val path = entity.service.servicePath + entity.name.toLowerCase.removeUnderline + '/'
-		val fullPath = path.webDir
+		val fullPath = path.webModulesDir
 		fullPath
 	}
 	

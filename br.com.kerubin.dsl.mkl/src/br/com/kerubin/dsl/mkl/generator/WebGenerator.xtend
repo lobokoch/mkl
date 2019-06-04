@@ -8,6 +8,7 @@ import br.com.kerubin.dsl.mkl.generator.web.account.WebNewAccountGenerator
 import br.com.kerubin.dsl.mkl.generator.web.account.WebUserAccountServiceGenerator
 import br.com.kerubin.dsl.mkl.generator.web.others.WebStylesGenerator
 import br.com.kerubin.dsl.mkl.generator.web.diretive.WebFocusDirectiveGenerator
+import br.com.kerubin.dsl.mkl.generator.web.account.WebAccountModuleGenerator
 
 class WebGenerator extends BaseGenerator {
 	
@@ -53,10 +54,13 @@ class WebGenerator extends BaseGenerator {
 			new WebSecurityLogoutServiceGenerator(this),
 			new WebEnvironmentsGenerator(this),
 			new WebEnumModelGenerator(this),
+			
+			new WebAccountModuleGenerator(this),
 			new WebConfigNewAccountGenerator(this),
 			new WebConfirmAccountGenerator(this),
 			new WebNewAccountGenerator(this),
 			new WebUserAccountServiceGenerator(this),
+			
 			new WebStylesGenerator(this),
 			new WebFocusDirectiveGenerator(this),
 			new WebEntityRoutingModuleGenerator(this),

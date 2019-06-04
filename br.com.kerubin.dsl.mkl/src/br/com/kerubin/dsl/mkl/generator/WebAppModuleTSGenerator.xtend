@@ -31,7 +31,7 @@ class WebAppModuleTSGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		import { AppComponent } from './app.component';
 		import { CoreModule } from './core/core.module';
-		import { AppRoutingModule } from './app-rounting.module';
+		import { AppRoutingModule } from './app-routing.module';
 		
 		@NgModule({
 		  declarations: [

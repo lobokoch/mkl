@@ -73,8 +73,6 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		@Injectable()
 		export class «serviceName» {
 			
-			// TODO: Provisório
-			// url = 'http://localhost:9101/entities/«varName»';
 			url = environment.apiUrl + '/«service.domain»/«service.name»/entities/«varName»';
 			
 			constructor(private http: HttpClientWithToken) { }

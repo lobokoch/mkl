@@ -69,7 +69,7 @@ class WebEntityRoutingModuleGenerator extends GeneratorExecutor implements IGene
 		
 		})
 		
-		export class  «entity.toEntityWebRoutingModuleClassName» { }
+		export class «entity.toEntityWebRoutingModuleClassName» { }
 		'''		
 		
 	}

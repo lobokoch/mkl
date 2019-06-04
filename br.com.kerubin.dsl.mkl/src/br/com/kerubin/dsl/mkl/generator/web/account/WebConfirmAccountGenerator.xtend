@@ -7,7 +7,7 @@ import br.com.kerubin.dsl.mkl.generator.BaseGenerator
 
 class WebConfirmAccountGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
-	static val CONFIRM_ACCOUNT = 'confimccount'
+	static val CONFIRM_ACCOUNT = 'confirmaccount'
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
