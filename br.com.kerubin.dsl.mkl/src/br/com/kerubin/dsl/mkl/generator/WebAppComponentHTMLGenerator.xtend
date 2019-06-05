@@ -27,16 +27,27 @@ class WebAppComponentHTMLGenerator extends GeneratorExecutor implements IGenerat
 		'''
 		<«NAVBAR_SELECTOR_NAME» *ngIf="canShowMenu()"></«NAVBAR_SELECTOR_NAME»>
 		
-		<router-outlet></router-outlet>
+		<div class="ui-g">
+		  <div class="ui-g-12 ui-fluid">
+		    <div class="ui-g-12 ui-fluid ui-md-2">
+		      <app-kerubin-menu *ngIf="canShowMenu()"></app-kerubin-menu>
+		    </div>
 		
-		<p-toast></p-toast>
+		    <div class="ui-g-12 ui-fluid ui-md-10">
+		      <router-outlet></router-outlet>
+		    </div>
 		
-		<p-confirmDialog header="Confirmação" icon="fa fa-question-circle" #confirmacao>
-		    <p-footer>
-		      <button type="button" pButton label="Sim" (click)="confirmacao.accept()"></button>
-		      <button type="button" pButton label="Não" (click)="confirmacao.reject()"></button>
-		    </p-footer>
-		  </p-confirmDialog>
+		    <p-toast></p-toast>
+		
+		    <p-confirmDialog header="Confirmação" icon="fa fa-question-circle" #confirmacao>
+		      <p-footer>
+		        <button type="button" pButton label="Sim" (click)="confirmacao.accept()"></button>
+		        <button type="button" pButton label="Não" (click)="confirmacao.reject()"></button>
+		      </p-footer>
+		    </p-confirmDialog>
+		  </div>
+		</div>
+		
 		'''
 	}
 	

@@ -47,6 +47,7 @@ class WebAppComponentTSGenerator extends GeneratorExecutor implements IGenerator
 		    return !exists;
 		  }
 		}
+		
 		'''
 	}
 	

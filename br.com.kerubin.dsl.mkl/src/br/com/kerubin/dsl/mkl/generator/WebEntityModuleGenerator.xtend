@@ -49,6 +49,8 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		import { SpinnerModule } from 'primeng/spinner';
 		import { DialogModule } from 'primeng/dialog';
 		import { DropdownModule } from 'primeng/dropdown';
+		import {CalendarModule} from 'primeng/calendar';
+		import { CurrencyMaskModule } from 'ng2-currency-mask';
 		
 		// Kerubin - BEGIN
 		import { «tranlationServiceName» } from './../i18n/«service.serviceWebTranslationComponentPathName»';
@@ -63,21 +65,23 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		  imports: [
 		    // PrimeNG
 		    CommonModule,
-		    FormsModule,
-		    InputTextModule,
-		    ButtonModule,
-		    InputTextareaModule,
-		    TableModule,
-		    TooltipModule,
-		    ToastModule,
-		    ConfirmDialogModule,
-		    AutoCompleteModule,
-		    PanelModule,
-		    InputSwitchModule,
-		    AccordionModule,
-		    SpinnerModule,
-		    DialogModule,
-		    DropdownModule,
+			FormsModule,
+			InputTextModule,
+			ButtonModule,
+			InputTextareaModule,
+			TableModule,
+			TooltipModule,
+			ToastModule,
+			ConfirmDialogModule,
+			AutoCompleteModule,
+			PanelModule,
+			InputSwitchModule,
+			AccordionModule,
+			SpinnerModule,
+			DialogModule,
+			DropdownModule,
+			CalendarModule,
+			CurrencyMaskModule,
 		
 		    // Kerubin
 		    «entityName»RoutingModule

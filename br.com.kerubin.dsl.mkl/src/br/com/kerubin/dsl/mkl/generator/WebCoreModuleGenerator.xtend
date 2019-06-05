@@ -51,7 +51,7 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		// Kerubin - BEGIN
 		import { NavbarComponent } from './../navbar/navbar.component';
-		import { KerubinMenuModule } from './../menu/kerubin-menu-module';
+		import { KerubinMenuModule } from './../menu/kerubin-menu.module';
 		import { FocusDirective } from './../directive/focus.directive';
 		import { MessageHandlerService } from './message-handler.service';
 		import { HttpClientWithToken } from '../security/http-client-token';
