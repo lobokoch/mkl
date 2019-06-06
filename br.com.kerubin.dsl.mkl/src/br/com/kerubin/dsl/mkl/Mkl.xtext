@@ -181,7 +181,8 @@ Slot:
 			(^hidden ?= 'hidden')? &
 			(publish ?= 'publishedInEvents')? &
 			(grid = Grid)? &
-			(web = Web)? 
+			(web = Web)? &
+			(sort = Sort)?
 		)
 ;
 

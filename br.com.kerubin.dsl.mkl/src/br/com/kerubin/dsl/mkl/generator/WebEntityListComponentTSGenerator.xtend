@@ -118,12 +118,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«entitySumFieldsClassName.toFirstLower» = new «entitySumFieldsClassName»();
 			«ENDIF»
 			
-			/*
-			«fieldName»: «dtoName»;
-			totaisFiltroContaPagar = new TotaisFiltroContaPagar(0.0, 0.0);
-			mostrarDialogPagarConta = false;
-			*/
-			
 			constructor(
 			    private «serviceVar»: «serviceName»,
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
@@ -132,16 +126,13 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			) { }
 			
 			ngOnInit() {
-		    	this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
+				«filterSlots.filter[isBetween].map['''this.«toIsBetweenOptionsOnClickMethod»(null);'''].join('\r\n')»
 				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 				this.initializeDateFilterIntervalDropdownItems();
-				«««filterSlots.filter[it.isBetween && it.isDate].map['''this.«it.toIsBetweenOptionsOnClickMethod»(null);'''].join»
 				«ENDIF»
 				«IF !filterSlots.empty»
 				«filterSlots.generateFilterSlotsInitialization»
 				«ENDIF»
-			    // this.«fieldName» = new «dtoName»();
-		        // this.contaPagar.dataPagamento = moment().toDate();
 			}
 			
 			«entity.toEntityListListMethod»(pageNumber = 0) {
@@ -195,7 +186,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    if (event.sortField) {
 			      this.«listFilterNameVar».sortField = new SortField(event.sortField, event.sortOrder);
 			    } else {
-			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultOrderedField»', 1); // asc
+			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultSortField»', «entity.defaultSortFieldOrderBy»); // asc
 			    }
 			    const pageNumber = event.first / event.rows;
 			    this.«entity.toEntityListListMethod»(pageNumber);
@@ -208,6 +199,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 			private initializeDateFilterIntervalDropdownItems() {
 				this.dateFilterIntervalDropdownItems = [
+				    {label: 'Minha competência', value: '12'},
 				    {label: 'Hoje', value: '0'},
 				    {label: 'Amanhã', value: '1'},
 				    {label: 'Esta semana', value: '2'},
@@ -232,8 +224,6 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ruleActions.map[generateRuleActions].join»
 			
 			«buildTranslationMethod(service)»
-			
-			«addExtras()»
 		}
 		'''
 		
@@ -564,6 +554,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 					dateFrom = moment().add(-1, 'year').startOf('year');
 					dateTo = moment().add(-1, 'year').endOf('year');
 					break;
+					
+				case 12: // Minha competência
+					dateFrom = moment().startOf('month');
+					dateTo = moment().endOf('month').add(5, 'day'); // Five days after and of the month
+					break;
 				
 				default:
 					break;
@@ -614,7 +609,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		«ELSEIF isBetween»
 		
 		«IF slot.isDate»
-		«slot.toIsBetweenOptionsSelected»: SelectItem = {label: 'Este ano', value: '6'};
+		«slot.toIsBetweenOptionsSelected»: SelectItem = {label: 'Minha competência', value: '12'};
 		«ELSE»
 		«ENDIF»
 		

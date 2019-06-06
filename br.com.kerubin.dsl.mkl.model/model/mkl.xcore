@@ -418,16 +418,24 @@ class AutoComplete {
 	}
 	
 	op boolean isSortASC() {
-		hasSort && sort.order == 'asc'
+		hasSort && sort.ASC
 	}
 	
 	op boolean isSortDESC() {
-		hasSort && sort.order == 'desc'
+		hasSort && sort.DESC
 	}
 }
 
 class Sort {
 	String order
+	
+	op boolean isASC() {
+		order == 'asc'
+	}
+	
+	op boolean isDESC() {
+		order == 'desc'
+	}
 }
 
 enum FilterOperatorEnum {
@@ -507,6 +515,7 @@ class Slot extends Element {
 	Boolean hidden
 	boolean publish = 'false'
 	boolean mapped = 'false'
+	contains Sort sort
 	
 	boolean lookupKey
     boolean lookupResult
@@ -529,6 +538,18 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasSort() {
+		sort !== null && !sort.order.trim.empty
+	}
+	
+	op boolean isSortASC() {
+		hasSort && sort.ASC
+	}
+	
+	op boolean isSortDESC() {
+		hasSort && sort.DESC
+	}
 	
 	op boolean isRequired() {
 		!optional

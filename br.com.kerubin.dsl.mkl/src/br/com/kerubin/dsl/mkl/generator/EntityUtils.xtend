@@ -828,6 +828,20 @@ class EntityUtils {
 		slot.fieldName
 	}
 	
+	def static getDefaultSortField(Entity entity) {
+		val slot = entity.slots.tail.findFirst[it.hasSort] ?: entity.id
+		slot.fieldName
+	}
+	
+	def static String getDefaultSortFieldOrderBy(Entity entity) {
+		val slot = entity.slots.tail.findFirst[it.hasSort] ?: entity.id
+		var orderBy = '1'
+		if (slot.hasSort) {
+			orderBy = if(slot.sortASC) '1' else '0'
+		}
+		orderBy
+	}
+	
 	def static getEntityReplicationQuantity(Entity entity) {
 		entity.fieldName + 'ReplicationQuantity'
 	}
