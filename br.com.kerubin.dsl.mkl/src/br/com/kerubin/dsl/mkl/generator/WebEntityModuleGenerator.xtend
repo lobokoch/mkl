@@ -3,6 +3,7 @@ package br.com.kerubin.dsl.mkl.generator
 import br.com.kerubin.dsl.mkl.model.Entity
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -30,6 +31,8 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		val serviceName = entity.toEntityWebServiceClassName
 		val entityName = entity.toDtoName
 		val entityWebName = entity.toWebName
+		val relations = entity.slots.filter[isEntity && !asEntity.isSameEntity(entity)]
+		val hasRelations = !relations.isEmpty
 		
 		'''
 		import { CommonModule } from '@angular/common';
@@ -58,6 +61,9 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		import { «entityName»ListComponent } from './list-«entityWebName».component';
 		import { «entityName»Component } from './crud-«entityWebName».component';
 		import { «entityName»RoutingModule } from './«entityWebName»-routing.module';
+		«IF hasRelations»
+		«relations.generateImports_1_RelationModules»
+		«ENDIF»
 		// Kerubin - END
 		
 		@NgModule({
@@ -84,7 +90,10 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 			CurrencyMaskModule,
 		
 		    // Kerubin
-		    «entityName»RoutingModule
+		    «entityName»RoutingModule«IF hasRelations»,«ENDIF»
+		    «IF hasRelations»
+    		«relations.generateImports_2_RelationModules»
+    		«ENDIF»
 		
 		  ],
 		
@@ -109,7 +118,28 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		
 	}
 	
+	def CharSequence generateImports_2_RelationModules(Iterable<Slot> slots) {
+		slots.map[generateImport_2_RelationModule].join(',\r\n')
+	}
 	
+	def CharSequence generateImport_2_RelationModule(Slot slot) {
+		val moduleName = slot.asEntity.toEntityWebModuleClassName
+		'''	«moduleName»'''
+	}	
+	
+	def CharSequence generateImports_1_RelationModules(Iterable<Slot> slots) {
+		'''
+		«slots.map[generateImport_1_RelationModule].join»
+		'''
+	}
+	
+	def CharSequence generateImport_1_RelationModule(Slot slot) {
+		val webModuleName = slot.asEntity.toEntityWebModuleClassName
+		val webName = slot.asEntity.toWebName
+		'''
+		import { «webModuleName» } from '../«webName»/«webName».module';
+		'''
+	}	
 	
 	
 	

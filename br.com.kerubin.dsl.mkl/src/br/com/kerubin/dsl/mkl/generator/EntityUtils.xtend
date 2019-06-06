@@ -503,6 +503,10 @@ class EntityUtils {
 		entity.name.toLowerCase.removeUnderline
 	}
 	
+	def static toWebName(String name) {
+		name.toLowerCase.removeUnderline
+	}
+	
 	def static toEntityName(Entity entity) {
 		entity.name.toFirstUpper + "Entity"
 	}
