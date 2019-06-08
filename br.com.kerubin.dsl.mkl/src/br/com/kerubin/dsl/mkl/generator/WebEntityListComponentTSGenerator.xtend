@@ -295,7 +295,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 		
 		if («exp») {
-			return '«rule.apply.resutValue»';
+			return '«rule.apply.getResutValue»';
 		}
 		'''
 	}

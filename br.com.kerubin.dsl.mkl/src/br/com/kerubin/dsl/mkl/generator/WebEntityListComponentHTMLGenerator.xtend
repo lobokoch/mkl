@@ -11,6 +11,7 @@ import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.FieldObject
 import br.com.kerubin.dsl.mkl.model.BasicTypeReference
 import br.com.kerubin.dsl.mkl.model.BooleanType
+import br.com.kerubin.dsl.mkl.model.RuleApply
 
 class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -111,6 +112,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val hasSum = slots.exists[hasSumField]
 		
 		val ruleActions = entity.ruleActions
+		val ruleGridRows = entity.ruleGridRows
+		val ruleGridRowsWithCSS = ruleGridRows.filter[it.apply.hasCSS]
 		
 		'''
 		
@@ -121,7 +124,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
 			    [totalRecords]="«entity.toEntityWebListItemsTotalElements»"
 			    [lazy]="true" (onLazyLoad)="«entity.toEntityListOnLazyLoadMethod»($event)" >
-			    
+			    «IF !ruleGridRowsWithCSS.empty»
+			    «ruleGridRowsWithCSS.generateRuleGridRowsCSSLegend»
+			    «ENDIF»
 			    <ng-template pTemplate="header">
 		            <tr>
 		            	«slots.map[slot |
@@ -170,6 +175,27 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			</p-table>
 		</div>
 		<!-- End GRID -->
+		'''
+	}
+	
+	def generateRuleGridRowsCSSLegend(Iterable<Rule> rules) {
+		'''
+		
+		<ng-template pTemplate="caption">
+			Legenda:
+			«rules.map[it.apply.generateCSSLegend].join»
+		</ng-template>
+		
+		'''
+	}
+	
+	def generateCSSLegend(RuleApply apply) {
+		var label = '<Sem legenda>'
+		if (apply.hasLabel) {
+			label = apply.label
+		}
+		'''
+		<span «apply.getCSSValue('kb-conta-legenda')»>«label»</span>
 		'''
 	}
 	

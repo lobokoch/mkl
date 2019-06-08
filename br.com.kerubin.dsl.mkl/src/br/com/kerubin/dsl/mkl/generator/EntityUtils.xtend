@@ -511,6 +511,10 @@ class EntityUtils {
 		entity.name.toFirstUpper + "Entity"
 	}
 	
+	def static getRuleGridRows(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROWS]] 
+	}
+	
 	def static getRuleActions(Entity entity) {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
 	}

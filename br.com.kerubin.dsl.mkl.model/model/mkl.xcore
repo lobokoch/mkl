@@ -209,9 +209,14 @@ enum RuleWhenTemporalConstants {
 class RuleApply {
 	String styleClass
 	String styleCss
+	String label
 	contains FieldMathExpression sumFieldExpression
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
+	
+	op boolean hasLabel() {
+		label !== null && !label.trim.empty
+	}
 	
 	op boolean hasMakeCopiesExpression() {
 		makeCopiesExpression !== null
@@ -223,6 +228,20 @@ class RuleApply {
 	
 	op boolean hasStyleCss() {
 		styleCss !== null && !styleCss.trim.isEmpty
+	}
+	
+	op boolean hasCSS() {
+		hasStyleClass || hasStyleCss
+	}
+	
+	op String getCSSValue(String other) {
+		val str = if (other !== null) ' ' + other else ''
+		if (hasStyleClass) {
+			'class="' + styleClass + str + '"'
+		}
+		else {
+			'style="' + styleCss + str + '"'
+		}
 	}
 	
 	op String getResutValue() {

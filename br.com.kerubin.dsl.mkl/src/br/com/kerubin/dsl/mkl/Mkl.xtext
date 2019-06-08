@@ -325,6 +325,7 @@ RuleApply:
 	(
 		('styleClass' ':' styleClass = STRING)? & 
 		('styleCss' ':' styleCss = STRING)? &
+		('label' ':' label = STRING)? &
 		('(' sumFieldExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)?
