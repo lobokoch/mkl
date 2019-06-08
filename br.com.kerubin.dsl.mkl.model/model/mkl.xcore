@@ -129,8 +129,17 @@ class NullObject extends AbstractObject {
 	String nullValue
 }
 
+abstract class TemporalFunction {
+	
+}
+
+class TemporalFunctionNextDays extends TemporalFunction {
+	int days = '0'
+}
+
 class TemporalObject extends AbstractObject {
 	RuleWhenTemporalConstants temporalConstant
+	contains TemporalFunctionNextDays temporalFuncation
 }
 
 abstract class RuleWhenAbstractObjectOperation {

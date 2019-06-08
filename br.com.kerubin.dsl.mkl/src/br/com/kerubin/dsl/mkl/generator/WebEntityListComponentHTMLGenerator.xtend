@@ -138,7 +138,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        </ng-template>
 		        
 			    <ng-template pTemplate="body" let-«entity.fieldName»>
-		            <tr«entity.applyRulesOnGrid» [pSelectableRow]="«entity.fieldName»">
+		            <tr [pSelectableRow]="«entity.fieldName»">
 		            	«slots.map[generateHTMLGridDataRow].join»
 		              	<td class="kb-actions">
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
@@ -313,7 +313,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		val hasStyleClass = slot.hasGridStyleClass
 		'''
-		<td«slot.buildBodyRowStyleCss»>
+		<td«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy'}}

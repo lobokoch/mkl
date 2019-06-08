@@ -21,6 +21,8 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
 import br.com.kerubin.dsl.mkl.model.NumberObject
 import br.com.kerubin.dsl.mkl.model.FieldObject
+import br.com.kerubin.dsl.mkl.model.TemporalFunction
+import br.com.kerubin.dsl.mkl.model.TemporalFunctionNextDays
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -412,8 +414,15 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def String getGetTemporalValue(RuleWhenTemporalValue temporalValue) {
 		if (temporalValue.temporalObject !== null) {
-			val constObj = temporalValue.temporalObject.temporalConstant.getTemporalConstantValue
-			constObj
+			val tempObj = temporalValue.temporalObject
+			if (tempObj.temporalFuncation !== null) {
+				val tempFunc = tempObj.temporalFuncation.getTemporalFuncationValue
+				tempFunc
+			}
+			else {
+				val constObj = tempObj.temporalConstant.getTemporalConstantValue
+				constObj
+			}
 		}
 		else {
 			temporalValue.valueInt.toString
@@ -422,6 +431,17 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def String toDateMoment(String objectName) {
 		'moment(' + objectName + ')'
+	}
+	
+	def String getTemporalFuncationValue(TemporalFunction tf) {
+		var result = '<INVALID_TEMPORAL_FUNCTION>'
+		if (tf instanceof TemporalFunctionNextDays) {
+			val func = tf as TemporalFunctionNextDays
+			val days = func.days
+			result = "moment().add(" + days + ", 'day')"
+		}
+		result
+		
 	}
 	
 	def String getTemporalConstantValue(RuleWhenTemporalConstants tc) {
