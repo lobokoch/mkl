@@ -859,6 +859,7 @@ class Entity extends PublicObject, Rulled {
 	boolean baseRepository
 	boolean enableReplication
 	boolean externalEntity = 'false'
+	boolean enableVersion
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents

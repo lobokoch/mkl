@@ -122,6 +122,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		val isOneToOne = slot.isOneToOne && slot.isRelationRefers
 		
 		'''
+		«slot.annotations.join('\r\n')»
 		«IF slot == entity.id»
 		«IF slot.isUUID && !isOneToOne && !entity.isExternalEntity»
 		«entity.addImport('import javax.persistence.GeneratedValue;')»
@@ -138,6 +139,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ENDIF»
 		«IF slot.hasRelationship»
 		«slot.getRelationAnnotation(entity)»
+		
 		«IF false/*isOneToOne*/»
 		@Column(name="«slot.databaseName»")
 		«ENDIF»

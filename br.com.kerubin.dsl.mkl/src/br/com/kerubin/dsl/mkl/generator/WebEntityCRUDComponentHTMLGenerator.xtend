@@ -314,7 +314,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (basicType instanceof DateTimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» dateFormat="dd/mm/yy hh:MM:ss"''')
+			builder.concat('''«webComponentType» dateFormat="dd/mm/yy" [showTime]="true"''')
 		}
 		else if (basicType instanceof UUIDType) {
 			webComponentType = 'input'

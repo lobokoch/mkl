@@ -85,7 +85,25 @@ class ServiceBoosterImpl implements ServiceBooster {
 			entity.createAuditingFields
 		}
 		
+		if (entity.enableVersion) {
+			entity.boostVersion
+		}
+		
 		entity.boostSlotAtivo
+	}
+	
+	def void boostVersion(Entity entity) {
+		val slot = ModelFactory.eINSTANCE.createSlot
+		slot.name = 'version'
+		slot.label = 'Versão'
+		slot.implicit = true
+		slot.hidden = true
+		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
+		basicTypeReference.basicType = ModelFactory.eINSTANCE.createIntegerType
+		slot.slotType = basicTypeReference
+		slot.annotations.add('@Version')
+		entity.imports.add('import javax.persistence.Version;')
+		entity.slots.add(slot)
 	}
 	
 	private def boostSlotAtivo(Entity entity) {

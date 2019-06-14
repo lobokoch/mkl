@@ -71,6 +71,7 @@ EnumItem:
 
 Entity:
 	(
+		(enableVersion?='@version')? &
 		(disableGeneration=DisableEntityGeneration)? &
 		(externalEntity?='@externalEntity')? &
 		(subscribeEntityEvents=SubscribeEntityEvents)? & 
