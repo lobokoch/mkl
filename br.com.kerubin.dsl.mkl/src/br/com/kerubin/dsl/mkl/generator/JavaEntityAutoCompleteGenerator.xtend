@@ -6,6 +6,7 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import java.util.Set
 
 class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -30,7 +31,9 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		}
 	}
 	
-	def CharSequence generateEntityAutoComplete(Entity entity, Iterable<Slot> slots) {	
+	def CharSequence generateEntityAutoComplete(Entity entity, Iterable<Slot> slots) {
+		
+		val imports = newLinkedHashSet
 		
 		val package = '''
 		package «entity.package»;
@@ -41,24 +44,26 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		
 		public interface «entity.toAutoCompleteName» {
 		
-			«slots.generateGetters»
+			«slots.generateGetters(imports)»
 		
 		}
 		'''
-		package + /*imports +*/ body 
+		package + imports.join('\r\n') + '\r\n' + body 
 	}
 	
-	def CharSequence generateGetters(Iterable<Slot> slots) {
+	def CharSequence generateGetters(Iterable<Slot> slots, Set<String> imports) {
 		'''
-		«slots.map[generateGetter].join('\r\n')»
+		«slots.map[generateGetter(imports)].join('\r\n')»
 		'''
 		
 	}
 	
-	def CharSequence generateGetter(Slot slot) {
+	def CharSequence generateGetter(Slot slot, Set<String> imports) {
 		'''
-		«slot.toJavaTypeDTO» get«slot.name.toFirstUpper»();
+		«slot.resolveSlotAutocomplete(imports)» get«slot.name.toFirstUpper»();
 		'''
 	}
+	
+	
 	
 }

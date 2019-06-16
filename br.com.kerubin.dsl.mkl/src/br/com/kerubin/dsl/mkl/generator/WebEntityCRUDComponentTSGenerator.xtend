@@ -6,11 +6,15 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
 import br.com.kerubin.dsl.mkl.model.Rule
+import java.util.Set
+import java.util.LinkedHashSet
 
 class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	StringConcatenationExt imports
+	val LinkedHashSet<String> importsSet = newLinkedHashSet
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -40,6 +44,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
 		val ruleMakeCopies = entity.ruleMakeCopies
+		val rulesFormOnCreate = entity.rulesFormOnCreate
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -94,6 +99,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			ngOnInit() {
+				«IF !rulesFormOnCreate.empty»
+				this.rulesOnCreate();
+				«ENDIF»
 				«IF entity.hasEnumSlotsWithDefault»
 				this.initializeEnumFieldsWithDefault();
 				«ENDIF»
@@ -212,12 +220,25 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
 			«ruleMakeCopies.map[generateInitializeCopiesReferenceFieldOptions].join»
+			«IF !rulesFormOnCreate.empty»
+			rulesOnCreate() {
+				«rulesFormOnCreate.map[it.generateRuleFormOnCreate(entity.fieldName, importsSet)].join»
+			}
+			«ENDIF»
 		}
 		'''
 		
-		val source = imports.ln.toString + body
+		val source = imports.ln.toString + importsSet.join('\r\n') + '\r\n' + body
 		source
 	}
+	
+	def CharSequence generateRuleFormOnCreate(Rule rule, String targetObject, Set<String> imports) {
+		'''
+		«rule.apply.buildRuleApplyForWeb(targetObject, imports)»
+		'''
+	}
+	
+	
 	
 	def CharSequence generateInitializeCopiesReferenceFieldOptions(Rule rule) {
 		'''
@@ -339,7 +360,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val entity = slot.asEntity
 		val serviceName = entity.toEntityWebServiceClassName.toFirstLower
 		
-		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id]
+		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id && !(entity.enableVersion && it.name.toLowerCase == 'version')]
 		if (resultSlots.isEmpty) {
 			resultSlots = entity.slots.filter[it.autoCompleteResult]
 		}
@@ -365,7 +386,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
 			if («slot.fieldName») {
-				return «resultSlots.map['''(«slot.fieldName».«it.fieldName» || '<nulo>')'''].join(" + ' - ' + ")»;
+				return «resultSlots.map['''(«slot.fieldName».«it.resolveAutocompleteFieldName» || '<nulo>')'''].join(" + ' - ' + ")»;
 			} else {
 				return null;
 			}

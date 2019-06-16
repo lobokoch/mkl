@@ -98,6 +98,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 		slot.label = 'Versão'
 		slot.implicit = true
 		slot.hidden = true
+		slot.optional = true
 		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
 		basicTypeReference.basicType = ModelFactory.eINSTANCE.createIntegerType
 		slot.slotType = basicTypeReference

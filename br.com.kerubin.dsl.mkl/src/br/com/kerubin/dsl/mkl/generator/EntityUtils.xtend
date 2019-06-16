@@ -29,6 +29,7 @@ import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
 import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 import br.com.kerubin.dsl.mkl.model.RuleTarget
+import java.util.Set
 
 class EntityUtils {
 	
@@ -190,14 +191,14 @@ class EntityUtils {
 		"<UNKNOWN1>"
 	}
 	
-	def static Entity getOwnerEntity(Slot slot) {
+	/*def static Entity getOwnerEntity(Slot slot) {
 		if (slot?.ownerObject !== null && slot.ownerObject instanceof Entity) {
 			return slot.ownerObject as Entity
 		}
 		else {
 			return null
 		}
-	}
+	}*/
 	
 	def static Slot getRelationOppositeSlot(Slot slot) {
 		(slot.relationship as RelationshipFeatured).field		
@@ -527,6 +528,10 @@ class EntityUtils {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.apply.hasMakeCopiesExpression]
 	}
 	
+	def static getRulesFormOnCreate(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.when.hasFormOnCreate]
+	}
+	
 	def static hasRuleActions(Entity entity) {
 		!entity.ruleActions.empty 
 	}
@@ -615,6 +620,42 @@ class EntityUtils {
 	
 	def static toWebEntityListDeleteItem(Entity entity) {
 		'delete' + entity.name.toFirstUpper
+	}
+	
+	def static String getBasePackage(Service service) {
+		service.configuration.groupId
+	}
+	
+	def static String getServicePackage(Service service) {
+		service.basePackage + '.' + service.domain.removeUnderline + '.' + service.name.removeUnderline
+	}
+	
+	def static String getPackage(Entity entity) {
+		entity.service.servicePackage + '.entity.' + entity.name.toLowerCase
+	}
+	
+	def static String resolveSlotAutocomplete(Slot slot, Set<String> imports) {
+		if (slot.isEntity) { // If slot is an entity, returns its autocomplete class name version.
+			val entity = slot.asEntity
+			val autoCompleteName = entity.toAutoCompleteName
+			val entityPackage = entity.package
+			imports.add('import ' + entityPackage + '.' + autoCompleteName + ';')
+			return autoCompleteName
+		}
+		return slot.toJavaTypeDTO
+	}
+	
+	
+	
+	def static String resolveAutocompleteFieldName(Slot slot) {
+		if (slot.isEntity) { // If slot is an entity, returns first string auto complete key configurated.
+			val entity = slot.asEntity
+			val autoCompleteSlot = entity.slots.filter[it.isAutoCompleteKey && it.isString].head
+			if (autoCompleteSlot !== null) {
+				return entity.fieldName + '.' + autoCompleteSlot.fieldName
+			}
+		}
+		return slot.fieldName
 	}
 	
 	def static getFieldName(Slot slot) {
@@ -978,6 +1019,14 @@ class EntityUtils {
 	
 	def static buildMethodSet(Slot slot, String obj, String param) {
 		obj + '.' + slot.name.buildMethodSet(param)
+	}
+	
+	def static CharSequence buildMethodSetForTypeScript(Slot slot, String value) {
+		// e.g.: this.caixa.dataHoraFechamento = moment().toDate();
+		val entityFieldName = slot.ownerEntity.fieldName
+		'''
+		this.«entityFieldName».«slot.fieldName» = «value»;
+		'''
 	}
 	
 	def static buildMethodConvertToDTO(Slot slot) {

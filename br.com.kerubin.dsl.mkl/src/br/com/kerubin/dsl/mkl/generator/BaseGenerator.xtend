@@ -36,8 +36,11 @@ abstract class BaseGenerator {
 		entities = service.elements.filter(Entity)
 		enums = service.elements.filter(Enumeration)
 		
-		injectServiteBooster();
-		serviceBooster.augmentService(service)
+		// Must boost only once.
+		if (this instanceof JavaGenerator) {
+			injectServiteBooster();
+			serviceBooster.augmentService(service)
+		}
 	}
 	
 	def getBundleVersion() {

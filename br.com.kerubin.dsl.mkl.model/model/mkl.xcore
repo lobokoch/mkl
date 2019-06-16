@@ -89,6 +89,11 @@ class Rule {
 
 class RuleWhen {
 	contains RuleWhenExpression expression
+	
+	op boolean hasFormOnCreate() {
+		expression !== null && expression.left !== null && (expression.left.whenObject instanceof FormObject) && 
+		(expression.left.objectOperation instanceof RuleWhenOpOnCreate)
+	}
 }
 
 class RuleWhenExpression {
@@ -109,7 +114,10 @@ class FieldMathExpression {
 }
 
 abstract class AbstractObject {
-	
+}
+
+class FormObject extends  AbstractObject {
+	boolean form
 }
 
 class FieldObject extends AbstractObject {
@@ -175,6 +183,10 @@ class RuleWhenOpIsNull extends RuleWhenAbstractObjectOperation {
 	
 }
 
+class RuleWhenOpOnCreate extends RuleWhenAbstractObjectOperation {
+	
+}
+
 class RuleWhenOpIsNotNull extends RuleWhenAbstractObjectOperation {
 	
 }
@@ -200,6 +212,7 @@ class RuleWhenOperator {
 
 
 enum RuleWhenTemporalConstants {
+	NOW as 'now'
 	TODAY as 'today'
 	TOMORROW as 'tomorrow'
 	YESTERDAY as 'yesterday' 
@@ -527,6 +540,7 @@ class Grid {
 class Web {
 	String styleClass
 	String label
+	boolean readOnly
 }
 
 abstract class Slotted extends Element {
@@ -627,6 +641,10 @@ class Slot extends Element {
 		return web !== null && web.getStyleClass !== null
 	}
 	
+	op boolean isWebReadOnly() {
+		return web !== null && web.readOnly
+	}
+	
 	op boolean hasWebLabel() {
 		return web !== null && web.label !== null
 	}
@@ -677,6 +695,15 @@ class Slot extends Element {
 		return null
 	}
 	
+	op Entity getOwnerEntity() {
+		if (ownerObject !== null && ownerObject instanceof Entity) {
+			return ownerObject as Entity
+		}
+		else {
+			return null
+		}
+	}
+	
 	op Enumeration asEnum() {
 		if (isEnum) {
 			val reference = (this.slotType as ObjectTypeReference)
@@ -690,6 +717,15 @@ class Slot extends Element {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
 			return basicType instanceof DateType
+		}
+		
+		false
+	}
+	
+	op boolean isDateTime() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof DateTimeType
 		}
 		
 		false
@@ -754,7 +790,10 @@ class Slot extends Element {
 	}
 	
 	op boolean isAutoCompleteResult() {
-		return hasAutoComplete() && (this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey))
+		return (hasAutoComplete && 
+			(this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey)) )||
+				// version field must figured out in the results.
+			ownerEntity.enableVersion && this.name.toLowerCase == 'version'
 	}
 	
 	op boolean isAutoCompleteKey() {

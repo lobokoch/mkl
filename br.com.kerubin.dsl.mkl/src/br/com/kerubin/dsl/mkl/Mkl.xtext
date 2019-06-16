@@ -184,6 +184,7 @@ Slot:
 			(grid = Grid)? &
 			(web = Web)? &
 			(sort = Sort)?
+			
 		)
 ;
 
@@ -224,8 +225,12 @@ RuleWhenExpression:
 ;
 
 RuleExpression:
-	(whenObject = (FieldObject | TemporalObject | NumberObject)) 
+	( whenObject = (FieldObject | TemporalObject | NumberObject | FormObject) ) 
 		('.' objectOperation = RuleWhenAbstractObjectOperation)?
+;
+
+FormObject:
+	form ?= 'form'
 ;
 
 RuleWhenAbstractObjectOperation:
@@ -235,7 +240,12 @@ RuleWhenAbstractObjectOperation:
 	RuleWhenOpIsNull |
 	RuleWhenOpIsNotNull |
 	RuleWhenOpIsEquals |
-	RuleWhenOpIsNotEquals
+	RuleWhenOpIsNotEquals |
+	RuleWhenOpOnCreate 
+;
+
+RuleWhenOpOnCreate:
+	methodName = 'onCreate'
 ;
 
 RuleWhenOpIsNull:
@@ -313,7 +323,7 @@ TemporalFunctionNextDays:
 ;
 
 enum RuleWhenTemporalConstants:
-	TODAY='today' | TOMORROW='tomorrow' | YESTERDAY='yesterday' | END_OF_WEEK='endOfWeek'
+	NOW='now' | TODAY='today' | TOMORROW='tomorrow' | YESTERDAY='yesterday' | END_OF_WEEK='endOfWeek'
 ;
 
 RuleWhenTemporalValue: 
@@ -398,10 +408,12 @@ Grid:
 ;
 
 Web:
+{Web}
 	'web' '('
 		(
-			('styleClass' ':' styleClass = STRING) &
-			('label' ':' label = STRING)?
+			('styleClass' ':' styleClass = STRING)? &
+			('label' ':' label = STRING)? &
+			(readOnly ?= 'readOnly')?
 		)
 	')'
 ;

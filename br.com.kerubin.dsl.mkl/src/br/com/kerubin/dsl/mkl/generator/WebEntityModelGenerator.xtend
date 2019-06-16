@@ -36,8 +36,8 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		«entity.slots.filter[!mapped].filter[it.isListFilterMany].map[generateListFilterAutoCompleteModel].join»
 		«ENDIF»
 		«entity.generateEntityListFilterModel»
-		«entity.generateEntityDTOModel»
-		«entity.generateEntityDefaultAutoComplete»
+		«entity.generateEntityDTOModel(false)»
+		«entity.generateEntityDefaultAutoComplete(true)»
 		«entity.generateEntitySumFieldsModel»
 		'''
 		
@@ -48,12 +48,12 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		imports + body 
 	}
 	
-	def CharSequence generateEntityDefaultAutoComplete(Entity entity) {
-		val autoCompleteSlots = entity.slots.filter[!mapped].filter[isAutoCompleteResult]
+	def CharSequence generateEntityDefaultAutoComplete(Entity entity, boolean isAutoComplete) {
+		val autoCompleteSlots = entity.slots.filter[!mapped].filter[isAutoCompleteResult || (entity.enableVersion && it.name.toLowerCase == 'version')]
 		'''
 		
 		export class «entity.toAutoCompleteName» {
-			«autoCompleteSlots.map[generateField(entity)].join»
+			«autoCompleteSlots.map[generateField(entity, isAutoComplete)].join»
 		}
 		'''
 	}
@@ -70,11 +70,11 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	// Begin DTO Model
-	def CharSequence generateEntityDTOModel(Entity entity) {
+	def CharSequence generateEntityDTOModel(Entity entity, boolean isAutoComplete) {
 		'''
 		
 		export class «entity.toEntityDTOName» {
-			«entity.generateFields»
+			«entity.generateFields(isAutoComplete)»
 		}
 		'''
 	}
@@ -94,22 +94,27 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		'''
 	}
 	
-	def CharSequence generateFields(Entity entity) {
+	def CharSequence generateFields(Entity entity, boolean isAutoComplete) {
+		val slots = entity.slots.filter[!mapped]
 		'''
-		«entity.slots.filter[!mapped].map[generateField(entity)].join»
+		«slots.map[generateField(entity, isAutoComplete)].join»
 		'''
 		
 	}
 	
-	def CharSequence generateField(Slot slot, Entity entity) {
+	def CharSequence generateField(Slot slot, Entity entity, boolean isAutoComplete) {
 		var dtoModel = entity.toEntityWebModelNameWithPah(slot)
+		var className = 'NONE'
+		if (slot.isEntity) {
+			className = if (isAutoComplete) slot.asEntity.toAutoCompleteName else slot.asEntity.toEntityDTOName
+		} 
 		
 		if (slot.isDTOFull) {
 			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
 		}
 		//else if (slot.isDTOLookupResult) {
 		else if (slot.isEntity && slot.asEntity.isNotSameName(entity)) {
-			entity.addImport("import { " + slot.asEntity.toEntityDTOName + " } from './" + dtoModel + "';")
+			entity.addImport("import { " + className + " } from './" + dtoModel + "';")
 		}
 		else if (slot.isEnum) { 
 			val slotAsEnum = slot.asEnum
@@ -118,7 +123,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF slot.isEntity»
-		«slot.fieldName»: «slot.asEntity.toEntityDTOName»;
+		«slot.fieldName»: «className»;
 		«ELSE»
 		«slot.fieldName»: «slot.toWebType»«IF slot.hasDefaultValue» = «slot.defaultValue»«ENDIF»;
 		«ENDIF»

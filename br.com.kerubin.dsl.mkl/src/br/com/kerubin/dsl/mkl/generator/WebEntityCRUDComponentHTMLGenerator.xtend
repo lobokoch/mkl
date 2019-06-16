@@ -160,7 +160,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.isToMany
 		«ELSE»
 		<div class="«slot.webClass»">
-			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»</label>«IF !slot.isOptional && !slot.isHiddenSlot»<label class="kb-label-required">*</label>«ENDIF»
+			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»</label>
 			«slot.generateWebComponent»
 		</div>
 		«ENDIF»
@@ -258,6 +258,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			// Pega como resultado o primeiro campo de resultado que não seja o id da entidade, caso não tenha nenhum, ai traz o id da entidade como campo de resultado.
 			webComponentType = 'p-autoComplete'
 			builder
+			.concat('''«webComponentType» ''')
+			.concat('''«IF slot.isWebReadOnly»[disabled]="true"«ENDIF»''')
 			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''')
 			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''')
 			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''')
@@ -267,7 +269,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (slot.isEnum){
 			webComponentType = 'p-dropdown'
-			builder.concat('''«webComponentType» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."''')
+			builder.concat('''«webComponentType»«IF slot.isWebReadOnly» [disabled]="true"«ENDIF» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."''')
 			return
 		}
 		
@@ -323,6 +325,15 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		else if (basicType instanceof ByteType) {
 			webComponentType = 'input'
 			builder.concat('''«webComponentType» type="«inputType»" pInputText''')
+		}
+		
+		if (slot.isWebReadOnly) {
+			builder.concat(''' [disabled]="true"''')
+			/*if (webComponentType == 'p-calendar') {
+			}
+			else {
+				builder.concat(''' readonly class="read-only" ''')
+			}*/
 		}
 		
 	}

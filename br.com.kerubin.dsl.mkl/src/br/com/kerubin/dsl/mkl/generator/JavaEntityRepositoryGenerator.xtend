@@ -27,7 +27,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateEntityRepository(Entity entity) {
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
-		val autoCompleteSlots = entity.slots.filter[it.hasAutoComplete]
+		val autoCompleteSlots = entity.slots.filter[it.hasAutoComplete || (entity.enableVersion && it.name.toLowerCase == 'version')]
 		val hasAutoComplete = !autoCompleteSlots.isEmpty
 		
 		'''
@@ -50,6 +50,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
 			«IF hasAutoComplete»
 			
+			// WARNING: supports only where clause with like for STRING fields. For relationships entities will get the first string autocomplete key field name.
 			@Query("«entity.generateAutoCompleteSQL(autoCompleteSlots.filter[it.isAutoCompleteResult], autoCompleteSlots.filter[it.isAutoCompleteKey])»")
 			Collection<«entity.toAutoCompleteName»> autoComplete(@Param("query") String query);
 			«ENDIF»
@@ -66,7 +67,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val slots = #[slot]
 		
 		'''
-		
+		// WARNING: supports only where clause with like for STRING fields. For relationships entities will get the first string autocomplete key field name.
 		@Query("«slot.ownerEntity.generateAutoCompleteSQL(slots, slots)»")
 		Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(@Param("query") String query);
 		'''
@@ -81,9 +82,9 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val resultFields = slotResultFields.map[it | alias + "." + it.name.toFirstLower + " as " + it.name.toFirstLower].join(", ")
 		sql.append(resultFields)
 		sql.append(" from ").append(entity.toEntityName).append(" ").append(alias)
-		sql.append(" where ")
-		val keyFields = slotKeyFields.map[it | 
-			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :query, '%')) )"
+		sql.append(" where ")  // do not support where in fields that is not STRING yeat
+		val keyFields = slotKeyFields.filter[it.isString || it.isEntity].map[it | // it.name.toFirstLower
+			"( upper(" + alias + "." + it.resolveAutocompleteFieldName + ") like upper(concat('%', :query, '%')) )"
 		].join(" or ")
 		sql.append(keyFields)
 		
@@ -97,6 +98,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		}
 		sql.toString
 	}
+	
 	
 	/*def String generateAutoCompleteSQL_(Entity entity, Iterable<Slot> slots) {
 		val alias = "ac"
