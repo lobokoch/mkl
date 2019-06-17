@@ -137,7 +137,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			«IF entity.hasDate»
 			private adjustEntityDates(entityList: «dtoName»[]) {
 				entityList.forEach(«varName» => {
-				      «entity.slots.filter[it.hasDate].map[it |
+				      «entity.slots.filter[it.hasDate && !it.implicit].map[it |
 				      '''
 				      if («varName».«it.fieldName») {
 				        «varName».«it.fieldName» = moment(«varName».«it.fieldName», '«it.formatMask»').toDate();
