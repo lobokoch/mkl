@@ -121,7 +121,7 @@ class RuleWebUtils {
 			slot = (expression.left.whenObject as FieldObject).getField
 			isObjSlot = true
 			entity = slot.ownerEntity
-			objName = slot.ownerEntity.fieldName + '.' + slot.fieldName
+			objName = 'this.' + slot.ownerEntity.fieldName + '.' + slot.fieldName
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
@@ -187,9 +187,9 @@ class RuleWebUtils {
 				val opIsEquals = op as RuleWhenOpIsEquals
 				var valueToCompare = opIsEquals.valueToCompare.getRuleWhenEqualsValueForTypeScript(entity, null)
 				var objectToCompare = objName
-				if (isObjSlot) {
+				/*if (isObjSlot) {
 					objectToCompare = 'this.' + objectToCompare
-				}
+				}*/
 				// val objectToCompare = entity.fieldName
 				
 				val isNotEquals = op instanceof RuleWhenOpIsNotEquals
