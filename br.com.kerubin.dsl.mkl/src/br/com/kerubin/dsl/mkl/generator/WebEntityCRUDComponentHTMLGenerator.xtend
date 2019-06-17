@@ -114,6 +114,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateButtons(Entity entity) {
+		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
+		
 		'''
 		
 		<div class="ui-g-12">
@@ -126,6 +128,39 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<a routerLink="/«entity.toWebName»" pButton label="Pesquisar"></a>
 			</div>
+			«IF !ruleFormActionsWithFunction.empty»
+			
+			<!-- Begin rule functions -->
+			
+			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join»
+			
+			<!-- End rule functions -->
+			«ENDIF»
+		</div>
+		
+		'''
+	}
+	
+	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val function = rule.apply.ruleFunction
+		val methodName = entity.toEntityRuleFormActionsFunctionName(function)
+		
+		val ruleAction = rule.action
+		val actionButton = ruleAction.actionButton
+		val btnToolTip = actionButton?.tooltip ?: ''
+		val btnLabel = actionButton?.label ?: ''
+		val btnIcon = actionButton?.icon ?: ''
+		val btnClass = actionButton?.cssClass ?: ''
+		
+		val actionName = ruleAction.toRuleActionName(methodName + '_action')
+		
+		val ruleActionWhenConditionName = actionName.toRuleActionWhenConditionName
+		
+		'''
+		
+		<div class="ui-g-12 ui-md-2 ui-fluid">
+			<button pButton [disabled]="!«ruleActionWhenConditionName»()" (click)="«actionName»()" type="button" «IF btnToolTip != ''»pTooltip="«btnToolTip»" tooltipPosition="top"«ENDIF»«IF btnIcon != ''» icon="«btnIcon»"«ENDIF»«IF btnLabel != ''» label="«btnLabel»"«ENDIF»«IF btnClass != ''» class="«btnClass»"«ENDIF»></button>
 		</div>
 		
 		'''

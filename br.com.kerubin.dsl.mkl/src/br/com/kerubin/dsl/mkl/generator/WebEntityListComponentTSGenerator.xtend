@@ -15,6 +15,7 @@ import br.com.kerubin.dsl.mkl.model.TemporalObject
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
@@ -247,7 +248,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		var String expression = null
 		if (hasWhen) {
 			val resultStrExp = new StringBuilder
-			rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp)
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
 			expression = resultStrExp.toString
 		}
 		

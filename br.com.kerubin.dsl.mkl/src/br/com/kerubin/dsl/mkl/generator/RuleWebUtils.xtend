@@ -26,6 +26,10 @@ import br.com.kerubin.dsl.mkl.model.RuleApply
 import java.util.Set
 import br.com.kerubin.dsl.mkl.model.FieldAndValue
 import br.com.kerubin.dsl.mkl.model.NullObject
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
+import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class RuleWebUtils {
 	
@@ -94,6 +98,10 @@ class RuleWebUtils {
 	}
 	
 	def static void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp) {
+		expression.buildRuleWhenExpression(resultStrExp)
+	}
+	
+	def static void buildRuleWhenExpression(RuleWhenExpression expression, StringBuilder resultStrExp) {
 		if (expression ===  null) {
 			return
 		}
@@ -104,12 +112,20 @@ class RuleWebUtils {
 		var isObjDate = false
 		var isNumber = false
 		var isObjForm = false
+		var isObjEnum = false
+		var Entity entity = null
+		var Slot slot = null
+		var isObjSlot = false
+		
 		if (expression.left.whenObject instanceof FieldObject) {
-			val slot = (expression.left.whenObject as FieldObject).getField
+			slot = (expression.left.whenObject as FieldObject).getField
+			isObjSlot = true
+			entity = slot.ownerEntity
 			objName = slot.ownerEntity.fieldName + '.' + slot.fieldName
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
+			isObjEnum = slot.isEnum
 			strExpression = objName
 		}
 		else if (expression.left.whenObject instanceof TemporalObject) {
@@ -127,6 +143,7 @@ class RuleWebUtils {
 		else if (expression.left.whenObject instanceof FormObject) {
 			isObjForm = true
 		}
+		
 		val op = expression.left.objectOperation
 		if (op !== null) {
 			if (op instanceof RuleWhenOpIsNull) {
@@ -166,6 +183,39 @@ class RuleWebUtils {
 					resultStrExp.concatSB('''«objName» == «value»''')					
 				}
 			}
+			else if (op instanceof RuleWhenOpIsEquals) {
+				val opIsEquals = op as RuleWhenOpIsEquals
+				var valueToCompare = opIsEquals.valueToCompare.getRuleWhenEqualsValueForTypeScript(entity, null)
+				var objectToCompare = objName
+				if (isObjSlot) {
+					objectToCompare = 'this.' + objectToCompare
+				}
+				// val objectToCompare = entity.fieldName
+				
+				val isNotEquals = op instanceof RuleWhenOpIsNotEquals
+				
+				if (isNotEquals) {
+					if (isObjSlot && slot.isEnum) {
+						valueToCompare = "'" + valueToCompare + "'"
+						resultStrExp.concatSB('''(String(«objectToCompare») !== «valueToCompare»)''')
+					}
+					else {
+						resultStrExp.concatSB('''(«objectToCompare» === «valueToCompare»)''')
+					}
+					
+				}
+				else {
+					// String(this.caixaDiario.caixaDiarioSituacao) !== 'NAO_INICIADO';
+					if (isObjSlot && slot.isEnum) {
+						valueToCompare = "'" + valueToCompare + "'"
+						resultStrExp.concatSB('''(String(«objectToCompare») === «valueToCompare»)''')
+					}
+					else {
+						resultStrExp.concatSB('''(«objectToCompare» === «valueToCompare»)''')
+					}
+					// resultStrExp.concatSB('''«envelopeObjectName».equals(«value»)''')
+				}
+			}
 			else if (op instanceof RuleWhenOpIsBefore) {
 				val opIsBefore = op as RuleWhenOpIsBefore
 				val value = opIsBefore.valueToCompare.getTemporalValue
@@ -188,6 +238,21 @@ class RuleWebUtils {
 			resultStrExp.concatSB(expression.operator.adaptRuleWhenOperator)
 			expression.rigth.buildRuleWhenForGridRowStyleClass(resultStrExp)
 		}
+	}
+	
+	def static String getRuleWhenEqualsValueForTypeScript(RuleWhenEqualsValue ruleWhenEqualsValue, Entity entity, Set<String> imports) {
+		var objStr = 'UNKNOWN_VALUE'
+		if (ruleWhenEqualsValue.enumObject !== null) {
+			val enumObject = ruleWhenEqualsValue.enumObject
+			// val enumeration = enumObject.enumeration
+			val enumItem = enumObject.enumItem
+			// TODO: resolve this
+			// objStr = enumeration.name + '.' + enumItem
+			objStr = enumItem
+			// val importValue = entity.getImportExternalEnumeration(enumeration)
+			// imports.add(importValue)
+		}
+		objStr
 	}
 	
 	def static StringBuilder insertSB(StringBuilder sb, String value) {

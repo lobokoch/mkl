@@ -30,6 +30,8 @@ import static extension org.apache.commons.lang3.StringUtils.*
 import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import java.util.Set
+import br.com.kerubin.dsl.mkl.model.RuleFunction
+import br.com.kerubin.dsl.mkl.model.RuleAction
 
 class EntityUtils {
 	
@@ -106,8 +108,40 @@ class EntityUtils {
 		entity.slots.exists[it.isEntity]
 	}
 	
+	def static boolean hasDateOnly(Entity entity) {
+		entity.slots.exists[isDate]
+	}
+	
 	def static boolean hasDate(Entity entity) {
-		entity.slots.exists[it.isDate]
+		entity.slots.exists[it.isDate || it.isDateTime || it.isTime]
+	}
+	
+	def static boolean hasDate(Slot slot) {
+		val result = slot.isDate || slot.isDateTime || slot.isTime
+		result
+	}
+	
+	def static boolean hasDateOnly(Slot slot) {
+		val result = slot.isDate
+		result
+	}
+	
+	def static boolean hasDateTime(Entity entity) {
+		entity.slots.exists[isDateTime]
+	}
+	
+	def static String getFormatMask(Slot slot) {
+		var format = '';
+		if (slot.isDate) {
+			format = 'YYYY-MM-DD'
+		}
+		else if (slot.isDateTime) {
+			format = 'YYYY-MM-DD H:m:s'
+		}
+		else if (slot.isTime) {
+			format = 'H:m:s'
+		}
+		return format;
 	}
 	
 	/*def static boolean isEntity(Slot slot) {
@@ -518,6 +552,22 @@ class EntityUtils {
 	
 	def static getRuleActions(Entity entity) {
 		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
+	}
+	
+	def static getRuleFormActions(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS]] 
+	}
+	
+	def static getRuleFormActionsWithFunction(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
+			&& it?.apply.hasRuleFunction
+		] 
+	}
+	
+	def static getRuleFormActionsActions(Entity entity) {
+		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
+			&& it?.apply.hasRuleFunction
+		] 
 	}
 	
 	def static getRuleSubscribe(Entity entity) {
@@ -1029,6 +1079,12 @@ class EntityUtils {
 		'''
 	}
 	
+	def static String toWebFieldName(Slot slot) {
+		// e.g.: this.caixaDiario.caixaDiarioSituacao
+		val entityAsFieldName = slot.ownerEntity.fieldName
+		'''this.«entityAsFieldName».«slot.fieldName»'''
+	}
+	
 	def static buildMethodConvertToDTO(Slot slot) {
 		//addressDTOConverter.convertToDTO(entity.getAddress())
 		slot.name.toFirstLower + 'DTOConverter.convertEntityToDto(entity.' + slot.buildMethodGet + ')' 
@@ -1049,6 +1105,22 @@ class EntityUtils {
 	
 	def static toServiceName(Entity entity) {
 		entity.name.toFirstUpper + "Service"
+	}
+	
+	def static toRuleActionName(RuleAction ruleAction, String defautName) {
+		ruleAction?.actionName ?: defautName
+	}
+	
+	def static toRuleActionWhenConditionName(String actionName) {
+		actionName + 'WhenCondition'
+	}
+	
+	def static toEntityRuleFormActionsFunctionName(Entity entity, RuleFunction func) {
+		entity.fieldName + "RuleFunction" + func.methodName.toFirstUpper
+	}
+	
+	def static toRuleFormActionsWithFunctionName(Entity entity) {
+		entity.name.toFirstUpper + "RuleFunctions"
 	}
 	
 	def static toSubscriberEventRabbitConfigName(Entity entity) {

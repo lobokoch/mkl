@@ -42,6 +42,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		
 		val ruleActions = entity.ruleActions
 		val ruleMakeCopies = entity.ruleMakeCopies
+		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
 		'''
 		package «entity.package»;
@@ -86,6 +87,11 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@Autowired
 			«entityDTOName»DTOConverter «entityDTOVar»DTOConverter;
+			«IF !ruleFormActionsWithFunction.isEmpty»
+			
+			@Autowired
+			private «entity.toRuleFormActionsWithFunctionName» «entity.toRuleFormActionsWithFunctionName.toFirstLower»;
+			«ENDIF»
 			
 			@Transactional
 			@PostMapping
@@ -152,7 +158,53 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			«ruleActions.map[generateRuleActions].join»
 			«ruleMakeCopies.map[generateRuleMakeCopies].join»
+			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join('\r\n')»
 		}
+		'''
+	}
+	
+	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val entityName = entity.toEntityName
+		val entityVar = entity.toEntityName.toFirstLower
+		val entityDTOName = entity.toEntityDTOName
+		val entityDTOVar = entity.toEntityDTOName.toFirstLower
+		
+		val toDTO = 'convertEntityToDto'
+		
+		val idVar = entity.id.name.toFirstLower
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		
+		val function = rule.apply.ruleFunction
+		val isFuncReturnThis = function.funcReturnThis
+		val isFuncParamThis = function.funcParamThis
+		val methodName = entity.toEntityRuleFormActionsFunctionName(function)
+		val ruleFuncServiceVar = entity.toRuleFormActionsWithFunctionName.toFirstLower
+		
+		'''
+		@Transactional
+		@PutMapping("/«methodName»/{«idVar»}")
+		public ResponseEntity<«entityDTOName»> «methodName»(@PathVariable «idType» «idVar», @Valid @RequestBody «entityDTOName» «entityDTOVar») {
+			try {
+				«IF isFuncReturnThis && isFuncParamThis»
+				«entityName» «entityVar» = «ruleFuncServiceVar».«function.methodName.toFirstLower»(«idVar», «entityDTOVar»);
+				return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
+				«ELSEIF isFuncReturnThis»
+				«entityName» «entityVar» = «ruleFuncServiceVar».«function.methodName.toFirstLower»();
+				return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
+				«ELSEIF isFuncParamThis»
+				«ruleFuncServiceVar».«function.methodName.toFirstLower»(«idVar», «entityDTOVar»);
+				return ResponseEntity.ok(null);
+				«ELSEIF !isFuncReturnThis && !isFuncParamThis»
+				«ruleFuncServiceVar».«function.methodName.toFirstLower»();
+				return ResponseEntity.ok(null);
+				«ENDIF»
+			}
+			catch(IllegalArgumentException e) {
+				return ResponseEntity.notFound().build();
+			}
+		}
+		
 		'''
 	}
 	

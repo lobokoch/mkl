@@ -56,6 +56,7 @@ class ActionButton {
 	String tooltip
 	String icon
 	String label
+	String cssClass
 }
 
 class FieldAssignExpression {
@@ -219,6 +220,12 @@ enum RuleWhenTemporalConstants {
 	END_OF_WEEK as 'endOfWeek'
 }
 
+class RuleFunction {
+	String methodName
+	boolean funcParamThis
+	boolean funcReturnThis
+}
+
 class RuleApply {
 	String styleClass
 	String styleCss
@@ -226,6 +233,11 @@ class RuleApply {
 	contains FieldMathExpression sumFieldExpression
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
+	contains RuleFunction ruleFunction
+	
+	op boolean hasRuleFunction() {
+		return ruleFunction !== null
+	}
 	
 	op boolean hasLabel() {
 		label !== null && !label.trim.empty
@@ -280,6 +292,7 @@ enum RuleTarget {
 	GRID_SUMROW_LAST_CELL as 'grid.sum.lastCell'
 	GRID_ACTIONS as 'grid.actions'
 	FORM as 'form'
+	FORM_ACTIONS as 'form.actions'
 	SUBSCRIBE as 'subscribe'
 }
 
@@ -726,6 +739,15 @@ class Slot extends Element {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
 			return basicType instanceof DateTimeType
+		}
+		
+		false
+	}
+	
+	op boolean isTime() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof TimeType
 		}
 		
 		false

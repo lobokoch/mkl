@@ -66,6 +66,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		
 		val ruleMakeCopies = entity.ruleMakeCopies
+		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
 		
 		val body = '''
@@ -131,14 +132,15 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			«ruleActions.map[generateRuleActions].join»
 			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
+			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join»
 			
 			«IF entity.hasDate»
 			private adjustEntityDates(entityList: «dtoName»[]) {
 				entityList.forEach(«varName» => {
-				      «entity.slots.filter[it.isDate].map[it |
+				      «entity.slots.filter[it.hasDate].map[it |
 				      '''
 				      if («varName».«it.fieldName») {
-				        «varName».«it.fieldName» = moment(«varName».«it.fieldName», 'YYYY-MM-DD').toDate();
+				        «varName».«it.fieldName» = moment(«varName».«it.fieldName», '«it.formatMask»').toDate();
 				      }
 				      	
 				      '''
@@ -277,6 +279,30 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val function = rule.apply.ruleFunction
+		val methodName = entity.toEntityRuleFormActionsFunctionName(function)
+		val dtoName = entity.toDtoName
+		val varName = dtoName.toFirstLower
+		
+		'''
+		«methodName»(«varName»: «dtoName»): Promise<«dtoName»> {
+		    const headers = this.getHeaders();
+		
+		    return this.http.put(`${this.url}/«methodName»/${«varName».«entity.id.fieldName»}`, «varName», { headers })
+		    .toPromise()
+		    .then(response => {
+		      const updated = response as «dtoName»;
+		      «IF entity.hasEntitySlots»this.adjustNullEntitySlots([updated]);«ENDIF»
+		      «IF entity.hasDate»this.adjustEntityDates([updated]);«ENDIF»
+		      return updated;
+		    });
+		}
+		
+		'''
 	}
 	
 	def CharSequence generateRuleMakeCopiesActions(Rule rule) {

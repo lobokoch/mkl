@@ -201,7 +201,6 @@ Rule:
 ;
 
 RuleAction:
-	//'name' ':' actionName = ID 
 	'name' ':' actionName = ID_KEYWORD 
 	'button' '(' actionButton = ActionButton ')'
 ;
@@ -210,7 +209,8 @@ ActionButton:
 	(
 		('tooltip' ':' tooltip = STRING) & 
 		('label' ':' label = STRING)? & 
-		('icon' ':' icon = STRING)?
+		('icon' ':' icon = STRING)? &
+		('cssClass' ':' cssClass = STRING)?
 	)
 ;
 
@@ -339,8 +339,21 @@ RuleApply:
 		('label' ':' label = STRING)? &
 		('(' sumFieldExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
-		(makeCopiesExpression = MakeCopiesExpression)?
+		(makeCopiesExpression = MakeCopiesExpression)? &
+		(ruleFunction = RuleFunction)?
 	)
+;
+
+RuleFunction:
+{RuleFunction}	
+	'function' '(' 
+	(
+		('name' ':' methodName = ID_KEYWORD) &
+		('params' ':' '[' funcParamThis ?= 'this' ']')? &
+		('return' ':' funcReturnThis ?= 'this')? 
+		
+	)
+	')'
 ;
 
 MakeCopiesExpression:
@@ -378,6 +391,7 @@ enum RuleTarget:
 	 GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell' |
 	 GRID_ACTIONS = 'grid.actions' |
 	 FORM = 'form' |
+	 FORM_ACTIONS = 'form.actions' |
 	 SUBSCRIBE = 'subscribe' 
 ;
 

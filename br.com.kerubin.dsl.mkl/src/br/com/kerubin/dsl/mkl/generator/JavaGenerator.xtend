@@ -43,7 +43,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaServerHttpFilterGenerator(this),
 			new JavaServiceHandlerInterceptorAdapterGenerator(this),
 			new JavaServiceWebMvcConfigurerAdapterGenerator(this),
-			new JavaMessagingAfterReceivePostProcessorsGenerator(this)
+			new JavaMessagingAfterReceivePostProcessorsGenerator(this),
+			new JavaEntityRuleFunctionsGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

@@ -72,7 +72,7 @@ class RuleUtils {
 		var isObjStr = false
 		var isObjDate = false
 		var isNumber = false
-		var Entity entity = null;
+		var Entity entity = null
 		if (expression.left.whenObject instanceof FieldObject) {
 			val slot = (expression.left.whenObject as FieldObject).getField
 			entity = slot.ownerEntity

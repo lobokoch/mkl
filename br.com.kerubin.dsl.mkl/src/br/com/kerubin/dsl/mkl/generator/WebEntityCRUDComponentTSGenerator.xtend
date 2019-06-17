@@ -45,6 +45,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val serviceVar = serviceName.toFirstLower
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val rulesFormOnCreate = entity.rulesFormOnCreate
+		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -220,6 +221,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
 			«ruleMakeCopies.map[generateInitializeCopiesReferenceFieldOptions].join»
+			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join»
 			«IF !rulesFormOnCreate.empty»
 			rulesOnCreate() {
 				«rulesFormOnCreate.map[it.generateRuleFormOnCreate(entity.fieldName, importsSet)].join»
@@ -230,6 +232,56 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val source = imports.ln.toString + importsSet.join('\r\n') + '\r\n' + body
 		source
+	}
+	
+	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val function = rule.apply.ruleFunction
+		val methodName = entity.toEntityRuleFormActionsFunctionName(function)
+		
+		val fieldName = entity.fieldName
+		val serviceName = entity.toEntityWebServiceClassName
+		val serviceVar = serviceName.toFirstLower
+		
+		val ruleAction = rule.action
+		val actionName = ruleAction.toRuleActionName(methodName + '_action')
+		val ruleActionWhenConditionName = actionName.toRuleActionWhenConditionName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = null
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		'''
+		«ruleActionWhenConditionName»(): boolean {
+			«IF hasWhen»		    
+			return «expression»;
+			«ELSE»
+			return true;
+			«ENDIF»
+		}
+		  
+		«actionName»() {
+			this.«methodName»();
+		}
+		
+		«methodName»() {
+		    this.«serviceVar».«methodName»(this.«fieldName»)
+		    .then((«fieldName») => {
+		      if («fieldName») { // Can be null
+		      	this.«fieldName» = «fieldName»;
+		      }
+		      this.showSuccess('Operação executada com sucesso.');
+		    })
+		    .catch(error => {
+		      this.showError('Erro ao executar a operação: ' + error);
+		    });
+		}
+		
+		'''
 	}
 	
 	def CharSequence generateRuleFormOnCreate(Rule rule, String targetObject, Set<String> imports) {
