@@ -438,7 +438,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
 			if («slot.fieldName») {
-				return «resultSlots.map['''(«slot.fieldName».«it.resolveAutocompleteFieldName» || '<nulo>')'''].join(" + ' - ' + ")»;
+				return «resultSlots.map['''(«slot.resolveAutocompleteFieldNameForWeb(it)» || '<nulo>')'''].join(" + ' - ' + ")»;
 			} else {
 				return null;
 			}
