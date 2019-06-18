@@ -99,6 +99,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 		slot.implicit = true
 		slot.hidden = true
 		slot.optional = true
+		slot.createGridHiddenForSlot
 		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
 		basicTypeReference.basicType = ModelFactory.eINSTANCE.createIntegerType
 		slot.slotType = basicTypeReference

@@ -702,10 +702,38 @@ class EntityUtils {
 			val entity = slot.asEntity
 			val autoCompleteSlot = entity.slots.filter[it.isAutoCompleteKey && it.isString].head
 			if (autoCompleteSlot !== null) {
-				return entity.fieldName + '.' + autoCompleteSlot.fieldName
+				return slot.fieldName + '.' + autoCompleteSlot.fieldName
 			}
 		}
 		return slot.fieldName
+	}
+	
+	def static String resolveAutocompleteFieldNameForWeb(Slot parentSlot, Slot slot) {
+		var fieldName = parentSlot.fieldName + '.' + slot.fieldName
+		if (slot.isEntity) { // If slot is an entity, returns first string auto complete key configurated.
+			val entity = slot.asEntity
+			val autoCompleteSlot = entity.slots.filter[it.isAutoCompleteResult && !it.isHiddenSlot].head
+			if (autoCompleteSlot !== null) {
+				fieldName += '.' + autoCompleteSlot.fieldName
+				return autoCompleteSlot.resolveAutocompleteFieldNameForWebType(fieldName)
+			}
+		}
+		return slot.resolveAutocompleteFieldNameForWebType(fieldName)
+	}
+	
+	def static resolveAutocompleteFieldNameForWebType(Slot slot, String fieldName) {
+		if (slot.isDate) {
+			 return '''moment(«fieldName»).format('DD/MM/YYYY')'''.toString
+		}
+		else if (slot.isDateTime) {
+			 return '''moment(«fieldName»).format('DD/MM/YYYY H:m')'''.toString
+		}
+		else if (slot.isTime) {
+			 return '''moment(«fieldName»).format('H:m:s')'''.toString
+		}
+		else {
+			return '''«fieldName»'''
+		}
 	}
 	
 	def static getFieldName(Slot slot) {

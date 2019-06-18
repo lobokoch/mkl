@@ -483,7 +483,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	def CharSequence generateAutoCompleteFieldConverter(Slot slot) {
 		val entity = slot.asEntity
 		
-		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id]
+		var resultSlots = entity.slots.filter[it.autoCompleteResult && !it.isHiddenSlot]
 		if (resultSlots.isEmpty) {
 			resultSlots = entity.slots.filter[it.autoCompleteResult]
 		}
@@ -492,7 +492,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
 			if («slot.fieldName») {
-				return «resultSlots.map['''«slot.fieldName».«it.fieldName»'''].join(" + ' - ' + ")»;
+				return «resultSlots.map['''«slot.resolveAutocompleteFieldNameForWeb(it)»'''].join(" + ' - ' + ")»;
 			} else {
 				return null;
 			}
