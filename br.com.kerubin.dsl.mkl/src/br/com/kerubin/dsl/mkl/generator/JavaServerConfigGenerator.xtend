@@ -25,8 +25,8 @@ class JavaServerConfigGenerator extends GeneratorExecutor implements IGeneratorE
 		package «service.servicePackage»;
 		
 		import java.util.UUID;
-		import org.modelmapper.ModelMapper;
-		import org.modelmapper.convention.MatchingStrategies;
+		// import org.modelmapper.ModelMapper;
+		// import org.modelmapper.convention.MatchingStrategies;
 		import org.springframework.amqp.core.MessagePostProcessor;
 		import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 		import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -39,12 +39,12 @@ class JavaServerConfigGenerator extends GeneratorExecutor implements IGeneratorE
 		public class ServerConfig {
 			
 			// TODO: remover esse cara
-			@Bean
+			/*@Bean
 			public ModelMapper modelMapper() {
 				ModelMapper modelMapper = new ModelMapper();
 				modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
 				return modelMapper;
-			}
+			}*/
 			
 			@Bean
 			public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(

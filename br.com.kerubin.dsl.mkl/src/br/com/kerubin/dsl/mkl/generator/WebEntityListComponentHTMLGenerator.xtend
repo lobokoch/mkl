@@ -343,6 +343,10 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy'}}
+			«ELSEIF slot.isDateTime»
+			{{«fieldName» | date:'dd/MM/yyyy HH:mm'}}
+			«ELSEIF slot.isTime»
+			{{«fieldName» | date:'HH:mm:ss'}}
 			«ELSEIF slot.isMoney»
 			{{«fieldName» | currency:'BRL':'symbol':'1.2-2':'pt' }}
 			«ELSEIF slot.isBoolean»
