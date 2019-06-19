@@ -1131,6 +1131,10 @@ class IntegerType extends generatedType {
 	
 }
 
+class SmallintType extends generatedType {
+	
+}
+
 class DoubleType extends BasicType {
 	
 }

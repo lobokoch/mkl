@@ -50,6 +50,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
+		if (entity.hasDate || entity.fieldsAsEntityHasDate) {
+			imports.add('''import * as moment from 'moment';''')
+		}
 		entity.slots.filter[it.isEntity].forEach[ 
 			val slotAsEntity = it.asEntity
 			imports.newLine

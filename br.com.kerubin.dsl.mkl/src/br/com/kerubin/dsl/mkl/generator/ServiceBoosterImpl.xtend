@@ -101,7 +101,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 		slot.optional = true
 		slot.createGridHiddenForSlot
 		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
-		basicTypeReference.basicType = ModelFactory.eINSTANCE.createIntegerType
+		basicTypeReference.basicType = ModelFactory.eINSTANCE.createSmallintType
 		slot.slotType = basicTypeReference
 		slot.annotations.add('@Version')
 		entity.imports.add('import javax.persistence.Version;')

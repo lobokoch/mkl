@@ -32,6 +32,7 @@ import br.com.kerubin.dsl.mkl.model.RuleTarget
 import java.util.Set
 import br.com.kerubin.dsl.mkl.model.RuleFunction
 import br.com.kerubin.dsl.mkl.model.RuleAction
+import br.com.kerubin.dsl.mkl.model.SmallintType
 
 class EntityUtils {
 	
@@ -114,6 +115,10 @@ class EntityUtils {
 	
 	def static boolean hasDate(Entity entity) {
 		entity.slots.exists[it.isDate || it.isDateTime || it.isTime]
+	}
+	
+	def static boolean fieldsAsEntityHasDate(Entity entity) {
+		entity.slots.filter[it.isEntity].exists[it.asEntity.hasDate]
 	}
 	
 	def static boolean hasDate(Slot slot) {
@@ -1192,6 +1197,9 @@ class EntityUtils {
 		else if (basicType instanceof IntegerType) {
 			"Long"
 		}
+		else if (basicType instanceof SmallintType) {
+			"short"
+		}
 		else if (basicType instanceof DoubleType) {
 			"Double"
 		}
@@ -1227,6 +1235,9 @@ class EntityUtils {
 		val basicType = btr.basicType
 		if (basicType instanceof StringType) {
 			"string"
+		}
+		else if (basicType instanceof SmallintType) {
+			"number"
 		}
 		else if (basicType instanceof IntegerType) {
 			"number"

@@ -17,6 +17,7 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.SmallintType
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	val closedHTMLTags = #['p-', 'textarea']
@@ -324,6 +325,10 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				webComponentType = 'input'
 				builder.concat('''«webComponentType» type="«inputType»" pInputText''')				
 			}
+		}
+		else if (basicType instanceof SmallintType) {
+			webComponentType = 'input'
+			builder.concat('''«webComponentType» type="«inputType»" pInputText''')
 		}
 		else if (basicType instanceof IntegerType) {
 			webComponentType = 'input'

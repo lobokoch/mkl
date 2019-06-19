@@ -16,6 +16,7 @@ import br.com.kerubin.dsl.mkl.model.PublicObject
 import br.com.kerubin.dsl.mkl.model.StringType
 import br.com.kerubin.dsl.mkl.model.TimeType
 import br.com.kerubin.dsl.mkl.model.UUIDType
+import br.com.kerubin.dsl.mkl.model.SmallintType
 
 class JavaPostgreSQLGenerator extends JavaSQLGenerator {
 	
@@ -31,6 +32,9 @@ class JavaPostgreSQLGenerator extends JavaSQLGenerator {
 		val basicType = reference.basicType
 		if (basicType instanceof StringType) {
 			"VARCHAR(" + (basicType as StringType).length  + ")"
+		}
+		else if (basicType instanceof SmallintType) {
+			"SMALLINT"
 		}
 		else if (basicType instanceof IntegerType) {
 			"NUMERIC(19)"
