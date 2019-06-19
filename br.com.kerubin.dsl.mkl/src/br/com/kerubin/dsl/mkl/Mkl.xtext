@@ -150,7 +150,7 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name' | 'parent' | 'optional' | 'many'
+	ID | 'name' | 'parent' | 'optional' | 'many' | 'form'
 ;
 
  fragment Name returns Named:
@@ -539,6 +539,7 @@ BasicType:
 StringType: name='string' ('[' length=INT ']')?;
 IntegerType: name='integer' (generated ?='generated')?;
 DoubleType: name='double';
+SmallintType: name='smallint';
 MoneyType: name='money';
 
 BooleanType: 
