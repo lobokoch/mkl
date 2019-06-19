@@ -552,39 +552,55 @@ class EntityUtils {
 	}
 	
 	def static getRuleGridRows(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROWS]] 
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.GRID_ROWS]] 
 	}
 	
 	def static getRuleActions(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
 	}
 	
 	def static getRuleFormActions(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS]] 
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS]] 
 	}
 	
 	def static getRuleFormActionsWithFunction(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
-			&& it?.apply.hasRuleFunction
+		entity?.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
+			&& it.apply !== null && it.apply.hasRuleFunction
 		] 
 	}
 	
 	def static getRuleFormActionsActions(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
-			&& it?.apply.hasRuleFunction
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
+			&& it.apply !== null && it.apply.hasRuleFunction
 		] 
 	}
 	
 	def static getRuleSubscribe(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.SUBSCRIBE]] 
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.SUBSCRIBE]] 
 	}
 	
 	def static getRuleMakeCopies(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.apply.hasMakeCopiesExpression]
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
+			return it.apply !== null && it.apply.hasMakeCopiesExpression
+		]
 	}
 	
 	def static getRulesFormOnCreate(Entity entity) {
-		entity.rules.filter[it.targets.exists[it == RuleTarget.FORM]].filter[it.when.hasFormOnCreate]
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
+			return it.when !== null && it.when.hasFormOnCreate
+		]
+	}
+	
+	def static getRulesFormOnInit(Entity entity) {
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
+			return it.when !== null && it.when.hasFormOnInit
+		]
+	}
+	
+	def static getRulesFormOnUpdate(Entity entity) {
+		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
+			return it.when !== null && it.when.hasFormOnUpdate
+		]
 	}
 	
 	def static hasRuleActions(Entity entity) {

@@ -45,6 +45,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val serviceVar = serviceName.toFirstLower
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val rulesFormOnCreate = entity.rulesFormOnCreate
+		val rulesFormOnUpdate = entity.rulesFormOnUpdate
+		val rulesFormOnInit = entity.rulesFormOnInit
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
@@ -103,8 +105,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			ngOnInit() {
+				«IF !rulesFormOnInit.empty»
+				this.rulesOnInit();
+				
+				«ENDIF»
 				«IF !rulesFormOnCreate.empty»
 				this.rulesOnCreate();
+				
 				«ENDIF»
 				«IF entity.hasEnumSlotsWithDefault»
 				this.initializeEnumFieldsWithDefault();
@@ -154,6 +161,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			create() {
+				«IF !rulesFormOnCreate.empty»
+				this.rulesOnCreate();
+				«ENDIF»
+				
 			    this.«serviceVar».create(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
@@ -165,6 +176,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			update() {
+				«IF !rulesFormOnUpdate.empty»
+				this.rulesOnUpdate();
+				
+				«ENDIF»
 			    this.«serviceVar».update(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
@@ -225,15 +240,28 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ruleMakeCopies.map[generateRuleMakeCopiesActions].join»
 			«ruleMakeCopies.map[generateInitializeCopiesReferenceFieldOptions].join»
 			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join»
+			«IF !rulesFormOnInit.empty»
+			rulesOnInit() {
+				«rulesFormOnInit.map[it.generateRuleFormOnInit(entity.fieldName, importsSet)].join»
+			}
+			
+			«ENDIF»
 			«IF !rulesFormOnCreate.empty»
 			rulesOnCreate() {
 				«rulesFormOnCreate.map[it.generateRuleFormOnCreate(entity.fieldName, importsSet)].join»
 			}
+			
+			«ENDIF»
+			«IF !rulesFormOnUpdate.empty»
+			rulesOnUpdate() {
+				«rulesFormOnUpdate.map[it.generateRuleFormOnUpdate(entity.fieldName, importsSet)].join»
+			}
+			
 			«ENDIF»
 		}
 		'''
 		
-		val source = imports.ln.toString + importsSet.join('\r\n') + '\r\n' + body
+		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
 	}
 	
@@ -287,7 +315,19 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 	}
 	
+	def CharSequence generateRuleFormOnInit(Rule rule, String targetObject, Set<String> imports) {
+		'''
+		«rule.apply.buildRuleApplyForWeb(targetObject, imports)»
+		'''
+	}
+	
 	def CharSequence generateRuleFormOnCreate(Rule rule, String targetObject, Set<String> imports) {
+		'''
+		«rule.apply.buildRuleApplyForWeb(targetObject, imports)»
+		'''
+	}
+	
+	def CharSequence generateRuleFormOnUpdate(Rule rule, String targetObject, Set<String> imports) {
 		'''
 		«rule.apply.buildRuleApplyForWeb(targetObject, imports)»
 		'''

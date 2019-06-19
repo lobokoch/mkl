@@ -242,21 +242,28 @@ class RuleUtils {
 	}
 	
 	def static String getTemporalConstantValueForJava(RuleWhenTemporalConstants tc, Set<String> imports) {
-		imports.add('import java.time.LocalDate;')
 		switch (tc) {
 			case RuleWhenTemporalConstants.TOMORROW: {
+				imports.add('import java.time.LocalDate;')
 				'LocalDate.now().plusDays(1)'
 			}
+			case RuleWhenTemporalConstants.NOW: {
+				imports.add('import java.time.LocalDateTime;')
+				'LocalDateTime.now()'
+			}
 			case RuleWhenTemporalConstants.YESTERDAY: {
+				imports.add('import java.time.LocalDate;')
 				'LocalDate.now().minusDays(1)'
 			}
 			case RuleWhenTemporalConstants.END_OF_WEEK: {
+				imports.add('import java.time.LocalDate;')
 				imports.add('import static java.time.temporal.TemporalAdjusters.nextOrSame;')
 				imports.add('import static java.time.DayOfWeek.SUNDAY;')
 				
 				'LocalDate.now().with(nextOrSame(SUNDAY))'
 			}
 			default: {
+				imports.add('import java.time.LocalDate;')
 				'LocalDate.now()' // Today
 			}
 		}

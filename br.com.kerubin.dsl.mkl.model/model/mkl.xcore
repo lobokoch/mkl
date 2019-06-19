@@ -92,8 +92,18 @@ class RuleWhen {
 	contains RuleWhenExpression expression
 	
 	op boolean hasFormOnCreate() {
-		expression !== null && expression.left !== null && (expression.left.whenObject instanceof FormObject) && 
-		(expression.left.objectOperation instanceof RuleWhenOpOnCreate)
+		expression !== null && expression.left !== null && expression.left.whenObject !== null && (expression.left.whenObject instanceof FormObject) && 
+		expression.left.objectOperation !== null && (expression.left.objectOperation instanceof RuleWhenOpOnCreate)
+	}
+	
+	op boolean hasFormOnUpdate() {
+		expression !== null && expression.left !== null && expression.left.whenObject !== null && (expression.left.whenObject instanceof FormObject) && 
+		expression.left.objectOperation !== null && (expression.left.objectOperation instanceof RuleWhenOpOnUpdate)
+	}
+	
+	op boolean hasFormOnInit() {
+		expression !== null && expression.left !== null && expression.left.whenObject !== null && (expression.left.whenObject instanceof FormObject) && 
+		expression.left.objectOperation !== null && (expression.left.objectOperation instanceof RuleWhenOpOnInit)
 	}
 }
 
@@ -185,6 +195,14 @@ class RuleWhenOpIsNull extends RuleWhenAbstractObjectOperation {
 }
 
 class RuleWhenOpOnCreate extends RuleWhenAbstractObjectOperation {
+	
+}
+
+class RuleWhenOpOnUpdate extends RuleWhenAbstractObjectOperation {
+	
+}
+
+class RuleWhenOpOnInit extends RuleWhenAbstractObjectOperation {
 	
 }
 

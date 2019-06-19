@@ -133,6 +133,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleActions = entity.ruleActions
 		val ruleMakeCopies = entity.ruleMakeCopies
 		
+		val rulesFormOnCreate = entity.rulesFormOnCreate
+		val rulesFormOnUpdate = entity.rulesFormOnCreate
+		
 		val imports = newLinkedHashSet
 		
 		val pakage = '''
@@ -201,6 +204,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			@Transactional
 			public «entityName» create(«entityName» «entityVar») {
+				«IF !rulesFormOnCreate.empty»
+				ruleOnCreate(«entityVar»);
+				
+				«ENDIF»
 				«IF !entity.hasPublishCreated»
 				return «repositoryVar».save(«entityVar»);
 				«ELSE»
@@ -209,6 +216,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				return entity;
 				«ENDIF»
 			}
+			«IF !rulesFormOnCreate.empty»
+			
+			protected void ruleOnCreate(«entityName» «entityVar») {
+				«rulesFormOnCreate.map[generateRuleFormOnCreate(imports)].join»
+			}
+			
+			«ENDIF»
 			
 			@Transactional(readOnly = true)
 			public «entityName» read(«idType» «idVar») {
@@ -217,6 +231,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			@Transactional
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
+				«IF !rulesFormOnUpdate.empty»
+				ruleOnUpdate(«entityVar»);
+				
+				«ENDIF»
 				«entityName» entity = «getEntityMethod»(«idVar»);
 				BeanUtils.copyProperties(«entityVar», entity, "«entity.id.name»");
 				entity = «repositoryVar».save(entity);
@@ -227,6 +245,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«ENDIF»
 				return entity;
 			}
+			«IF !rulesFormOnUpdate.empty»
+						
+			protected void ruleOnUpdate(«entityName» «entityVar») {
+				«rulesFormOnUpdate.map[generateRuleFormOnUpdate(imports)].join»
+			}
+			
+			«ENDIF»
 			
 			@Transactional
 			public void delete(«idType» «idVar») {
@@ -349,6 +374,28 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			copies.add(«entityVar»);
 			«repositoryVar».saveAll(copies);
 		}
+		'''
+	}
+	
+	def CharSequence generateRuleFormOnCreate(Rule rule, Set<String> imports) {
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.toEntityName.toFirstLower
+		
+		var fieldValues = rule.apply.actionExpression.fieldValues
+		
+		'''
+		«fieldValues.map[it.generateActionFieldAssign(entityVar, imports)].join»
+		'''
+	}
+	
+	def CharSequence generateRuleFormOnUpdate(Rule rule, Set<String> imports) {
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.toEntityName.toFirstLower
+		
+		var fieldValues = rule.apply.actionExpression.fieldValues
+		
+		'''
+		«fieldValues.map[it.generateActionFieldAssign(entityVar, imports)].join»
 		'''
 	}
 	

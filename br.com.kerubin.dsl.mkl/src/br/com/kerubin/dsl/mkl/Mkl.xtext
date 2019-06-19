@@ -230,7 +230,8 @@ RuleExpression:
 ;
 
 FormObject:
-	form ?= 'form'
+{FormObject}
+	form ?= 'entityForm'
 ;
 
 RuleWhenAbstractObjectOperation:
@@ -241,11 +242,21 @@ RuleWhenAbstractObjectOperation:
 	RuleWhenOpIsNotNull |
 	RuleWhenOpIsEquals |
 	RuleWhenOpIsNotEquals |
-	RuleWhenOpOnCreate 
+	RuleWhenOpOnCreate |
+	RuleWhenOpOnUpdate |
+	RuleWhenOpOnInit
 ;
 
 RuleWhenOpOnCreate:
 	methodName = 'onCreate'
+;
+
+RuleWhenOpOnUpdate:
+	methodName = 'onUpdate'
+;
+
+RuleWhenOpOnInit:
+	methodName = 'onInit'
 ;
 
 RuleWhenOpIsNull:
