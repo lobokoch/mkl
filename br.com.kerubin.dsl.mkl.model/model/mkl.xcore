@@ -777,7 +777,26 @@ class Slot extends Element {
 			return basicType instanceof IntegerType || 
 			basicType instanceof MoneyType || 
 			basicType instanceof DoubleType || 
-			basicType instanceof ByteType
+			basicType instanceof ByteType ||
+			basicType instanceof SmallintType
+		}
+		
+		false
+	}
+	
+	op boolean isSmallint() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof SmallintType
+		}
+		
+		false
+	}
+	
+	op boolean isInteger() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof IntegerType
 		}
 		
 		false

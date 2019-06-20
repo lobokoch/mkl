@@ -308,6 +308,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				    <groupId>br.com.kerubin.api</groupId>
 				    <artifactId>database-core</artifactId>
 				</dependency>
+				<dependency>
+					<groupId>org.projectlombok</groupId>
+					<artifactId>lombok</artifactId>
+					<scope>provided</scope>
+				</dependency>
 		        «buildMessagingDependency»
 				<!-- Begin Entity Dependencies -->
 				«service?.dependencies.map[buildEntityMavenDependency]?.join»

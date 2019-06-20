@@ -761,6 +761,21 @@ class EntityUtils {
 		slot.name.toFirstLower
 	}
 	
+	def static resolveFieldInitializationValue(Slot slot) {
+		var value = ''
+		
+		if (slot.isSmallint) {
+			value = '0'
+		}
+		
+		if (!value.empty) {
+			''' = «value»'''
+		}
+		else {
+			''''''
+		}
+	}
+	
 	def static getSumFieldName(Slot slot) {
 		'sum' + slot.name.toFirstUpper
 	}
@@ -854,6 +869,11 @@ class EntityUtils {
 		name
 	}
 	
+	def static toAutoCompleteImplName(Entity entity) {
+		val name = entity.toAutoCompleteClassName + 'Impl'
+		name
+	}
+	
 	def static toTranslationServiceClassName(Service service) {
 		val name = service.domain.toCamelCase + service.name.toCamelCase + 'TranslationService'
 		name
@@ -894,7 +914,7 @@ class EntityUtils {
 		«IF noArgsConstructor»
 		
 		public «className»() {
-			
+			// Contructor for reflexion, injection, Jackson, QueryDSL, etc proposal.
 		}
 		«ENDIF»
 		«IF allArgsConstructor»

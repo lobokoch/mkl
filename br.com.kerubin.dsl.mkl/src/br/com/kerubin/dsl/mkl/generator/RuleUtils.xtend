@@ -283,7 +283,8 @@ class RuleUtils {
 		} 
 		else if (abstratcValue instanceof NumberObject) {
 			val object = (abstratcValue as NumberObject)
-			valueExp = object.value.toString
+			valueExp = slot.getNumberValue(object, imports)
+			// valueExp = object.value.toString
 		} 
 		else if (abstratcValue instanceof NullObject) {
 			val object = (abstratcValue as NullObject)
@@ -293,6 +294,19 @@ class RuleUtils {
 		'''
 		«slot.buildMethodSet(targetObject, valueExp)»;
 		'''
+	}
+	
+	def static getNumberValue(Slot slot, NumberObject numberObject, Set<String> imports) {
+		var value = numberObject.value.toString
+		if (slot.isMoney) {
+			imports.add('import java.math.BigDecimal;')
+			value = 'new BigDecimal(' + value + ')'  
+		}
+		else if (slot.isInteger) {
+			value = 'new Long(' + value + ')' 
+		}
+		
+		value
 	}
 	
 	def static String getTemporalConstantValueForAngularMoment(RuleWhenTemporalConstants tc) {

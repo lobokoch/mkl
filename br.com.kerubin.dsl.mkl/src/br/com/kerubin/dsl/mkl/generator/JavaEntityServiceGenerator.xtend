@@ -134,7 +134,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		val rulesFormOnCreate = entity.rulesFormOnCreate
-		val rulesFormOnUpdate = entity.rulesFormOnCreate
+		val rulesFormOnUpdate = entity.rulesFormOnUpdate
 		
 		val imports = newLinkedHashSet
 		

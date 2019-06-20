@@ -126,6 +126,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    form.reset();
 			    setTimeout(function() {
 			      this.«fieldName» = new «dtoName»();
+			      «IF !rulesFormOnInit.empty»
+			      this.rulesOnInit();
+	  			  «ENDIF»
 			      «IF entity.hasEnumSlotsWithDefault»
 			      this.initializeEnumFieldsWithDefault();
 			      «ENDIF»
