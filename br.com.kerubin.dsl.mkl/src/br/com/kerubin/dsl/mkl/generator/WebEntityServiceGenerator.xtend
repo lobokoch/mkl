@@ -47,6 +47,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val ruleActions = entity.ruleActions
 		
+		val fkSlots = entity.getEntitySlots
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «entity.toAutoCompleteName» } from './«entity.toEntityWebModelName»';''')
 		slots.filter[it.isEntity && it.asEntity.isNotSameName(entity)].forEach[
@@ -63,6 +65,12 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
 		imports.add("import { environment } from 'src/environments/environment';")
+		
+		if (!fkSlots.empty) {
+			fkSlots.getDistinctSlotsByEntityName.forEach[ 
+				imports.add(it.resolveSlotAutocompleteImportForWeb)
+			]
+		}
 		
 		
 		val ruleMakeCopies = entity.ruleMakeCopies
@@ -179,6 +187,14 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			}
 			
+			«IF !fkSlots.empty»
+									
+			// Begin relationships autoComplete 
+			«fkSlots.map[it.generateSlotAutoCompleteMethod].join»
+			// End relationships autoComplete
+			
+			«ENDIF»
+						
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
 			«ENDIF»
@@ -279,6 +295,31 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateSlotAutoCompleteMethod(Slot slot) {
+		val entity = slot.asEntity
+		val slotAutoCompleteName = slot.toSlotAutoCompleteName
+		val autoCompleteClassName = entity.toAutoCompleteName
+		
+		'''
+		
+		«slotAutoCompleteName»(query: string): Promise<«autoCompleteClassName»[]> {
+		    const headers = this.getHeaders();
+		
+		    let params = new HttpParams();
+		    params = params.set('query', query);
+		
+		    return this.http.get<«autoCompleteClassName»[]>(`${this.url}/«slotAutoCompleteName»`, { headers, params })
+		      .toPromise()
+		      .then(response => {
+		        const result = response as «autoCompleteClassName»[];
+		        return result;
+		      });
+		
+		}
+		
+		'''
 	}
 	
 	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {

@@ -44,6 +44,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
+		val fkSlots = entity.getEntitySlots
+		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
+		
 		'''
 		package «entity.package»;
 		
@@ -76,6 +79,12 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		import org.springframework.data.domain.Page;
 		import org.springframework.data.domain.Pageable;
 		«service.importPageResult»
+		
+		«IF !fkSlotsDistinct.empty»
+				
+		«fkSlotsDistinct.map[it.resolveSlotAutocompleteImport].join('\r\n')»
+		
+		«ENDIF»	
 		
 		
 		@RestController
@@ -159,7 +168,32 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«ruleActions.map[generateRuleActions].join»
 			«ruleMakeCopies.map[generateRuleMakeCopies].join»
 			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join('\r\n')»
+			
+			«IF !fkSlots.empty»
+						
+			// Begin relationships autoComplete 
+			«fkSlots.map[it.generateSlotAutoCompleteMethod].join»
+			// End relationships autoComplete
+			
+			«ENDIF»
 		}
+		'''
+	}
+	
+	def CharSequence generateSlotAutoCompleteMethod(Slot slot) {
+		val entity = slot.asEntity
+		val slotAutoCompleteName = slot.toSlotAutoCompleteName
+		val entityServiceVar = slot.ownerEntity.toServiceName.toFirstLower
+		
+		'''
+		
+		@Transactional(readOnly=true)
+		@GetMapping("/«slotAutoCompleteName»")
+		public Collection<«entity.toAutoCompleteName»> «slotAutoCompleteName»(@RequestParam("query") String query) {
+			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query);
+			return result;
+		}
+		
 		'''
 	}
 	

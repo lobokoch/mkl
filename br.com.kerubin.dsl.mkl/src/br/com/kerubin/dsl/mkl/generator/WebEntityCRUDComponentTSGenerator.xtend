@@ -456,7 +456,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence mountAutoComplete(Slot slot) {
 		val entity = slot.asEntity
-		val serviceName = entity.toEntityWebServiceClassName.toFirstLower
+		val serviceName = slot.ownerEntity.toEntityWebServiceClassName.toFirstLower
 		
 		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id && !(entity.enableVersion && it.name.toLowerCase == 'version')]
 		if (resultSlots.isEmpty) {
@@ -472,7 +472,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		«slot.toAutoCompleteName»(event) {
 		    const query = event.query;
 		    this.«serviceName»
-		      .autoComplete(query)
+		      .«slot.toSlotAutoCompleteName»(query)
 		      .then((result) => {
 		        this.«slot.webAutoCompleteSuggestions» = result as «entity.toAutoCompleteName»[];
 		      })

@@ -1058,6 +1058,10 @@ class Entity extends PublicObject, Rulled {
 		return !slots.filter[it.hasListFilter].empty
 	}
 	
+	op Slot[] getEntitySlots() {
+		slots.filter[it.isEntity].asEList
+	}
+	
 	op boolean hasListFilterMany() {
 		return hasListFilter() && !slots.filter[it.isListFilterMany].empty
 	}

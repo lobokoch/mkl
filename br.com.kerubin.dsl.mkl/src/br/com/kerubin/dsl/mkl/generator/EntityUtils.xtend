@@ -9,6 +9,7 @@ import br.com.kerubin.dsl.mkl.model.DateType
 import br.com.kerubin.dsl.mkl.model.DoubleType
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Enumeration
+import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.ManyToMany
 import br.com.kerubin.dsl.mkl.model.ManyToOne
@@ -18,21 +19,22 @@ import br.com.kerubin.dsl.mkl.model.OneToMany
 import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.PublicObject
 import br.com.kerubin.dsl.mkl.model.RelationshipFeatured
+import br.com.kerubin.dsl.mkl.model.RuleAction
+import br.com.kerubin.dsl.mkl.model.RuleFunction
+import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.Service
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.SmallintType
 import br.com.kerubin.dsl.mkl.model.StringType
 import br.com.kerubin.dsl.mkl.model.TimeType
 import br.com.kerubin.dsl.mkl.model.UUIDType
+import java.util.ArrayList
 import java.util.List
+import java.util.Set
+import org.eclipse.emf.common.util.EList
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
-import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
-import br.com.kerubin.dsl.mkl.model.RuleTarget
-import java.util.Set
-import br.com.kerubin.dsl.mkl.model.RuleFunction
-import br.com.kerubin.dsl.mkl.model.RuleAction
-import br.com.kerubin.dsl.mkl.model.SmallintType
 
 class EntityUtils {
 	
@@ -716,6 +718,54 @@ class EntityUtils {
 		return slot.toJavaTypeDTO
 	}
 	
+	def static getDistinctSlotsByEntityName(EList<Slot> slots) {
+		val onlyEntitySlots = slots.filter[it.isEntity].toList
+		val List<Slot> distinctByEntityNameSlots = new ArrayList()
+		onlyEntitySlots.forEach[slot | 
+			// Deixa adicionar apenas 1 slot apontando para a mesma entidade, e
+			// não deixa adicionar slot se ele é do mesmo tipo da entidade owner dele.
+			val slotAsEntityName = slot.asEntity.name
+			val canAdd = (slotAsEntityName != slot.ownerEntity.name) && !distinctByEntityNameSlots.exists[it.asEntity.name == slotAsEntityName]
+			if (canAdd) {
+				distinctByEntityNameSlots.add(slot)
+			}
+		]
+		
+		distinctByEntityNameSlots
+	}
+	
+	def static String resolveSlotAutocompleteImport(Slot slot) {
+		if (slot.isEntity) { // If slot is an entity, returns its autocomplete class name version.
+			val entity = slot.asEntity
+			val autoCompleteName = entity.toAutoCompleteName
+			val entityPackage = entity.package
+			return 'import ' + entityPackage + '.' + autoCompleteName + ';'
+		}
+		return '<slot is not an entity>'
+	}
+	
+	def static String resolveSlotAutocompleteImportForWeb(Slot slot) {
+		if (slot.isEntity) { // If slot is an entity, returns its autocomplete class name version.
+			val entity = slot.asEntity
+			val autoCompleteName = entity.toAutoCompleteName
+			//val entityPackage = entity.package
+			val result = '''import { «autoCompleteName» } from './«entity.toEntityWebModelName»';'''
+			return result
+			//return 'import ' + entityPackage + '.' + autoCompleteName + ';'
+		}
+		return '<slot is not an entity>'
+	}
+	
+	def static String resolveSlotRepositoryImport(Slot slot) {
+		if (slot.isEntity) { // If slot is an entity, returns its autocomplete class name version.
+			val entity = slot.asEntity
+			val repositoryName = entity.toRepositoryName
+			val entityPackage = entity.package
+			return 'import ' + entityPackage + '.' + repositoryName + ';'
+		}
+		return '<slot is not an entity>'
+	}
+	
 	
 	
 	def static String resolveAutocompleteFieldName(Slot slot) {
@@ -866,6 +916,12 @@ class EntityUtils {
 	
 	def static toAutoCompleteName(Entity entity) {
 		val name = entity.toAutoCompleteClassName
+		name
+	}
+	
+	def static toSlotAutoCompleteName(Slot slot) {
+		val entity = slot.asEntity
+		val name = entity.fieldName + slot.fieldName.toFirstUpper + 'AutoComplete'
 		name
 	}
 	

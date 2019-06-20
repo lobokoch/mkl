@@ -49,6 +49,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val ruleActions = entity.ruleActions
 		val ruleMakeCopies = entity.ruleMakeCopies
+		val fkSlots = entity.getEntitySlots
 		
 		'''
 		package «entity.package»;
@@ -59,6 +60,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		«IF entity.hasAutoComplete»
 		import java.util.Collection;
 		«ENDIF»
+		
+		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotAutocompleteImport].join»
 		
 		public interface «entity.toServiceName» {
 			
@@ -75,6 +78,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«IF entity.hasAutoComplete»
 			public Collection<«entity.toAutoCompleteName»> autoComplete(String query);
 			«ENDIF»
+			
+			«IF !fkSlots.empty»
+			// Begin relationships autoComplete 
+			«fkSlots.map[it.generateSlotAutoCompleteInterfaceMethod].join»
+			// End relationships autoComplete
+			«ENDIF»
+			 
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
 			«ENDIF»
@@ -85,6 +95,19 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ruleActions.map[generateRuleActionsInterfaceMethod].join»
 			«ruleMakeCopies.map[generateRuleMakeCopiesActionsInterfaceMethod].join»
 		}
+		'''
+	}
+	
+	def Object generateSlotAutoCompleteInterfaceMethod(Slot slot) {
+		val entity = slot.asEntity
+		'''
+		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query);
+		'''
+	}
+	
+	def Object generateSlotsAutoCompleteImports(Slot slot) {
+		'''
+		«slot.resolveSlotAutocompleteImport»
 		'''
 	}
 	
@@ -135,8 +158,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		val rulesFormOnCreate = entity.rulesFormOnCreate
 		val rulesFormOnUpdate = entity.rulesFormOnUpdate
+		val fkSlots = entity.getEntitySlots
 		
 		val imports = newLinkedHashSet
+		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
 		
 		val pakage = '''
 		package «entity.package»;		
@@ -175,6 +200,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import br.com.kerubin.api.database.core.ServiceContext;
 		«service.getImportServiceConstants»
 		«ENDIF»
+		«IF !fkSlots.empty»
+		
+		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotAutocompleteImport].join('\r\n')»
+		
+		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotRepositoryImport].join('\r\n')»
+		
+		«ENDIF»		
 		'''
 		
 		val code = '''
@@ -200,9 +232,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Autowired
 			DomainEntityEventsPublisher publisher;
 			«ENDIF»
+			«IF !fkSlotsDistinct.empty»
 			
+			«fkSlotsDistinct.map[it.generateSlotRepositoryInjection].join»
+			«ENDIF»
 			
 			@Transactional
+			@Override
 			public «entityName» create(«entityName» «entityVar») {
 				«IF !rulesFormOnCreate.empty»
 				ruleOnCreate(«entityVar»);
@@ -225,11 +261,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			
 			@Transactional(readOnly = true)
+			@Override
 			public «entityName» read(«idType» «idVar») {
 				return «getEntityMethod»(«idVar»);
 			}
 			
 			@Transactional
+			@Override
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
 				«IF !rulesFormOnUpdate.empty»
 				ruleOnUpdate(«entityVar»);
@@ -254,6 +292,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			
 			@Transactional
+			@Override
 			public void delete(«idType» «idVar») {
 				«repositoryVar».deleteById(«idVar»);
 				
@@ -265,7 +304,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			«IF entity.hasPublishEntityEvents»
-			private void publishEvent(«entityName» entity, String eventName) {
+			protected void publishEvent(«entityName» entity, String eventName) {
 				«entity.toEntityDomainEventTypeName» event = new «entityEventName»(«publishSlots.map[it.buildSlotGet].join(', \r\n\t')»);
 				
 				DomainEventEnvelope<DomainEvent> envelope = DomainEventEnvelopeBuilder
@@ -282,6 +321,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			
 			@Transactional(readOnly = true)
+			@Override
 			public Page<«entityName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName», Pageable pageable) {
 				Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName»);
 				
@@ -290,7 +330,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			}
 			
 			@Transactional(readOnly = true)
-			private «entityName» «getEntityMethod»(«idType» «entity.id.name») {
+			protected «entityName» «getEntityMethod»(«idType» «entity.id.name») {
 				Optional<«entityName»> «entityVar» = «repositoryVar».findById(«idVar»);
 				if (!«entityVar».isPresent()) {
 					throw new IllegalArgumentException("«entityDTOName» not found:" + «idVar».toString());
@@ -300,10 +340,18 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			«IF entity.hasAutoComplete»
 			@Transactional(readOnly = true)
+			@Override
 			public Collection<«entity.toAutoCompleteName»> autoComplete(String query) {
 				Collection<«entity.toAutoCompleteName»> result = «repositoryVar».autoComplete(query);
 				return result;
 			}
+			«ENDIF»
+			«IF !fkSlots.empty»
+			
+			// Begin relationships autoComplete 
+			«fkSlots.map[it.generateSlotAutoCompleteImplMethod].join»
+			// End relationships autoComplete
+			
 			«ENDIF»
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteImpl].join»
@@ -321,6 +369,32 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val result = pakage + preImports + imports.join('\n\r') + '\n\r' + code;
 		
 		result
+	}
+	
+	def CharSequence generateSlotRepositoryInjection(Slot slot) {
+		val entity = slot.asEntity
+		val repositoryClass = entity.toRepositoryName
+		val repositoryVar = repositoryClass.toFirstLower
+		
+		'''
+		@Autowired
+		private «repositoryClass» «repositoryVar»;
+		
+		'''
+	}
+	
+	def CharSequence generateSlotAutoCompleteImplMethod(Slot slot) {
+		val entity = slot.asEntity
+		val repositoryVar = entity.toRepositoryName.toFirstLower
+		'''
+		@Transactional(readOnly = true)
+		@Override
+		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query) {
+			Collection<«entity.toAutoCompleteName»> result = «repositoryVar».autoComplete(query);
+			return result;
+		}
+		
+		'''
 	}
 	
 	def CharSequence generateRuleMakeCopiesActionsImpl(Rule rule, Set<String> imports) {
@@ -444,6 +518,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		'''
 		@Transactional(readOnly = true)
+		@Override
 		public «entity.toEntitySumFieldsName» get«entity.toEntitySumFieldsName»(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName») {
 			Predicate predicate = «entity.toEntityListFilterPredicateName.toFirstLower».mountAndGetPredicate(«entity.toEntityListFilterName»);
 			
@@ -505,6 +580,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		'''
 		
 		@Transactional(readOnly = true)
+		@Override
 		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(String query) {
 			Collection<«autoComplateName.toFirstUpper»> result = «repositoryVar».«autoComplateName»(query);
 			return result;
