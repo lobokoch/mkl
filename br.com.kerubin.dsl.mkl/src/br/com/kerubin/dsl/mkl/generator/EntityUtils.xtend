@@ -326,6 +326,11 @@ class EntityUtils {
 		var class = 'ui-g-12 ui-fluid'
 		if (slot.hasWebClass) 
 			class += ' ' + slot.web.getStyleClass
+		
+		if (slot.isHiddenSlot && !class.containsWord('hidden')) {
+			class += ' hidden'
+		}
+		
 		class
 	}
 	

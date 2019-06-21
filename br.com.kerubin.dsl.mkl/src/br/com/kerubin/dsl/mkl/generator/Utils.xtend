@@ -1,6 +1,10 @@
 package br.com.kerubin.dsl.mkl.generator
 
+import java.util.regex.Pattern
+
 class Utils {
+	
+	static val REGEX_FIND_WORD = '(?i).*?\\b%s\\b.*?';
 	
 	// JAVA
 	static val MAIN_APP_NAME = 'Kerubin'
@@ -206,5 +210,14 @@ class Utils {
 			sb.append(' ')
 		}
 		sb.append(value);
+	}
+	
+	
+	def static boolean containsWord(String text, String word) {
+		if (text === null || word === null) {
+			return false
+		}
+	    val regex = String.format(REGEX_FIND_WORD, Pattern.quote(word));
+	    return text.matches(regex);
 	}
 }

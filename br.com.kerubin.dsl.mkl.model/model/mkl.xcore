@@ -673,7 +673,7 @@ class Slot extends Element {
 	}
 	
 	op boolean isShowOnGrid() {
-		return !hasGrid || !grid.isSlotIsHidden 
+		return !isHiddenSlot && (!hasGrid || !grid.isSlotIsHidden) 
 	}
 	
 	op boolean hasGridStyleClass() {

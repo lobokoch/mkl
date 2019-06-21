@@ -8,7 +8,9 @@ import br.com.kerubin.dsl.mkl.model.DoubleType
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.MoneyType
+import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.SmallintType
 import br.com.kerubin.dsl.mkl.model.StringType
 import br.com.kerubin.dsl.mkl.model.TimeType
 import br.com.kerubin.dsl.mkl.model.UUIDType
@@ -16,8 +18,6 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
-import br.com.kerubin.dsl.mkl.model.Rule
-import br.com.kerubin.dsl.mkl.model.SmallintType
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	val closedHTMLTags = #['p-', 'textarea']
@@ -190,12 +190,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			styleClassMethodName = slot.toRuleWithSlotAppyStyleClassMethodName
 		}
 		
-		if (slot.isDTOFull) {
-		}
-		else if (slot.isDTOLookupResult) {
-		}
-		else if (slot.isEnum) { 
-		}
 		
 		'''
 		«IF slot.isToMany»
