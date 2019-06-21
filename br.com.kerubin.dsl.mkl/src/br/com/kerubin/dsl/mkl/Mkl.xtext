@@ -194,7 +194,8 @@ fragment Rules returns Rulled:
 
 // BEGIN rule
 Rule:
-	'with' '(' (targets += RuleTarget (',' targets += RuleTarget)*)? ')'
+	//'with' '(' (targets += AbstractRuleTarget (',' targets += AbstractRuleTarget)*)? ')'
+	'with' '(' (target = AbstractRuleTarget)? ')'
 	'.' 'apply' '(' apply = RuleApply ')'
 	('.' 'when' '(' when = RuleWhen ')')?
 	('.' 'action' '(' action = RuleAction ')')?
@@ -351,7 +352,7 @@ RuleApply:
 		('(' sumFieldExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
-		(ruleFunction = RuleFunction)?
+		(ruleFunction = RuleFunction)? 
 	)
 ;
 
@@ -379,6 +380,7 @@ MakeCopiesExpression:
 	')'
 ;
 
+
 FieldAssignExpression:
 	fieldValues += FieldAndValue (',' fieldValues += FieldAndValue)*
 ;
@@ -394,6 +396,18 @@ FieldMathExpression:
 
 enum MathOperator:
 	PLUS='+' | MINUS='-' | MULTIPLICATION='*' | DIVISION='/'
+;
+
+AbstractRuleTarget:
+	RuleTargetEnum | RuleTargetField
+;
+
+RuleTargetField:
+	target = FieldObject
+;
+
+RuleTargetEnum:
+	target = RuleTarget
 ;
 
 enum RuleTarget:

@@ -35,6 +35,10 @@ import org.eclipse.emf.common.util.EList
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
+import br.com.kerubin.dsl.mkl.model.AbstractRuleTarget
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
+import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
+import br.com.kerubin.dsl.mkl.model.Rule
 
 class EntityUtils {
 	
@@ -554,55 +558,92 @@ class EntityUtils {
 	}
 	
 	def static getRuleGridRows(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.GRID_ROWS]] 
+		val rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ROWS]
+		rules
 	}
 	
 	def static getRuleActions(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.GRID_ACTIONS]] 
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS] 
 	}
 	
 	def static getRuleFormActions(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS]] 
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS]
 	}
 	
 	def static getRuleFormActionsWithFunction(Entity entity) {
-		entity?.rules.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
-			&& it.apply !== null && it.apply.hasRuleFunction
-		] 
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
+			it.apply !== null && it.apply.hasRuleFunction]
+		rules
 	}
 	
 	def static getRuleFormActionsActions(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM_ACTIONS] 
-			&& it.apply !== null && it.apply.hasRuleFunction
-		] 
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
+			it.apply !== null && it.apply.hasRuleFunction]
+		rules
 	}
 	
 	def static getRuleSubscribe(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.SUBSCRIBE]] 
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.SUBSCRIBE] 
+	}
+	
+	def static getRulesWithSlot(Entity entity) {
+		entity?.rules?.filter[it.target instanceof RuleTargetField]
+	}
+	
+	def static getRulesWithTargetEnum(Entity entity) {
+		//entity?.rules?.filter[it.target.isTargetEnum].map[(it as RuleTargetEnum).target]
+		entity?.rules?.filter[it.target instanceof RuleTargetEnum]
+	}
+	
+	def static ruleAsTargetEnum(Rule rule) {
+		//entity?.rules?.filter[it.target.isTargetEnum].map[(it as RuleTargetEnum).target]
+		if (rule.target !== null && rule.target instanceof RuleTargetEnum) {
+			return rule.target as RuleTargetEnum
+		}
+		null
+	}
+	
+	def static getRulesWithSlotAppyStyleClass(Entity entity) {
+		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasStyleClass] 
+	}
+	
+	def static getRuleWithSlotAppyStyleClassForSlot(Slot slot) {
+		val entity = slot.ownerEntity
+		val rules = entity.rulesWithSlotAppyStyleClass
+		if (!rules.empty) { // TODO: for now gets only the first one.
+			val rule = rules.filter[it.target.asRuleWithTargetField.target.field.name == slot.name].head
+			if (rule !== null) {
+				return rule
+			}
+		} 
+		
+		null
+	}
+	
+	def static asRuleWithTargetField(AbstractRuleTarget target) {
+		if (target instanceof RuleTargetField) {
+			target as RuleTargetField
+		}
 	}
 	
 	def static getRuleMakeCopies(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
-			return it.apply !== null && it.apply.hasMakeCopiesExpression
-		]
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
+		.filter[it.apply !== null && it.apply.hasMakeCopiesExpression]
 	}
 	
 	def static getRulesFormOnCreate(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
-			return it.when !== null && it.when.hasFormOnCreate
-		]
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
+		.filter[it.when !== null && it.when.hasFormOnCreate]
 	}
 	
 	def static getRulesFormOnInit(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
-			return it.when !== null && it.when.hasFormOnInit
-		]
+		entity?.rulesWithTargetEnum?.filter[it.target == RuleTarget.FORM]
+		.filter[it.when !== null && it.when.hasFormOnInit]
 	}
 	
 	def static getRulesFormOnUpdate(Entity entity) {
-		entity?.rules?.filter[it.targets.exists[it == RuleTarget.FORM]].filter[ it |
-			return it.when !== null && it.when.hasFormOnUpdate
-		]
+		entity?.rulesWithTargetEnum?.filter[it.target == RuleTarget.FORM]
+		.filter[it.when !== null && it.when.hasFormOnUpdate]
 	}
 	
 	def static hasRuleActions(Entity entity) {
@@ -749,9 +790,9 @@ class EntityUtils {
 			val entity = slot.asEntity
 			val autoCompleteName = entity.toAutoCompleteName
 			//val entityPackage = entity.package
-			val result = '''import { «autoCompleteName» } from './«entity.toEntityWebModelName»';'''
+			val result = '''import { «autoCompleteName» } from './«entity.toEntityWebModelNameWithPah»';'''
+			//println('result: ' + result)
 			return result
-			//return 'import ' + entityPackage + '.' + autoCompleteName + ';'
 		}
 		return '<slot is not an entity>'
 	}
@@ -1007,6 +1048,11 @@ class EntityUtils {
 	
 	def static toAutoCompleteClearMethodName(Slot slot) {
 		slot.toAutoCompleteName + 'Clear'
+	}
+	
+	def static toRuleWithSlotAppyStyleClassMethodName(Slot slot) {
+		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyStyleClass'
+		name
 	}
 	
 	def static toAutoCompleteDTOName(Slot slot) {

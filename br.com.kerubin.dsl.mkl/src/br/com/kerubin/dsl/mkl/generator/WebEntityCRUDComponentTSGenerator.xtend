@@ -10,6 +10,7 @@ import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
 import br.com.kerubin.dsl.mkl.model.Rule
 import java.util.Set
 import java.util.LinkedHashSet
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
 
 class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -48,6 +49,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rulesFormOnUpdate = entity.rulesFormOnUpdate
 		val rulesFormOnInit = entity.rulesFormOnInit
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
+		val rulesWithSlotAppyStyleClass = entity.rulesWithSlotAppyStyleClass
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -261,11 +263,46 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			«ENDIF»
+			
+			«IF !rulesWithSlotAppyStyleClass.empty»
+												
+			// Begin RuleWithSlotAppyStyleClass 
+			«rulesWithSlotAppyStyleClass.map[it.generateRuleWithSlotAppyStyleClass].join»
+			// End Begin RuleWithSlotAppyStyleClass
+			
+			«ENDIF»
 		}
 		'''
 		
 		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
+	}
+	
+	def CharSequence generateRuleWithSlotAppyStyleClass(Rule rule) {
+		val slot = (rule.target as RuleTargetField).target.field
+		val methodName = slot.toRuleWithSlotAppyStyleClassMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		val styleClass = rule.apply.getResutValue
+		
+		'''
+		«methodName»() {
+			const expression = «expression»;
+			if (expression) {
+				return '«styleClass»';
+			} else {
+				return '';
+			}
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {

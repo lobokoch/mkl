@@ -34,7 +34,7 @@ import br.com.kerubin.dsl.mkl.model.Slot
 class RuleWebUtils {
 	
 	def static CharSequence buildRulesForGridRowStyleClass(Entity entity) {
-		val rules = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_ROWS] && it.apply.hasStyleClass]
+		val rules = entity.rulesWithTargetEnum.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ROWS && it.apply.hasStyleClass]
 		
 		if (!rules.empty) {
 			val entityVar = entity.fieldName

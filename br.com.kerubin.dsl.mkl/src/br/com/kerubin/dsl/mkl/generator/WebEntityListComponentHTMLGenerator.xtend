@@ -229,7 +229,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence buildEntityRuleWithSum(Entity entity) {
-		val rule = entity.rules.filter[it.targets.exists[it == RuleTarget.GRID_SUMROW_LAST_CELL]].head
+		val rule = entity.rulesWithTargetEnum.filter[it.ruleAsTargetEnum == RuleTarget.GRID_SUMROW_LAST_CELL].head
 		if (rule === null) {
 			return ''
 		}
@@ -273,7 +273,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		if (!entity.hasRules) {
 			return ''''''
 		}
-		if (entity.rules.exists[it.targets.exists[it == RuleTarget.GRID_ROWS]]) {
+		if (entity.rulesWithTargetEnum.exists[it.ruleAsTargetEnum == RuleTarget.GRID_ROWS]) {
 			return ''' [ngClass]="applyAndGetRuleGridRowStyleClass(«entity.fieldName»)"'''
 		}
 	}

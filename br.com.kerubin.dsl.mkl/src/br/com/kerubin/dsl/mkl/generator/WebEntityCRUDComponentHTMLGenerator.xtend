@@ -184,6 +184,12 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		val ruleWithSlotAppyStyleClass = slot.getRuleWithSlotAppyStyleClassForSlot
+		var styleClassMethodName = ''
+		if (ruleWithSlotAppyStyleClass !== null) {
+			styleClassMethodName = slot.toRuleWithSlotAppyStyleClassMethodName
+		}
+		
 		if (slot.isDTOFull) {
 		}
 		else if (slot.isDTOLookupResult) {
@@ -195,7 +201,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		«IF slot.isToMany»
 		slot.isToMany
 		«ELSE»
-		<div class="«slot.webClass»">
+		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»>
 			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»</label>
 			«slot.generateWebComponent»
 		</div>
