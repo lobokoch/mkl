@@ -573,6 +573,7 @@ class EntityUtils {
 	def static getRuleFormActionsWithFunction(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
 			it.apply !== null && it.apply.hasRuleFunction]
+		
 		rules
 	}
 	
@@ -591,14 +592,18 @@ class EntityUtils {
 	}
 	
 	def static getRulesWithTargetEnum(Entity entity) {
-		//entity?.rules?.filter[it.target.isTargetEnum].map[(it as RuleTargetEnum).target]
-		entity?.rules?.filter[it.target instanceof RuleTargetEnum]
+		val rules = entity?.rules?.filter[
+			val flag = it.target instanceof RuleTargetEnum
+			return flag
+		]
+		
+		rules
 	}
 	
-	def static ruleAsTargetEnum(Rule rule) {
-		//entity?.rules?.filter[it.target.isTargetEnum].map[(it as RuleTargetEnum).target]
+	def static RuleTarget ruleAsTargetEnum(Rule rule) {
 		if (rule.target !== null && rule.target instanceof RuleTargetEnum) {
-			return rule.target as RuleTargetEnum
+			val result = (rule.target as RuleTargetEnum).target
+			return result
 		}
 		null
 	}
