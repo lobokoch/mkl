@@ -597,6 +597,7 @@ class SumField {
 class Grid {
 	boolean slotIsHidden
 	boolean slotIsUnordered
+	boolean showNumberAsNegative
 	String styleClass
 }
 
@@ -678,6 +679,10 @@ class Slot extends Element {
 	
 	op boolean hasGridStyleClass() {
 		return hasGrid && grid.styleClass !== null && !grid.styleClass.trim.isEmpty 
+	}
+	
+	op boolean isGridShowNumberAsNegative() {
+		return hasGrid && grid.showNumberAsNegative 
 	}
 	
 	op boolean isOrderedOnGrid() {

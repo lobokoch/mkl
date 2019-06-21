@@ -115,6 +115,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val ruleGridRows = entity.ruleGridRows
 		val ruleGridRowsWithCSS = ruleGridRows.filter[it.apply.hasCSS]
 		
+		
 		'''
 		
 		<!-- Begin GRID -->
@@ -130,11 +131,12 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			    <ng-template pTemplate="header">
 		            <tr>
 		            	«slots.map[slot |
+		            	val userClasses = slot.getUserWebClassesArray
 		            	'''
 	            		«IF slot.isOrderedOnGrid»
-	            			<th «slot.buildGridColumnWidth»[pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
+	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF» «slot.buildGridColumnWidth»[pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
 	            		«ELSE»
-	            			<th>«slot.getTranslationKeyGridFunc»</th>
+	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»>«slot.getTranslationKeyGridFunc»</th>
 	            		«ENDIF»
 		            	'''
 		            ].join»
@@ -335,11 +337,15 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLGridDataRow(Slot slot) {
-		val fieldName = slot.entityFieldName
+		var fieldName = slot.entityFieldName
+		if (slot.isNumber && slot.isGridShowNumberAsNegative) {
+			fieldName = 'doShowNumberAsNegative(' + fieldName + ')'
+		}
+		val userClasses = slot.getUserWebClassesArray
 		
 		val hasStyleClass = slot.hasGridStyleClass
 		'''
-		<td«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
+		<td«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy'}}

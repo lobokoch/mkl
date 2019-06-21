@@ -334,6 +334,23 @@ class EntityUtils {
 		class
 	}
 	
+	def static String getUserWebClassesArray(Slot slot) {
+		if (slot.hasWebClass) {
+			var styleClass = slot.web.getStyleClass
+			
+			 val userClassesList = styleClass.split(' ')
+			 if (userClassesList !== null) {
+			 	var userClasses = userClassesList.filter[it.startsWith('kb-')].map["'" + it + "'"].join(' ')
+			 	if (userClasses !== null && !userClasses.trim.empty) {
+			 		userClasses = '[' + userClasses + ']'
+			 		return userClasses
+			 	}
+			 }
+		}
+		
+		return null
+	}
+	
 	def static String getWebLabel(Slot slot) {
 		var label = if (slot.hasWebLabel) slot.web.label else slot.translationKey.translationKeyFunc.toString
 		label

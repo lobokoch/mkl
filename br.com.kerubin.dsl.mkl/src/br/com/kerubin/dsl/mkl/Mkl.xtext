@@ -441,6 +441,7 @@ Grid:
 		(
 			(slotIsUnordered ?= 'unordered')? &
 			(slotIsHidden ?= 'hidden')? &
+			(showNumberAsNegative ?= 'showNumberAsNegative')? &
 			('styleClass' ':' styleClass = STRING)?
 		)
 	')'

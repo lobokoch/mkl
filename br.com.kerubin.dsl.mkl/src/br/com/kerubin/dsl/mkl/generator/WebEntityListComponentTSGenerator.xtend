@@ -227,6 +227,17 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ruleActions.map[generateRuleActions].join»
 			
 			«buildTranslationMethod(service)»
+			
+			«IF entity.slots.exists[it.isGridShowNumberAsNegative]»
+			
+			doShowNumberAsNegative(value: any) {
+			    if (value) {
+			      return value * -1;
+			    }
+			    return value;
+			  }
+			  
+			«ENDIF»
 		}
 		'''
 		
