@@ -913,8 +913,8 @@ class Slot extends Element {
 	}
 	
 	op boolean isAutoCompleteResult() {
-		return (hasAutoComplete && 
-			(this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey)) )||
+		return (hasAutoComplete &&  
+			(this.getAutoComplete.isResult || !(this.autoComplete.isData || this.getAutoComplete.isResult || this.getAutoComplete.isKey)) ) ||
 				// version field must figured out in the results.
 			ownerEntity.enableVersion && this.name.toLowerCase == 'version'
 	}

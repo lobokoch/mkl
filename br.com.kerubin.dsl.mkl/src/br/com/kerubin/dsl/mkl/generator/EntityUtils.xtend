@@ -688,12 +688,12 @@ class EntityUtils {
 	}
 	
 	def static getRulesFormOnInit(Entity entity) {
-		entity?.rulesWithTargetEnum?.filter[it.target == RuleTarget.FORM]
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
 		.filter[it.when !== null && it.when.hasFormOnInit]
 	}
 	
 	def static getRulesFormOnUpdate(Entity entity) {
-		entity?.rulesWithTargetEnum?.filter[it.target == RuleTarget.FORM]
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
 		.filter[it.when !== null && it.when.hasFormOnUpdate]
 	}
 	
