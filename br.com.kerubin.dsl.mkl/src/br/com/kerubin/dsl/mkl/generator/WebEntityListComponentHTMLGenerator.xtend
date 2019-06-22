@@ -202,7 +202,12 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence buildGridColumnWidth(Slot slot) {
-		if (slot.isDate) {
+		var columnWidth = if (slot.hasGridColumnWidth) slot.grid.columnWidth else ''
+		
+		if (!columnWidth.empty) {
+			'''style="width: «columnWidth»" '''
+		}
+		else if (slot.isDate) {
 			'''style="width: 7em" '''
 		}
 		else if (slot.isMoney) {
@@ -302,7 +307,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateSumFieldValue(Slot slot) {
-		'''«IF slot.sumField.hasLabel»«slot.sumField.label»: «ENDIF»{{ «slot.ownerEntity.toEntitySumFieldsName.toFirstLower».«slot.sumFieldName»«IF slot.isMoney» | currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}'''
+		var fieldName = slot.ownerEntity.toEntitySumFieldsName.toFirstLower + '.' + slot.sumFieldName
+		
+		if (slot.isGridShowNumberAsNegative) {
+			fieldName = fieldName.toGridShowNumberAsNegative
+		}
+		
+		'''«IF slot.sumField.hasLabel»«slot.sumField.label»: «ENDIF»{{ «fieldName»«IF slot.isMoney» | «IF slot.isGridNoCurrencySimbol»number:'1.2-2'«ELSE»currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF»«ENDIF» }}'''
 	}
 	
 	def CharSequence generateHTMLExtras(Entity entity) {
@@ -339,7 +350,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence generateHTMLGridDataRow(Slot slot) {
 		var fieldName = slot.entityFieldName
 		if (slot.isNumber && slot.isGridShowNumberAsNegative) {
-			fieldName = 'doShowNumberAsNegative(' + fieldName + ')'
+			fieldName = fieldName.toGridShowNumberAsNegative
 		}
 		val userClasses = slot.getUserWebClassesArray
 		
@@ -354,7 +365,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«ELSEIF slot.isTime»
 			{{«fieldName» | date:'HH:mm:ss'}}
 			«ELSEIF slot.isMoney»
-			{{«fieldName» | currency:'BRL':'symbol':'1.2-2':'pt' }}
+			{{«fieldName» | «IF slot.isGridNoCurrencySimbol»number:'1.2-2'«ELSE»currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}
 			«ELSEIF slot.isBoolean»
 			{{«fieldName»«slot.booleanValue» }}
 			«ELSEIF slot.isEntity»

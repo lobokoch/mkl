@@ -388,8 +388,13 @@ class EntityUtils {
 	}
 	
 	def static String getLabelGridValue(Slot slot) {
-		val label = slot.labelGrid ?: slot.getLabelValue
+		val label = if (slot.hasGridLabel) slot.grid.label else slot.getLabelValue
 		label
+	}
+	
+	def static String toGridShowNumberAsNegative(String fieldNameValue) {
+		val methodCall = 'doShowNumberAsNegative(' + fieldNameValue + ')'
+		methodCall
 	}
 	
 	

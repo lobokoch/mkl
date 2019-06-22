@@ -176,7 +176,7 @@ Slot:
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
 			('label' ':' label=STRING)? &
-			('labelGrid' ':' labelGrid=STRING)? &
+			//('labelGrid' ':' labelGrid=STRING)? &
 			(sumField = SumField)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
@@ -442,6 +442,9 @@ Grid:
 			(slotIsUnordered ?= 'unordered')? &
 			(slotIsHidden ?= 'hidden')? &
 			(showNumberAsNegative ?= 'showNumberAsNegative')? &
+			(noCurrencySimbol ?= 'noCurrencySimbol')? &
+			('label' ':' label = STRING)? &
+			('columnWidth' ':' columnWidth = STRING)? &
 			('styleClass' ':' styleClass = STRING)?
 		)
 	')'

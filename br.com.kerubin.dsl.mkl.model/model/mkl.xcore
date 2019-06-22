@@ -598,7 +598,10 @@ class Grid {
 	boolean slotIsHidden
 	boolean slotIsUnordered
 	boolean showNumberAsNegative
+	boolean noCurrencySimbol
+	String label
 	String styleClass
+	String columnWidth
 }
 
 class Web {
@@ -636,7 +639,7 @@ class Slot extends Element {
 	
 	String help
 	String label
-	String labelGrid
+	//String labelGrid
 	String mask
 	
 	// String defaultValue
@@ -685,6 +688,14 @@ class Slot extends Element {
 		return hasGrid && grid.showNumberAsNegative 
 	}
 	
+	op boolean isGridNoCurrencySimbol() {
+		return hasGrid && grid.noCurrencySimbol 
+	}
+	
+	op boolean hasGridColumnWidth() {
+		return hasGrid && grid.columnWidth !== null && !grid.columnWidth.trim.empty
+	}
+	
 	op boolean isOrderedOnGrid() {
 		return !hasGrid || !grid.isSlotIsUnordered
 	}
@@ -693,8 +704,8 @@ class Slot extends Element {
 		return label !== null && !label.trim.isEmpty
 	}
 	
-	op boolean hasLabelGrid() {
-		return labelGrid !== null && !labelGrid.trim.isEmpty
+	op boolean hasGridLabel() {
+		return hasGrid && grid.label !== null && !grid.label.trim.isEmpty
 	}
 	
 	op boolean hasGrid() {
