@@ -129,9 +129,15 @@ class FieldMathExpression {
 }
 
 abstract class AbstractObject {
+	
 }
 
-class FormObject extends  AbstractObject {
+class EntityAndFieldObject extends AbstractObject {
+	refers Slot fieldEntity
+	String fieldSlot
+}
+
+class FormObject extends AbstractObject {
 	boolean form
 }
 
@@ -256,6 +262,11 @@ class RuleApply {
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
 	contains RuleFunction ruleFunction
+	contains DisableCUD disableCUD
+	
+	op boolean hasDisableCUD() {
+		disableCUD !== null
+	}
 	
 	op boolean hasRuleFunction() {
 		return ruleFunction !== null
@@ -299,6 +310,10 @@ class RuleApply {
 			styleCss
 		}
 	}
+}
+
+class DisableCUD {
+	boolean disableCUD
 }
 
 class AbstractRuleTarget {
@@ -515,6 +530,7 @@ class CudEvents {
 class AutoComplete {
 	boolean key
 	boolean result
+	boolean data
 	contains Sort sort
 	
 	op boolean hasSort() {
@@ -901,6 +917,10 @@ class Slot extends Element {
 			(this.getAutoComplete.isResult || (!this.getAutoComplete.isResult && !this.getAutoComplete.isKey)) )||
 				// version field must figured out in the results.
 			ownerEntity.enableVersion && this.name.toLowerCase == 'version'
+	}
+	
+	op boolean isAutoCompleteData() {
+		return hasAutoComplete && this.getAutoComplete.isData
 	}
 	
 	op boolean isAutoCompleteKey() {

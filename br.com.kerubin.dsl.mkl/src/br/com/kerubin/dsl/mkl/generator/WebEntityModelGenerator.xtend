@@ -49,7 +49,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 	}
 	
 	def CharSequence generateEntityDefaultAutoComplete(Entity entity, boolean isAutoComplete) {
-		val autoCompleteSlots = entity.slots.filter[!mapped].filter[isAutoCompleteResult || (entity.enableVersion && it.name.toLowerCase == 'version')]
+		val autoCompleteSlots = entity.slots.filter[!mapped].filter[it.isAutoCompleteResult || it.isAutoCompleteData || (entity.enableVersion && it.name.toLowerCase == 'version')]
 		'''
 		
 		export class «entity.toAutoCompleteName» {

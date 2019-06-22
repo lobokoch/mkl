@@ -30,6 +30,7 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
 import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
 
 class RuleWebUtils {
 	
@@ -116,12 +117,31 @@ class RuleWebUtils {
 		var Entity entity = null
 		var Slot slot = null
 		var isObjSlot = false
+		var isObjEntityAndField = false
+		var Slot fieldEntity = null
 		
 		if (expression.left.whenObject instanceof FieldObject) {
 			slot = (expression.left.whenObject as FieldObject).getField
 			isObjSlot = true
 			entity = slot.ownerEntity
 			objName = 'this.' + slot.ownerEntity.fieldName + '.' + slot.fieldName
+			isObjStr = slot.isString
+			isObjDate = slot.isDate
+			isNumber = slot.isNumber
+			isObjEnum = slot.isEnum
+			strExpression = objName
+		}
+		else if (expression.left.whenObject instanceof EntityAndFieldObject) {
+			isObjEntityAndField = true
+			isObjSlot = true
+			val entityAndFieldObject = (expression.left.whenObject as EntityAndFieldObject)
+			fieldEntity = entityAndFieldObject.fieldEntity
+			
+			entity = fieldEntity.asEntity
+			val slotName = entityAndFieldObject.fieldSlot
+			slot = entity.slots.filter[it.name.toLowerCase == slotName.toLowerCase].head
+			
+			objName = 'this.' + fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName + '.' + slot.fieldName
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber

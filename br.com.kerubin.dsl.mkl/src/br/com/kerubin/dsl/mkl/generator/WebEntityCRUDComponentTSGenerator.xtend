@@ -50,6 +50,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rulesFormOnInit = entity.rulesFormOnInit
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		val rulesWithSlotAppyStyleClass = entity.rulesWithSlotAppyStyleClass
+		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -269,13 +270,38 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			// Begin RuleWithSlotAppyStyleClass 
 			«rulesWithSlotAppyStyleClass.map[it.generateRuleWithSlotAppyStyleClass].join»
 			// End Begin RuleWithSlotAppyStyleClass
+			«ENDIF»
 			
+			«IF !rulesFormWithDisableCUD.empty»
+			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD»
 			«ENDIF»
 		}
 		'''
 		
 		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
+	}
+	
+	def CharSequence generateRuleFormWithDisableCUD(Rule rule) {
+		val entity = rule.ruleOwnerEntity
+		val methodName = entity.toRuleFormWithDisableCUDMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		
+		'''
+		«methodName»() {
+			const expression = «expression»;
+			return expression;
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateRuleWithSlotAppyStyleClass(Rule rule) {

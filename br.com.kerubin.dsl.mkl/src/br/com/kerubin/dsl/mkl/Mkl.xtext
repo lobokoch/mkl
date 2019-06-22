@@ -226,8 +226,12 @@ RuleWhenExpression:
 ;
 
 RuleExpression:
-	( whenObject = (FieldObject | TemporalObject | NumberObject | FormObject) ) 
+	( whenObject = (FieldObject | TemporalObject | NumberObject | FormObject | EntityAndFieldObject) ) 
 		('.' objectOperation = RuleWhenAbstractObjectOperation)?
+;
+
+EntityAndFieldObject:
+	fieldEntity=[Slot] '.' fieldSlot=ID_KEYWORD
 ;
 
 FormObject:
@@ -352,8 +356,13 @@ RuleApply:
 		('(' sumFieldExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
+		(disableCUD = DisableCUD)? &
 		(ruleFunction = RuleFunction)? 
 	)
+;
+
+DisableCUD:
+	disableCUD ?= 'disableCUD'
 ;
 
 RuleFunction:
@@ -479,12 +488,12 @@ enum FilterOperatorEnum:
 
 AutoComplete:
 {AutoComplete}	
-	//'autoComplete' ('(' ((key?='key') | (result?='result') | (key?='key' ',' result?='result')) ')')?
 	'autoComplete' 
 	(
 	'('
 		(key?='key')? &
 		(result?='result')? &
+		(data?='data')? &
 		(sort = Sort)?
 	')'
 	)?

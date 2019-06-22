@@ -24,7 +24,7 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def generateAutoCompleteInterface(Entity entity) {
-		val slots = entity.slots.filter[it.isAutoCompleteResult]
+		val slots = entity.slots.filter[it.isAutoCompleteResult || it.isAutoCompleteData]
 		if (!slots.isEmpty) {
 			val basePakage = clientGenSourceFolder // CLIENT
 			val entityFile = basePakage + entity.packagePath + '/' + entity.toAutoCompleteName + '.java'
@@ -33,7 +33,7 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def generateAutoCompleteImpl(Entity entity) {
-		val slots = entity.slots.filter[it.isAutoCompleteResult]
+		val slots = entity.slots.filter[it.isAutoCompleteResult || it.isAutoCompleteData]
 		if (!slots.isEmpty) {
 			val basePakage = serverGenSourceFolder // SERVER
 			val entityFile = basePakage + entity.packagePath + '/' + entity.toAutoCompleteImplName + '.java'

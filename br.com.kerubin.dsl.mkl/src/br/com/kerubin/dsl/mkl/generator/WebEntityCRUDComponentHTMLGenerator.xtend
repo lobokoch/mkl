@@ -116,12 +116,14 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateButtons(Entity entity) {
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
+		val hasRulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD.size > 0
+		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
 		
 		'''
 		
 		<div class="ui-g-12">
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<button class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
+				<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»()"«ENDIF» class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<button pButton (click)="begin(form1)" type="button" label="Novo"></button>

@@ -597,11 +597,26 @@ class EntityUtils {
 		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS]
 	}
 	
+	def static getRulesForm(Entity entity) {
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
+	}
+	
 	def static getRuleFormActionsWithFunction(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
 			it.apply !== null && it.apply.hasRuleFunction]
 		
 		rules
+	}
+	
+	def static getRulesFormWithDisableCUD(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM && 
+			it.apply !== null && it.apply.hasDisableCUD]
+		
+		rules
+	}
+	
+	def static toRuleFormWithDisableCUDMethodName(Entity entity) {
+		entity.fieldName + 'RuleDisableCUD'
 	}
 	
 	def static getRuleFormActionsActions(Entity entity) {
@@ -633,6 +648,10 @@ class EntityUtils {
 			return result
 		}
 		null
+	}
+	
+	def static Entity getRuleOwnerEntity(Rule rule) {
+		rule.owner as Entity
 	}
 	
 	def static getRulesWithSlotAppyStyleClass(Entity entity) {
@@ -780,6 +799,10 @@ class EntityUtils {
 		entity.service.servicePackage + '.entity.' + entity.name.toLowerCase
 	}
 	
+	def static String getEnumPackage(Enumeration enumeration) {
+		getServicePackage(enumeration.service) + '.' + enumeration.name.toFirstUpper
+	}
+	
 	def static String resolveSlotAutocomplete(Slot slot, Set<String> imports) {
 		if (slot.isEntity) { // If slot is an entity, returns its autocomplete class name version.
 			val entity = slot.asEntity
@@ -787,7 +810,12 @@ class EntityUtils {
 			val entityPackage = entity.package
 			imports.add('import ' + entityPackage + '.' + autoCompleteName + ';')
 			return autoCompleteName
+		} 
+		
+		if (slot.isEnum) {
+			imports.add('import ' + slot.asEnum.enumPackage + ';')
 		}
+		
 		return slot.toJavaTypeDTO
 	}
 	
