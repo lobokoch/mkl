@@ -49,6 +49,7 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 		public class «entity.toEntityLookupResultDTOName» {
 		
 			«slots.generateFields»
+			«entity.generateConstructor»
 			«slots.generateGetters»
 			«slots.generateSetters»
 			«entity.generateEquals»
@@ -63,6 +64,14 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 		'''
 		
 		package + imports + body 
+	}
+	
+	def CharSequence generateConstructor(Entity entity) {
+		'''
+		
+		«entity.toEntityLookupResultDTOName.generateNoArgsConstructor»
+		
+		'''
 	}
 	
 	

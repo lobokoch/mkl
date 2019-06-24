@@ -519,23 +519,33 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence mountAutoComplete(Slot slot) {
 		val entity = slot.asEntity
-		val serviceName = slot.ownerEntity.toEntityWebServiceClassName.toFirstLower
+		val ownerEntity = slot.ownerEntity
+		
+		val serviceName = ownerEntity.toEntityWebServiceClassName.toFirstLower
 		
 		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id && !(entity.enableVersion && it.name.toLowerCase == 'version')]
 		if (resultSlots.isEmpty) {
 			resultSlots = entity.slots.filter[it.autoCompleteResult]
 		}
 		
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		
 		'''
 		«slot.toAutoCompleteClearMethodName»(event) {
 			// The autoComplete value has been reseted
-			this.«slot.ownerEntity.fieldName».«slot.fieldName» = null;
+			this.«ownerEntity.fieldName».«slot.fieldName» = null;
 		}
 		
 		«slot.toAutoCompleteName»(event) {
+			«IF hasAutoCompleteWithOwnerParams»
+			const «ownerEntity.fieldName» = (JSON.parse(JSON.stringify(this.«ownerEntity.fieldName»)));
+			if (String(«ownerEntity.fieldName».«slot.fieldName» === '')) {
+				«ownerEntity.fieldName».«slot.fieldName» = null;
+			}
+			«ENDIF»
 		    const query = event.query;
 		    this.«serviceName»
-		      .«slot.toSlotAutoCompleteName»(query)
+		      .«slot.toSlotAutoCompleteName»(query«IF hasAutoCompleteWithOwnerParams», «ownerEntity.fieldName»«ENDIF»)
 		      .then((result) => {
 		        this.«slot.webAutoCompleteSuggestions» = result as «entity.toAutoCompleteName»[];
 		      })

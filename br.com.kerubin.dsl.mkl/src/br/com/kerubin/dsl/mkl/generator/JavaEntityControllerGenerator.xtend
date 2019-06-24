@@ -182,15 +182,24 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateSlotAutoCompleteMethod(Slot slot) {
 		val entity = slot.asEntity
+		val ownerEntity = slot.ownerEntity
+		val entityDTOName = ownerEntity.toEntityDTOName
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
+		
 		val slotAutoCompleteName = slot.toSlotAutoCompleteName
 		val entityServiceVar = slot.ownerEntity.toServiceName.toFirstLower
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
 		
 		'''
 		
 		@Transactional(readOnly=true)
+		«IF hasAutoCompleteWithOwnerParams»
+		@PostMapping(value = "/«slotAutoCompleteName»", params = { "query" })
+		«ELSE»
 		@GetMapping("/«slotAutoCompleteName»")
-		public Collection<«entity.toAutoCompleteName»> «slotAutoCompleteName»(@RequestParam("query") String query) {
-			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query);
+		«ENDIF»
+		public Collection<«entity.toAutoCompleteName»> «slotAutoCompleteName»(@RequestParam("query") String query«IF hasAutoCompleteWithOwnerParams», @RequestBody «entityDTOName» «entityDTOVar»«ENDIF») {
+			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query«IF hasAutoCompleteWithOwnerParams», «entityDTOVar»«ENDIF»);
 			return result;
 		}
 		

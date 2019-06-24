@@ -46,6 +46,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		public class «entity.toEntityDTOName» {
 		
 			«entity.generateFields»
+			«entity.generateConstructor»
 			«entity.generateGetters»
 			«entity.generateSetters»
 			«entity.generateEquals»
@@ -60,6 +61,14 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 		
 		package + imports + body 
+	}
+	
+	def CharSequence generateConstructor(Entity entity) {
+		'''
+		
+		«entity.toDtoName.generateNoArgsConstructor»
+		
+		'''
 	}
 	
 	

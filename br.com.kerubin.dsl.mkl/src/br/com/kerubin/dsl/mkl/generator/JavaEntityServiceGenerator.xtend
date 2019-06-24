@@ -61,7 +61,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import java.util.Collection;
 		«ENDIF»
 		
-		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotAutocompleteImport].join»
+		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotAutocompleteImport].join('\r\n')»
 		
 		public interface «entity.toServiceName» {
 			
@@ -100,8 +100,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	
 	def Object generateSlotAutoCompleteInterfaceMethod(Slot slot) {
 		val entity = slot.asEntity
+		val ownerEntity = slot.ownerEntity
+		val entityDTOName = ownerEntity.toEntityDTOName
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		
 		'''
-		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query);
+		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query«IF hasAutoCompleteWithOwnerParams», «entityDTOName» «entityDTOVar»«ENDIF»);
 		'''
 	}
 	
@@ -385,11 +390,16 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence generateSlotAutoCompleteImplMethod(Slot slot) {
 		val entity = slot.asEntity
+		val ownerEntity = slot.ownerEntity
+		val entityDTOName = ownerEntity.toEntityDTOName
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
 		val repositoryVar = entity.toRepositoryName.toFirstLower
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		
 		'''
 		@Transactional(readOnly = true)
 		@Override
-		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query) {
+		public Collection<«entity.toAutoCompleteName»> «slot.toSlotAutoCompleteName»(String query«IF hasAutoCompleteWithOwnerParams», «entityDTOName» «entityDTOVar»«ENDIF») {
 			Collection<«entity.toAutoCompleteName»> result = «repositoryVar».autoComplete(query);
 			return result;
 		}

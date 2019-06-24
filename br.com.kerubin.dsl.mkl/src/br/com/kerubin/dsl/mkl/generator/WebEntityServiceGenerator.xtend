@@ -299,18 +299,21 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def CharSequence generateSlotAutoCompleteMethod(Slot slot) {
 		val entity = slot.asEntity
+		val ownerEntity = slot.ownerEntity
 		val slotAutoCompleteName = slot.toSlotAutoCompleteName
 		val autoCompleteClassName = entity.toAutoCompleteName
 		
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		
 		'''
 		
-		«slotAutoCompleteName»(query: string): Promise<«autoCompleteClassName»[]> {
+		«slotAutoCompleteName»(query: string«IF hasAutoCompleteWithOwnerParams», «ownerEntity.fieldName»: «ownerEntity.toDtoName»«ENDIF»): Promise<«autoCompleteClassName»[]> {
 		    const headers = this.getHeaders();
 		
 		    let params = new HttpParams();
 		    params = params.set('query', query);
 		
-		    return this.http.get<«autoCompleteClassName»[]>(`${this.url}/«slotAutoCompleteName»`, { headers, params })
+		    return this.http.«IF hasAutoCompleteWithOwnerParams»post«ELSE»get«ENDIF»<«autoCompleteClassName»[]>(`${this.url}/«slotAutoCompleteName»`«IF hasAutoCompleteWithOwnerParams», «ownerEntity.fieldName»«ENDIF», { headers, params })
 		      .toPromise()
 		      .then(response => {
 		        const result = response as «autoCompleteClassName»[];

@@ -183,7 +183,8 @@ Slot:
 			(publish ?= 'publishedInEvents')? &
 			(grid = Grid)? &
 			(web = Web)? &
-			(sort = Sort)?
+			(sort = Sort)? &
+			(autoCompleteWithOwnerParams?='autoCompleteWithOwnerParams')?
 			
 		)
 ;
