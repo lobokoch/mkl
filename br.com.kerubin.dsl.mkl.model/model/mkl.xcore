@@ -132,6 +132,10 @@ abstract class AbstractObject {
 	
 }
 
+class StringObject extends AbstractObject {
+	String strValue
+}
+
 class EntityAndFieldObject extends AbstractObject {
 	refers Slot fieldEntity
 	String fieldSlot
@@ -223,6 +227,7 @@ class RuleWhenOpIsNotNull extends RuleWhenAbstractObjectOperation {
 class RuleWhenEqualsValue /*extends RuleWhenTemporalValue*/ {
 	contains FieldObject fieldObject
 	contains EnumObject enumObject
+	contains StringObject stringObject
 }
 
 class EnumObject extends AbstractObject {

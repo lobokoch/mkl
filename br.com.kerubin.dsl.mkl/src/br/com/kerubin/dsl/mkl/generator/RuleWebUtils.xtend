@@ -31,6 +31,7 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
+import br.com.kerubin.dsl.mkl.model.StringObject
 
 class RuleWebUtils {
 	
@@ -103,6 +104,11 @@ class RuleWebUtils {
 	}
 	
 	def static void buildRuleWhenExpression(RuleWhenExpression expression, StringBuilder resultStrExp) {
+		val isThis = true
+		buildRuleWhenExpression(expression, resultStrExp, isThis);
+	}
+	
+	def static void buildRuleWhenExpression(RuleWhenExpression expression, StringBuilder resultStrExp, boolean isThis) {
 		if (expression ===  null) {
 			return
 		}
@@ -124,7 +130,12 @@ class RuleWebUtils {
 			slot = (expression.left.whenObject as FieldObject).getField
 			isObjSlot = true
 			entity = slot.ownerEntity
-			objName = 'this.' + slot.ownerEntity.fieldName + '.' + slot.fieldName
+			if (isThis) {
+				objName = 'this.' + slot.ownerEntity.fieldName + '.' + slot.fieldName
+			}
+			else {
+				objName = slot.ownerEntity.fieldName + '.' + slot.fieldName
+			}
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
@@ -141,7 +152,12 @@ class RuleWebUtils {
 			val slotName = entityAndFieldObject.fieldSlot
 			slot = entity.slots.filter[it.name.toLowerCase == slotName.toLowerCase].head
 			
-			objName = 'this.' + fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName + '.' + slot.fieldName
+			if (isThis) {
+				objName = 'this.' + fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName + '.' + slot.fieldName
+			}
+			else {
+				objName = fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName + '.' + slot.fieldName
+			}
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
@@ -159,6 +175,12 @@ class RuleWebUtils {
 			objName = tObj.value.toString
 			strExpression = objName
 			isNumber = true
+		}
+		else if (expression.left.whenObject instanceof StringObject) {
+			val tObj = expression.left.whenObject as StringObject
+			objName = tObj.strValue.toString
+			strExpression = objName
+			isObjStr = true
 		}
 		else if (expression.left.whenObject instanceof FormObject) {
 			isObjForm = true
@@ -207,15 +229,14 @@ class RuleWebUtils {
 				val opIsEquals = op as RuleWhenOpIsEquals
 				var valueToCompare = opIsEquals.valueToCompare.getRuleWhenEqualsValueForTypeScript(entity, null)
 				var objectToCompare = objName
-				/*if (isObjSlot) {
-					objectToCompare = 'this.' + objectToCompare
-				}*/
-				// val objectToCompare = entity.fieldName
+				
 				
 				val isNotEquals = op instanceof RuleWhenOpIsNotEquals
 				
+				val isStringValue = (isObjSlot && slot.isEnum) || opIsEquals.valueToCompare.stringObject !== null
+				
 				if (isNotEquals) {
-					if (isObjSlot && slot.isEnum) {
+					if (isStringValue) {
 						valueToCompare = "'" + valueToCompare + "'"
 						resultStrExp.concatSB('''(String(«objectToCompare») !== «valueToCompare»)''')
 					}
@@ -226,7 +247,7 @@ class RuleWebUtils {
 				}
 				else {
 					// String(this.caixaDiario.caixaDiarioSituacao) !== 'NAO_INICIADO';
-					if (isObjSlot && slot.isEnum) {
+					if (isStringValue) {
 						valueToCompare = "'" + valueToCompare + "'"
 						resultStrExp.concatSB('''(String(«objectToCompare») === «valueToCompare»)''')
 					}
@@ -256,7 +277,7 @@ class RuleWebUtils {
 		
 		if (expression.rigth !== null) {
 			resultStrExp.concatSB(expression.operator.adaptRuleWhenOperator)
-			expression.rigth.buildRuleWhenForGridRowStyleClass(resultStrExp)
+			expression.rigth.buildRuleWhenExpression(resultStrExp, isThis)
 		}
 	}
 	
@@ -271,6 +292,9 @@ class RuleWebUtils {
 			objStr = enumItem
 			// val importValue = entity.getImportExternalEnumeration(enumeration)
 			// imports.add(importValue)
+		}
+		else if (ruleWhenEqualsValue.stringObject !== null) {
+			objStr = ruleWhenEqualsValue.stringObject.strValue
 		}
 		objStr
 	}

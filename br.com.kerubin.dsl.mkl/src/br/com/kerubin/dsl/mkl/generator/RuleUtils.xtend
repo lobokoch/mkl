@@ -24,6 +24,7 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
 import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
 import br.com.kerubin.dsl.mkl.model.Enumeration
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
+import br.com.kerubin.dsl.mkl.model.RuleTarget
 
 class RuleUtils {
 	
@@ -66,6 +67,14 @@ class RuleUtils {
 		if (expression ===  null) {
 			return
 		}
+		
+		var isRuleWithSubscribe = false
+		if (expression.eContainer !== null 
+			&& expression.eContainer.eContainer !== null &&
+			expression.eContainer.eContainer instanceof Rule) {
+				isRuleWithSubscribe = (expression.eContainer.eContainer as Rule).ruleAsTargetEnum == RuleTarget.SUBSCRIBE
+			} 
+		//(expression.eContainer.eContainer as Rule).ruleAsTargetEnum == RuleTarget.SUBSCRIBE
 		
 		var String objName = null
 		var String strExpression = null
@@ -138,15 +147,22 @@ class RuleUtils {
 			else if (op instanceof RuleWhenOpIsEquals) {
 				val opIsEquals = op as RuleWhenOpIsEquals
 				val value = opIsEquals.valueToCompare.getRuleWhenEqualsValueForJava(entity, imports)
-				val envelopeObjectName = objName.replace(entity.fieldName, 'envelope.getPayload()')
+				if (isRuleWithSubscribe) {
+					objName = objName.replace(entity.fieldName, 'envelope.getPayload()')
+				}
+				
+				val isStringValue = opIsEquals.valueToCompare.stringObject !== null
+				if (isStringValue) {
+					objName += '.toString()'
+				}
 				
 				val isNotEquals = op instanceof RuleWhenOpIsNotEquals
 				
 				if (isNotEquals) {
-					resultStrExp.concatSB('''!(«envelopeObjectName».equals(«value»))''')
+					resultStrExp.concatSB('''!(«objName».equals(«value»))''')
 				}
 				else {
-					resultStrExp.concatSB('''«envelopeObjectName».equals(«value»)''')
+					resultStrExp.concatSB('''«objName».equals(«value»)''')
 				}
 			}
 			else if (op instanceof RuleWhenOpIsBefore) {
@@ -194,6 +210,9 @@ class RuleUtils {
 			objStr = enumeration.name + '.' + enumItem
 			val importValue = entity.getImportExternalEnumeration(enumeration)
 			imports.add(importValue)
+		} 
+		else if (ruleWhenEqualsValue.stringObject !== null) {
+			objStr = '"' + ruleWhenEqualsValue.stringObject.strValue + '"'
 		}
 		objStr
 	}

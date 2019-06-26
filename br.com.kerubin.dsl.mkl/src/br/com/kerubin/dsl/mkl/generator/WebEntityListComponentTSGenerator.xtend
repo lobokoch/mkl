@@ -66,6 +66,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val ruleActions = entity.ruleActions
 		val idVar = entity.id.name.toFirstLower
 		
+		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
+		
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
 		import {ConfirmationService, LazyLoadEvent, SelectItem} from 'primeng/api';
@@ -238,11 +240,40 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			  }
 			  
 			«ENDIF»
+			
+			«IF !rulesFormWithDisableCUD.empty»
+			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD»
+			«ENDIF»
 		}
 		'''
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateRuleFormWithDisableCUD(Rule rule) {
+		val entity = rule.ruleOwnerEntity
+		val dtoName = entity.toDtoName
+		val fieldName = entity.fieldName
+		
+		val methodName = entity.toRuleFormWithDisableCUDMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp, false)
+			expression = resultStrExp.toString
+		}
+		
+		
+		'''
+		«methodName»(«fieldName»: «dtoName») {
+			const expression = «expression»;
+			return expression;
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateRuleActions(Rule rule) {

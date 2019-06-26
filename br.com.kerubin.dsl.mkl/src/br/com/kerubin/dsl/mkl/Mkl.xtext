@@ -231,6 +231,7 @@ RuleExpression:
 		('.' objectOperation = RuleWhenAbstractObjectOperation)?
 ;
 
+
 EntityAndFieldObject:
 	fieldEntity=[Slot] '.' fieldSlot=ID_KEYWORD
 ;
@@ -305,7 +306,11 @@ RuleWhenOpIsNotEquals:
 
 RuleWhenEqualsValue:
 {RuleWhenEqualsValue}	
-	enumObject=EnumObject// | fieldObject=FieldObject 
+	enumObject = EnumObject | fieldObject = FieldObject | stringObject = StringObject
+;
+
+StringObject:
+	strValue = STRING
 ;
 
 EnumObject:

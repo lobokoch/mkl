@@ -115,6 +115,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val ruleGridRows = entity.ruleGridRows
 		val ruleGridRowsWithCSS = ruleGridRows.filter[it.apply.hasCSS]
 		
+		val hasRulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD.size > 0
+		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
+		
 		
 		'''
 		
@@ -150,7 +153,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		              	<td class="kb-actions">
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
 		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="pi pi-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
-		              		<button (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
+		              		<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»(«entity.fieldName»)"«ENDIF» (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
 		              		«ruleActions.map[it.generateRuleActions].join»
 		              	</td>
 		            </tr>

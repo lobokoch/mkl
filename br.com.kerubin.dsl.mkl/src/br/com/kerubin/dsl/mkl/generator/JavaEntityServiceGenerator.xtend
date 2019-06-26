@@ -168,6 +168,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val imports = newLinkedHashSet
 		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
 		
+		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
+		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
+		
 		val pakage = '''
 		package «entity.package»;		
 		'''
@@ -245,6 +248,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Transactional
 			@Override
 			public «entityName» create(«entityName» «entityVar») {
+				«IF !rulesFormWithDisableCUD.empty»
+				«ruleFormWithDisableCUDMethodName»(«entityVar»);
+				
+				«ENDIF»
 				«IF !rulesFormOnCreate.empty»
 				ruleOnCreate(«entityVar»);
 				
@@ -274,6 +281,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Transactional
 			@Override
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
+				«IF !rulesFormWithDisableCUD.empty»
+				«ruleFormWithDisableCUDMethodName»(«entityVar»);
+				
+				«ENDIF»
 				«IF !rulesFormOnUpdate.empty»
 				ruleOnUpdate(«entityVar»);
 				
@@ -299,6 +310,12 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Transactional
 			@Override
 			public void delete(«idType» «idVar») {
+				«IF !rulesFormWithDisableCUD.empty»
+				«entityName» «entityVar» = new «entityName»();
+				«entityVar».setId(«idVar»);
+				«ruleFormWithDisableCUDMethodName»(«entityVar»);
+				
+				«ENDIF»
 				«repositoryVar».deleteById(«idVar»);
 				
 				«IF entity.hasPublishDeleted»
@@ -368,12 +385,41 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			«ruleActions.map[generateRuleActionsImpl(imports)].join»
 			«ruleMakeCopies.map[generateRuleMakeCopiesActionsImpl(imports)].join»
+			«IF !rulesFormWithDisableCUD.empty»
+			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD(imports)»
+			«ENDIF»
 		}
 		'''
 		
 		val result = pakage + preImports + imports.join('\n\r') + '\n\r' + code;
 		
 		result
+	}
+	
+	def CharSequence generateRuleFormWithDisableCUD(Rule rule, Set<String> imports) {
+		val entity = rule.ruleOwnerEntity
+		
+		val entityName = entity.toEntityName
+		val entityVar = entity.fieldName
+		
+		val methodName = entity.toRuleFormWithDisableCUDMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String whenExpression = 'true'
+		if (hasWhen) {
+			whenExpression = rule.buildRuleWhenExpressionForJava(imports)
+		}
+		
+		
+		'''
+		protected void «methodName»(«entityName» «entityVar») {
+			boolean expression = «whenExpression»;
+			if (!expression) {
+				throw new IllegalStateException("Opeção não permitida para este objeto.");
+			}	
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateSlotRepositoryInjection(Slot slot) {
