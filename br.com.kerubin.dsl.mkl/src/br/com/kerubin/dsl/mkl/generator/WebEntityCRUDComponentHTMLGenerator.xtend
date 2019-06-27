@@ -175,7 +175,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 		<p-card>
 			<p-header>
-				div class="kb-card-header">«entity.translationKey.translationKeyFunc»</div>
+				<div class="kb-card-header">«entity.translationKey.translationKeyFunc»</div>
 			</p-header>
 		
 		'''
