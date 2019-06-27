@@ -54,6 +54,7 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		import { DropdownModule } from 'primeng/dropdown';
 		import {CalendarModule} from 'primeng/calendar';
 		import { CurrencyMaskModule } from 'ng2-currency-mask';
+		import {CardModule} from 'primeng/card';
 		
 		// Kerubin - BEGIN
 		import { «tranlationServiceName» } from './../i18n/«service.serviceWebTranslationComponentPathName»';
@@ -88,6 +89,7 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 			DropdownModule,
 			CalendarModule,
 			CurrencyMaskModule,
+			CardModule,
 		
 		    // Kerubin
 		    «entityName»RoutingModule«IF hasRelations»,«ENDIF»

@@ -49,17 +49,19 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 		<div class="container">
+			«entity.generateEntityTitle»
 		
 		  <form #form1="ngForm" (ngSubmit)="save(form1.form)">
 		  	<div class="ui-g">
 		  	
-				«entity.generateEntityTitle»
 				«entity.generateEntityFields»
 				«IF !rules.empty»«entity.generateEntityCopies(rules.head)»«ENDIF»
 				«entity.generateButtons»
 			
 			</div>
 		  </form>
+		  
+		  </p-card>
 		  
 		</div>
 		'''
@@ -171,9 +173,11 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
-		<div class="ui-g-12">
-			<h1>«entity.translationKey.translationKeyFunc»</h1>
-		</div>
+		<p-card>
+			<p-header>
+				div class="kb-card-header">«entity.translationKey.translationKeyFunc»</div>
+			</p-header>
+		
 		'''
 	}
 	

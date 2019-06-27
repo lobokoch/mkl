@@ -410,11 +410,10 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			whenExpression = rule.buildRuleWhenExpressionForJava(imports)
 		}
 		
-		
 		'''
 		protected void «methodName»(«entityName» «entityVar») {
 			boolean expression = «whenExpression»;
-			if (!expression) {
+			if (expression) {
 				throw new IllegalStateException("Opeção não permitida para este objeto.");
 			}	
 			

@@ -25,6 +25,7 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
 import br.com.kerubin.dsl.mkl.model.Enumeration
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
 import br.com.kerubin.dsl.mkl.model.RuleTarget
+import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
 
 class RuleUtils {
 	
@@ -63,32 +64,76 @@ class RuleUtils {
 		return null
 	}
 	
+	def static findRule(RuleWhenExpression expression) {
+		var container = expression.eContainer
+		while (container !== null) {
+			if (container instanceof Rule) {
+				val rule = container as Rule
+				return rule
+			}
+			container = container.eContainer
+		}
+		
+		return null
+	}
+	
 	def static void buildRuleWhenExpressionForJava(RuleWhenExpression expression, StringBuilder resultStrExp, Set<String> imports) {
 		if (expression ===  null) {
 			return
 		}
 		
+		val rule = expression.findRule
 		var isRuleWithSubscribe = false
-		if (expression.eContainer !== null 
-			&& expression.eContainer.eContainer !== null &&
-			expression.eContainer.eContainer instanceof Rule) {
-				isRuleWithSubscribe = (expression.eContainer.eContainer as Rule).ruleAsTargetEnum == RuleTarget.SUBSCRIBE
-			} 
-		//(expression.eContainer.eContainer as Rule).ruleAsTargetEnum == RuleTarget.SUBSCRIBE
+		if (rule !== null) {
+			isRuleWithSubscribe = rule.ruleAsTargetEnum == RuleTarget.SUBSCRIBE
+		} 
+		
 		
 		var String objName = null
 		var String strExpression = null
 		var isObjStr = false
 		var isObjDate = false
 		var isNumber = false
-		var Entity entity = null
+		// var isObjForm = false
+		var isObjEnum = false
+		var Slot slot = null
+		var isObjSlot = false
+		var isObjEntityAndField = false
+		var Slot fieldEntity = null
+		
+		var isThis = false // TODO: only if needed
+		
+		var Entity entity = if (rule !== null) rule.owner as Entity else null
+		
 		if (expression.left.whenObject instanceof FieldObject) {
-			val slot = (expression.left.whenObject as FieldObject).getField
+			slot = (expression.left.whenObject as FieldObject).getField
 			entity = slot.ownerEntity
 			objName = slot.ownerEntity.fieldName + '.' + slot.buildMethodGet
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
+			strExpression = objName
+		}
+		else if (expression.left.whenObject instanceof EntityAndFieldObject) {
+			isObjEntityAndField = true
+			isObjSlot = true
+			val entityAndFieldObject = (expression.left.whenObject as EntityAndFieldObject)
+			fieldEntity = entityAndFieldObject.fieldEntity
+			
+			entity = fieldEntity.asEntity
+			val slotName = entityAndFieldObject.fieldSlot
+			slot = entity.slots.filter[it.name.toLowerCase == slotName.toLowerCase].head
+			
+			if (isThis) {
+				objName = 'this.' + fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName.buildMethodGet + '.' + slot.fieldName.buildMethodGet
+			}
+			else {
+				objName = fieldEntity.ownerEntity.fieldName + '.' + fieldEntity.fieldName.buildMethodGet + '.' + slot.fieldName.buildMethodGet
+			}
+			isObjStr = slot.isString
+			isObjDate = slot.isDate
+			isNumber = slot.isNumber
+			isObjEnum = slot.isEnum
 			strExpression = objName
 		}
 		else if (expression.left.whenObject instanceof TemporalObject) {
@@ -222,8 +267,14 @@ class RuleUtils {
 	}
 	
 	def static String getExternalServicePackage(Entity entity) {
-		val domainName = entity?.subscribeEntityEvents?.externalDomain
-		val serviceName = entity?.subscribeEntityEvents?.externalService
+		var domainName = entity.service.domain
+		var serviceName = entity.service.name
+		
+		if (entity.isExternalEntity) {
+			domainName = entity?.subscribeEntityEvents?.externalDomain
+			serviceName = entity?.subscribeEntityEvents?.externalService
+		}
+		
 		val basePackage = entity.service.configuration.groupId
 		basePackage + '.' + domainName?.removeUnderline + '.' + serviceName?.removeUnderline
 	}

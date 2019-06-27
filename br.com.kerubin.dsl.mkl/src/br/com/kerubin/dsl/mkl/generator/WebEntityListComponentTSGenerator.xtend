@@ -290,7 +290,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		var String expression = null
 		if (hasWhen) {
 			val resultStrExp = new StringBuilder
-			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			rule.when.expression.buildRuleWhenExpression(resultStrExp, false)
 			expression = resultStrExp.toString
 		}
 		
