@@ -311,9 +311,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Override
 			public void delete(«idType» «idVar») {
 				«IF !rulesFormWithDisableCUD.empty»
-				«entityName» «entityVar» = new «entityName»();
-				«entityVar».setId(«idVar»);
-				«ruleFormWithDisableCUDMethodName»(«entityVar»);
+				«ruleFormWithDisableCUDMethodName»(«getEntityMethod»(«idVar»));
 				
 				«ENDIF»
 				«repositoryVar».deleteById(«idVar»);
