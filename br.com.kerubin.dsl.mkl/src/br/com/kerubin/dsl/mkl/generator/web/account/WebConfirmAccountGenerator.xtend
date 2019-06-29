@@ -133,7 +133,7 @@ class WebConfirmAccountGenerator extends GeneratorExecutor implements IGenerator
 		    </div>
 		
 		    <div class="ui-g-12 ui-fluid ui-md-6">
-		      <a routerLink="/mainmenu" pButton [label]="btnLabel"></a>
+		      <a routerLink="/login" pButton [label]="btnLabel"></a>
 		    </div>
 		  </div>
 		

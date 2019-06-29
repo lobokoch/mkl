@@ -38,14 +38,16 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence doGenerateEntityComponentHTML(Entity entity) {
 		'''
 		<div class="container">
+			«entity.generateEntityTitle»
 		
 		  	<div class="ui-g">
-				«entity.generateEntityTitle»
 				«entity.generateHTMLFilters»
 				«entity.generateHTMLGrid»
 				«entity.generateHTMLButtons»
 				«entity.generateHTMLExtras»
 			</div>
+			
+			</p-panel>
 		  
 		</div>
 		'''
@@ -544,9 +546,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
-		<div>
-			<h1>«entity.translationKey.translationKeyFunc»</h1>
-		</div>
+		<p-panel>
+			<p-header>
+				<div class="kb-form-panel-header">«entity.translationKey.translationKeyFunc»</div>
+			</p-header>
+		
 		'''
 	}
 	

@@ -31,6 +31,7 @@ class WebAccountModuleGenerator extends GeneratorExecutor implements IGeneratorE
 		import { FormsModule } from '@angular/forms';
 		import { CommonModule } from '@angular/common';
 		import { NgModule } from '@angular/core';
+		import { RouterModule } from '@angular/router';
 		
 		// PrimeMG
 		import { DropdownModule } from 'primeng/dropdown';
@@ -61,7 +62,8 @@ class WebAccountModuleGenerator extends GeneratorExecutor implements IGeneratorE
 		  exports: [
 		    ConfigNewAccountComponent,
 		    ConfirmAccountComponent,
-		    NewAccountComponent
+		    NewAccountComponent,
+		    RouterModule
 		  ]
 		
 		})

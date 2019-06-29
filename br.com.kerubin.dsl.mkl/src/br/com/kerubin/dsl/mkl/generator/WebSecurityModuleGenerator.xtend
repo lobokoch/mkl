@@ -35,6 +35,7 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 		import { CommonModule } from '@angular/common';
 		import { NgModule } from '@angular/core';
 		import { JwtModule } from '@auth0/angular-jwt';
+		import { RouterModule } from '@angular/router';
 		
 		// Kerubin - BEGIN
 		import { LoginComponent } from './login/login.component';
@@ -66,8 +67,8 @@ class WebSecurityModuleGenerator extends GeneratorExecutor implements IGenerator
 		    FormsModule,
 		    InputTextModule,
 		    ButtonModule,
-		    CardModule
-		
+		    CardModule,
+		    RouterModule
 		  ],
 		
 		  declarations: [
