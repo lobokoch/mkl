@@ -52,6 +52,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rulesWithSlotAppyStyleClass = entity.rulesWithSlotAppyStyleClass
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
 		
+		val hasCalendar = entity.hasDate
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
@@ -88,6 +90,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		})
 		
 		export class «entity.toEntityWebComponentClassName» implements OnInit {
+			«IF hasCalendar»
+			
+			«getCalendarLocaleSettingsVarName»: any;
+			
+			«ENDIF»
 			«IF !ruleMakeCopies.empty»«initializeMakeCopiesVars(ruleMakeCopies.head)»«ENDIF»
 			«fieldName» = new «dtoName»();
 			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
@@ -108,6 +115,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			ngOnInit() {
+				«IF hasCalendar»
+				this.initLocaleSettings();
+				«ENDIF»
 				«IF !rulesFormOnInit.empty»
 				this.rulesOnInit();
 				
@@ -275,11 +285,24 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !rulesFormWithDisableCUD.empty»
 			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD»
 			«ENDIF»
+			«IF hasCalendar»
+			«generateInitLocaleSettings»
+			«ENDIF»
 		}
 		'''
 		
 		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
+	}
+	
+	def CharSequence generateInitLocaleSettings() {
+		'''
+		
+		initLocaleSettings() {
+			this.«getCalendarLocaleSettingsVarName» = this.«service.toTranslationServiceVarName».«getCalendarLocaleSettingsMethodName»();
+		}
+		
+		'''
 	}
 	
 	def CharSequence generateRuleFormWithDisableCUD(Rule rule) {

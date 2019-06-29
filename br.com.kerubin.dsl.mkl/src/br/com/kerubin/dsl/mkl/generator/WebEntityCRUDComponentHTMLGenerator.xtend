@@ -61,7 +61,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			</div>
 		  </form>
 		  
-		  </p-card>
+		  </p-panel>
 		  
 		</div>
 		'''
@@ -173,9 +173,9 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateEntityTitle(Entity entity) {
 		'''
-		<p-card>
+		<p-panel>
 			<p-header>
-				<div class="kb-card-header">«entity.translationKey.translationKeyFunc»</div>
+				<div class="kb-form-panel-header">«entity.translationKey.translationKeyFunc»</div>
 			</p-header>
 		
 		'''
@@ -354,15 +354,15 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (basicType instanceof DateType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» dateFormat="dd/mm/yy"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy"''')
 		}
 		else if (basicType instanceof TimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» dateFormat="hh:MM:ss"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="hh:MM:ss"''')
 		}
 		else if (basicType instanceof DateTimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» dateFormat="dd/mm/yy" [showTime]="true"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy" [showTime]="true"''')
 		}
 		else if (basicType instanceof UUIDType) {
 			webComponentType = 'input'

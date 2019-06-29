@@ -398,6 +398,16 @@ class EntityUtils {
 	}
 	
 	
+	def static String getCalendarLocaleSettingsMethodName() {
+		val methodName = 'getCalendarLocaleSettings'
+		methodName
+	}
+	
+	def static String getCalendarLocaleSettingsVarName() {
+		val varName = 'calendarLocale'
+		varName
+	}
+	
 	def static String getTranslationKey(Service service) {
 		val key = service.domain.toFirstLower + '.' + service.name.toFirstLower
 		key
