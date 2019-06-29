@@ -67,9 +67,9 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 			
 			@Bean
 			public Queue «entiyNameFirstLower»Queue() {
+				// This service queue name for subscribe to the entity owner exchange topic.
 				String queueName = MessageFormat.format("{0}_{1}_{2}_{3}_{4}", 
-					DomainEvent.APPLICATION, «externalEntityConstantsName».DOMAIN, 
-					«externalEntityConstantsName».SERVICE, ENTITY_KEY, ENTITY_NAME);
+					DomainEvent.APPLICATION, "«entity.service.domain»", "«entity.service.name»", ENTITY_KEY, ENTITY_NAME);
 				
 				return new Queue(queueName, true);
 			}
