@@ -249,6 +249,11 @@ class GeneratorExecutor {
 		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
 	}
 	
+	def String getImportServiceConstants(Entity entity) {
+		val service = entity.service
+		'import ' + service.servicePackage + '.' + service.toServiceConstantsName + ';'
+	}
+	
 	def String toServiceContextName(Service service) {
 		//service.domainName + service.serviceName + "Constants"
 		'ServiceContext'

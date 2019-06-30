@@ -29,6 +29,7 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 	def CharSequence generateEntitySubscriberEventRabbitConfig(Entity entity) {
 		val entiyNameFirstLower = entity.toDtoName.toFirstLower
 		val externalEntityConstantsName = entity.toExternalServiceConstantsName
+		val domaAndServiceConstantsName = service.toServiceConstantsName
 		
 		'''
 		package «entity.package»;
@@ -48,6 +49,7 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 		import br.com.kerubin.api.messaging.core.DomainEvent;
 		
 		«entity.getImportExternalServiceConstants»
+		«entity.getImportServiceConstants»
 		
 		@ComponentScan({"br.com.kerubin.api.messaging.core"})
 		@Configuration
@@ -58,9 +60,11 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 			
 			@Bean
 			public TopicExchange «entiyNameFirstLower»Topic() {
-				String topicName = MessageFormat.format("{0}_{1}_{2}_{3}", 
-					DomainEvent.APPLICATION, «externalEntityConstantsName».DOMAIN, 
-					«externalEntityConstantsName».SERVICE, DomainEntityEventsPublisher.TOPIC_PREFFIX);
+				String topicName = MessageFormat.format("{0}_{1}_{2}_{3}", //
+					DomainEvent.APPLICATION, //
+					«externalEntityConstantsName».DOMAIN, //
+					«externalEntityConstantsName».SERVICE, //
+					DomainEntityEventsPublisher.TOPIC_PREFFIX);
 				
 				return new TopicExchange(topicName);
 			}
@@ -68,8 +72,12 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 			@Bean
 			public Queue «entiyNameFirstLower»Queue() {
 				// This service queue name for subscribe to the entity owner exchange topic.
-				String queueName = MessageFormat.format("{0}_{1}_{2}_{3}_{4}", 
-					DomainEvent.APPLICATION, "«entity.service.domain»", "«entity.service.name»", ENTITY_KEY, ENTITY_NAME);
+				String queueName = MessageFormat.format("{0}_{1}_{2}_{3}_{4}", //
+					DomainEvent.APPLICATION, //
+					«domaAndServiceConstantsName».DOMAIN, //
+					«domaAndServiceConstantsName».SERVICE, //
+					ENTITY_KEY, //
+					ENTITY_NAME);
 				
 				return new Queue(queueName, true);
 			}
@@ -78,13 +86,16 @@ class JavaEntitySubscriberEventRabbitConfigGenerator extends GeneratorExecutor i
 			public Binding «entiyNameFirstLower»Binding(@Qualifier("«entiyNameFirstLower»Topic") TopicExchange topic, 
 					@Qualifier("«entiyNameFirstLower»Queue") Queue queue) {
 				
-				String rountingKey = MessageFormat.format("{0}.{1}.{2}.{3}.{4}", 
-						DomainEvent.APPLICATION, «externalEntityConstantsName».DOMAIN, 
-						«externalEntityConstantsName».SERVICE, ENTITY_KEY, ENTITY_NAME);
+				String rountingKey = MessageFormat.format("{0}.{1}.{2}.{3}.{4}", //
+						DomainEvent.APPLICATION, //
+						«externalEntityConstantsName».DOMAIN, //
+						«externalEntityConstantsName».SERVICE, //
+						ENTITY_KEY, //
+						ENTITY_NAME);
 				
 				return BindingBuilder
-						.bind(queue)
-						.to(topic)
+						.bind(queue) //
+						.to(topic) //
 						.with(rountingKey);
 			}
 		
