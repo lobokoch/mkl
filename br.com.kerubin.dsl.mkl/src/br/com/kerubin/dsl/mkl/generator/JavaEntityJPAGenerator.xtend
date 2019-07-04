@@ -15,6 +15,10 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import org.eclipse.xtend2.lib.StringConcatenation
 import br.com.kerubin.dsl.mkl.model.EnumType
+import br.com.kerubin.dsl.mkl.model.HibFilterDef
+import br.com.kerubin.dsl.mkl.model.HibParamDef
+import br.com.kerubin.dsl.mkl.model.HibFilters
+import br.com.kerubin.dsl.mkl.model.HibFilter
 
 class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -49,6 +53,12 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		@Entity
 		@Table(name = "«entity.databaseName»")
+		«IF entity.hasHibFilterDef»
+		«entity.hibFilterDefList.map[it.generateHibFilterDef].join»
+		«ENDIF»
+		«IF entity.hasHibFilters»
+		«entity.hibFiltersList.map[it.generateHibFilters].join»
+		«ENDIF»
 		public class «entity.toEntityName» «IF entity.isAuditing»extends AuditingEntity«ENDIF» {
 		
 			«entity.generateFields»
@@ -70,7 +80,33 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		package + imports + body 
 	}
 	
+	def CharSequence generateHibFilters(HibFilters filters) {
+		'''
+		
+		@Filters( {
+		    «filters.filterList.map[it.generateHibFilter].join(',\r\n')»
+		} )
+		
+		'''
+	}
 	
+	def CharSequence generateHibFilter(HibFilter filter) {
+		'''@Filter(name = "«filter.name»", condition = "«filter.condition»")'''
+	}
+	
+	def CharSequence generateHibFilterDef(HibFilterDef filterDef) {
+		'''
+		
+		@FilterDef(name = "«filterDef.name»", parameters = {
+			«filterDef.parameters.map[it.generateHibParamDef].join(',\r\n')»
+		})
+		
+		'''
+	}
+	
+	def CharSequence generateHibParamDef(HibParamDef paramDef) {
+		'''@ParamDef(name = "«paramDef.name»", type = "«paramDef.type»")'''
+	}
 	
 	def CharSequence generateFields(Entity entity) {
 		'''
@@ -603,6 +639,17 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		entity.addImport('import javax.persistence.Column;')
 		if (entity.isAuditing) {
 			entity.addImport('import br.com.kerubin.api.database.entity.AuditingEntity;')
+		}
+		
+		// Hibernate filters
+		if (entity.hasHibFilterDef) {
+			entity.addImport('import org.hibernate.annotations.FilterDef;')
+			entity.addImport('import org.hibernate.annotations.ParamDef;')
+		}
+		
+		if (entity.hasHibFilters) {
+			entity.addImport('import org.hibernate.annotations.Filters;')
+			entity.addImport('import org.hibernate.annotations.Filter;')
 		}
 	}
 	

@@ -72,6 +72,8 @@ EnumItem:
 Entity:
 	(
 		(enableVersion?='@version')? &
+		(hibFilterDefList += HibFilterDef*) &
+		(hibFiltersList += HibFilters*) &
 		(disableGeneration=DisableEntityGeneration)? &
 		(externalEntity?='@externalEntity')? &
 		(subscribeEntityEvents=SubscribeEntityEvents)? & 
@@ -89,6 +91,42 @@ Entity:
 		Rules?
 	'}'
 ;
+
+// Hibernate @FilterDef
+HibFilterDef:
+	'@filterDef' '('
+		'name' ':' name = STRING ','
+		'parameters' ':' '[' parameters += HibParamDef* ']'
+	')'
+;
+
+// Hibernate @ParamDef
+HibParamDef:
+	'paramDef' '('
+		'name' ':' name = STRING ',' 
+		'type' ':' type = STRING 
+	')'
+	| (',' HibParamDef)
+;
+
+// Hibernate @Filters
+HibFilters:
+{HibFilters}	
+	'@filters' '('
+		'[' filterList += HibFilter* ']'
+	')'
+;
+
+//  Hibernate @Filter
+HibFilter:
+	'filter' '('
+		'name' ':' name = STRING ','	
+		'condition' ':' condition = STRING	
+	')'
+	| (',' HibFilter)
+;
+
+
 
 DisableServiceGeneration:
 {DisableServiceGeneration}	

@@ -149,6 +149,8 @@ class FieldObject extends AbstractObject {
 	refers Slot field
 }
 
+
+
 /*class EnumObject extends AbstractObject {
 	refers Enumeration enumeration
 	String enumItem
@@ -1023,6 +1025,29 @@ class PublicObject extends Record, ServiceObject {
 	
 }
 
+// Hibernate @FilterDef
+class HibFilterDef {
+	String name
+	contains HibParamDef[] parameters
+}
+
+// Hibernate @ParamDef
+class HibParamDef {
+	String name
+	String ^type
+}
+
+// Hibernate @Filters
+class HibFilters {
+	contains HibFilter[] filterList
+}
+
+//  Hibernate @Filter
+class HibFilter {
+	String name
+	String condition
+}
+
 class Entity extends PublicObject, Rulled {
 	refers Entity parent
 	boolean secure
@@ -1036,6 +1061,18 @@ class Entity extends PublicObject, Rulled {
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
 	contains DisableEntityGeneration disableGeneration
+	
+	// Hibernate filters
+	contains HibFilterDef[] hibFilterDefList
+	contains HibFilters[] hibFiltersList
+	
+	op boolean hasHibFilterDef() {
+		return hibFilterDefList !== null && hibFilterDefList.size() > 0
+	}
+	
+	op boolean hasHibFilters() {
+		return hibFiltersList !== null && hibFiltersList.size() > 0
+	}
 	
 	op boolean isNotExternalEntity() {
 		! externalEntity
