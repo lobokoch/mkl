@@ -75,14 +75,14 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		builder.newLine
 		
 		//Table fields
-		var slots = entity.slots.filter[!it.isEntity || (it.isOneToOne && it.isRelationRefers) || it.isManyToOne]
+		var slots = entity.slots.filter[!it.isEntity || (it.isOneToOne && it.isRelationRefers) || it.isManyToOne].filter[!it.isTransient]
 		builder.append(slots.map[generateDatabaseField].join(',\n'))
 		
 		builder.newLine
 		builder.append(');')
 		builder.newLine
 		
-		slots = entity.slots.filter[ (it.isManyToMany && it.isRelationOwner) || (it.isOneToMany && !it.isBidirectional) ]
+		slots = entity.slots.filter[ (it.isManyToMany && it.isRelationOwner) || (it.isOneToMany && !it.isBidirectional) ].filter[!it.isTransient]
 		slots.forEach[builder.append(it.createIntermediateTable)]			
 		
 		builder

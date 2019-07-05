@@ -318,12 +318,17 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		// Is a basic type
 		val basicType = slot.basicType
 		
-		val inputType = if (slot.hiddenSlot) "hidden" else "text"
+		var inputType = if (slot.hiddenSlot) 'hidden' else 'text'
 		
 		if (basicType instanceof StringType) {
 			val stringType = basicType as StringType
+			if (slot.isPassword) {
+				inputType = 'password'
+				webComponentType = 'input'
+				builder.concat('''«webComponentType» type="«inputType»" pInputText ''')			
+			}
 			// Must be a TextArea?
-			if (stringType.length > 255) {
+			else if (stringType.length > 255) {
 				webComponentType = 'textarea'
 				builder.concat('''«webComponentType» pInputTextarea rows="3"''')			
 			}

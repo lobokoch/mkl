@@ -80,6 +80,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import {SelectItem} from 'primeng/api';''')
 		}
 		
+		/*if (entity.hasPassword) {
+			imports.add('''import {PasswordModule} from 'primeng/password';''')
+		}*/
+		
 		val component = entity.toEntityWebCRUDComponentName
 		val body = '''
 		

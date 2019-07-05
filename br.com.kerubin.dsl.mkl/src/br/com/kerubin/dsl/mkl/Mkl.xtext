@@ -188,7 +188,7 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name' | 'parent' | 'optional' | 'many' | 'form'
+	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 'transient'
 ;
 
  fragment Name returns Named:
@@ -218,6 +218,8 @@ Slot:
 			(sumField = SumField)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
+			(password ?= 'password')? &
+			(transient ?= 'transient')? &
 			(publish ?= 'publishedInEvents')? &
 			(grid = Grid)? &
 			(web = Web)? &

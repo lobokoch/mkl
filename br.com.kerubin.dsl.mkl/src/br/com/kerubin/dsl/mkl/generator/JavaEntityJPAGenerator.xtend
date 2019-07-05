@@ -158,6 +158,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		val isOneToOne = slot.isOneToOne && slot.isRelationRefers
 		
 		'''
+		«IF slot.isTransient»
+		@Transient
+		«ELSE»
 		«slot.annotations.join('\r\n')»
 		«IF slot == entity.id»
 		«IF slot.isUUID && !isOneToOne && !entity.isExternalEntity»
@@ -175,12 +178,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ENDIF»
 		«IF slot.hasRelationship»
 		«slot.getRelationAnnotation(entity)»
-		
-		«IF false/*isOneToOne*/»
-		@Column(name="«slot.databaseName»")
-		«ENDIF»
 		«ELSE»
 		@Column(name="«slot.databaseName»")
+		«ENDIF»
 		«ENDIF»
 		'''
 	}
@@ -650,6 +650,10 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		if (entity.hasHibFilters) {
 			entity.addImport('import org.hibernate.annotations.Filters;')
 			entity.addImport('import org.hibernate.annotations.Filter;')
+		}
+		
+		if (entity.hasTransient) {
+			entity.addImport('import javax.persistence.Transient;')
 		}
 	}
 	

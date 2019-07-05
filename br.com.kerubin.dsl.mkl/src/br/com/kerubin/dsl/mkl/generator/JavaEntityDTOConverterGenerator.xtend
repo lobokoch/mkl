@@ -83,7 +83,7 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		public «entity.toEntityDTOName» «TO_DTO»(«entity.toEntityName» «ENTITY») {
 			«entity.toEntityDTOName» «DTO» = null;
 			if («ENTITY» != null) {
-				«DTO» = mapper.map(«ENTITY», «entity.toEntityDTOName».class);
+				«DTO» = mapper.map(«ENTITY», «entity.toEntityDTOName».class, true); // Do not permit passwords fields go outside.
 			}
 			return «DTO»;
 		}

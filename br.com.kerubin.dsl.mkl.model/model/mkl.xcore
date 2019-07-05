@@ -644,6 +644,8 @@ class Slot extends Element {
 	boolean parent
 	boolean many
 	boolean indexed
+	boolean password
+	boolean ^transient
 	Boolean hidden
 	boolean publish = 'false'
 	boolean mapped = 'false'
@@ -1065,6 +1067,14 @@ class Entity extends PublicObject, Rulled {
 	// Hibernate filters
 	contains HibFilterDef[] hibFilterDefList
 	contains HibFilters[] hibFiltersList
+	
+	op boolean hasPassword() {
+		slots.exists[it.isPassword]
+	}
+	
+	op boolean hasTransient() {
+		slots.exists[it.isTransient]
+	}
 	
 	op boolean hasHibFilterDef() {
 		return hibFilterDefList !== null && hibFilterDefList.size() > 0

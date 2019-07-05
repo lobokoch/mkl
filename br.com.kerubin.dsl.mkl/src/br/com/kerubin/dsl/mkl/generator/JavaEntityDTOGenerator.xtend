@@ -133,7 +133,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ELSE»
 		public «slot.toJavaTypeDTO» get«slot.name.toFirstUpper»() {
 		«ENDIF»
-			return «slot.name.toFirstLower»;
+			return «IF slot.isPassword»"*****" /*«ENDIF»«slot.name.toFirstLower»«IF slot.isPassword»*/«ENDIF»;
 		}
 		'''
 	}
@@ -153,7 +153,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ELSE»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaTypeDTO» «slot.name.toFirstLower») {
 		«ENDIF»
-			this.«slot.name.toFirstLower» = «slot.name.toFirstLower»;
+			this.«slot.name.toFirstLower» = «IF slot.isPassword»"*****" /*«ENDIF»«slot.name.toFirstLower»«IF slot.isPassword»*/«ENDIF»;
 		}
 		'''
 	}

@@ -90,6 +90,14 @@ class ServiceBoosterImpl implements ServiceBooster {
 		}
 		
 		entity.boostSlotAtivo
+		entity.boostPasswordSlots
+	}
+	
+	def void boostPasswordSlots(Entity entity) {
+		if (entity.hasPassword) {
+			entity.imports.add('import br.com.kerubin.api.messaging.annotation.Password;')
+			entity.slots.filter[it.isPassword].forEach[it.annotations.add('@Password')]
+		}
 	}
 	
 	def void boostVersion(Entity entity) {
