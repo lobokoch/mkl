@@ -158,10 +158,10 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		val isOneToOne = slot.isOneToOne && slot.isRelationRefers
 		
 		'''
+		«slot.annotations.join('\r\n')»
 		«IF slot.isTransient»
 		@Transient
 		«ELSE»
-		«slot.annotations.join('\r\n')»
 		«IF slot == entity.id»
 		«IF slot.isUUID && !isOneToOne && !entity.isExternalEntity»
 		«entity.addImport('import javax.persistence.GeneratedValue;')»
