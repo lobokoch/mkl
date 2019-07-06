@@ -79,6 +79,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		if (!ruleMakeCopies.empty) {
 			imports.add('''import {SelectItem} from 'primeng/api';''')
 		}
+
+		imports.add('''import { MessageHandlerService } from 'src/app/core/message-handler.service';''')
 		
 		/*if (entity.hasPassword) {
 			imports.add('''import {PasswordModule} from 'primeng/password';''')
@@ -110,7 +112,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    «entity.slots.filter[isEntity && it.asEntity.isNotSameName(entity)].map[mountServiceConstructorInject].join('\n\r')»
 			    private route: ActivatedRoute,
-			    private messageService: MessageService
+			    private messageHandler: MessageHandlerService
 			) { 
 				«entity.slots.filter[isEnum].map['''this.«it.webDropdownOptionsInitializationMethod»();'''].join('\n\r')»
 				«IF !ruleMakeCopies.empty»
@@ -188,10 +190,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar».create(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro criado com sucesso!');
+			      this.messageHandler.showSuccess('Registro criado com sucesso!');
 			    }).
 			    catch(error => {
-			      this.showError('Erro ao criar registro: ' + error);
+			      this.messageHandler.showError(error);
 			    });
 			}
 			
@@ -203,10 +205,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar».update(this.«fieldName»)
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
-			      this.showSuccess('Registro alterado!');
+			      this.messageHandler.showSuccess('Registro alterado!');
 			    })
 			    .catch(error => {
-			      this.showError('Erro ao atualizar registro: ' + error);
+			      this.messageHandler.showError(error);
 			    });
 			}
 			
@@ -214,7 +216,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar».retrieve(id)
 			    .then((«fieldName») => this.«fieldName» = «fieldName»)
 			    .catch(error => {
-			      this.showError('Erro ao buscar registro: ' + id);
+			      this.messageHandler.showError(error);
 			    });
 			}
 			
@@ -232,13 +234,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    this.«serviceVar».replicar«dtoName»(this.«fieldName».id, this.«fieldName».agrupador, this.«entity.entityReplicationQuantity»)
 			    .then((result) => {
 			      if (result === true) {
-			        this.showSuccess('Os registros foram criados com sucesso.');
+			        this.messageHandler.showSuccess('Os registros foram criados com sucesso.');
 			      } else {
-			        this.showError('Não foi possível criar os registros.');
+			        this.messageHandler.showError('Não foi possível criar os registros.');
 			      }
 			    })
 			    .catch(error => {
-			      this.showError('Ocorreu um erro ao criar os registros: ' + error);
+			      this.messageHandler.showError(error);
 			    });
 			  }
 			«ENDIF»
@@ -246,14 +248,6 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«entity.slots.filter[isEntity].map[mountAutoComplete].join('\n\r')»
 			
 			«entity.slots.filter[isEnum].map[it.generateEnumInitializationOptions].join»
-			
-			public showSuccess(msg: string) {
-			    this.messageService.add({severity: 'success', summary: 'Successo', detail: msg});
-			}
-			
-			public showError(msg: string) {
-			    this.messageService.add({severity: 'error', summary: 'Erro', detail: msg});
-			}
 			
 			«buildTranslationMethod(service)»
 			
@@ -398,10 +392,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		      if («fieldName») { // Can be null
 		      	this.«fieldName» = «fieldName»;
 		      }
-		      this.showSuccess('Operação executada com sucesso.');
+		      this.messageHandler.showSuccess('Operação executada com sucesso.');
 		    })
 		    .catch(error => {
-		      this.showError('Erro ao executar a operação: ' + error);
+		      this.messageHandler.showError(error);
 		    });
 		}
 		
@@ -483,7 +477,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		«actionName»(form: FormControl) {
 		      if (!this.«entityVar».«grouperField.fieldName») {
 		        // this.copiesMustHaveGroup = true;
-		        this.showError('Campo \'«grouperField.fieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
+		        this.messageHandler.showError('Campo \'«grouperField.fieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
 		        return;
 		      }
 		      // this.copiesMustHaveGroup = false;
@@ -492,13 +486,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		        this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
 			    .then(() => {
 		        // this.copiesMustHaveGroup = false;
-		        this.showSuccess('Operação realizada com sucesso!');
+		        this.messageHandler.showSuccess('Operação realizada com sucesso!');
 			    }).
 			    catch(error => {
 		        // this.copiesMustHaveGroup = false;
 		        const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
 		        console.log(error);
-			      this.showError('Erro: ' + message);
+			      this.messageHandler.showError(message);
 			    });
 		}
 		'''
@@ -577,7 +571,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		        this.«slot.webAutoCompleteSuggestions» = result as «entity.toAutoCompleteName»[];
 		      })
 		      .catch(error => {
-		        this.showError('Erro ao buscar registros com o termo: ' + query);
+		        this.messageHandler.showError(error);
 		      });
 		}
 		
