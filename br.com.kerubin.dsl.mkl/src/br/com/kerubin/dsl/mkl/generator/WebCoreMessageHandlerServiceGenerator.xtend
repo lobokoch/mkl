@@ -69,14 +69,20 @@ class WebCoreMessageHandlerServiceGenerator extends GeneratorExecutor implements
 		      try {
 		
 		        if (errorResponse.error) {
-		          if (errorResponse.error.error_description) {
-		            message = errorResponse.error.error_description;
-		          } else if (errorResponse.error.message) {
-		            message = errorResponse.error.message;
-		          } else {
-		            message = 'Ocorreu um erro. Tente novamente em alguns instantes';
-		          }
 		
+		          if (errorResponse.error.apierror && errorResponse.error.apierror.message) {
+		            message = errorResponse.error.apierror.message;
+		          } else {
+		            if (errorResponse.error.error_description) {
+		              message = errorResponse.error.error_description;
+		            } else if (errorResponse.error.message) {
+		              message = errorResponse.error.message;
+		            } else if (errorResponse.error.text) {
+		              message = errorResponse.error.text;
+		            } else {
+		              message = 'Ocorreu um erro. Tente novamente em alguns instantes';
+		            }
+		          }
 		        }
 		
 		      } catch (e) {
@@ -84,9 +90,10 @@ class WebCoreMessageHandlerServiceGenerator extends GeneratorExecutor implements
 		      }
 		    }
 		
-		    if (message && message.indexOf('rio inexistente ou senha inv') !== -1) {
+		    if (message && (message.indexOf('rio inexistente ou senha inv') !== -1 || message.toLowerCase().indexOf('bad credentials') !== -1)) {
 		    	message = 'Usuário inexistente ou senha inválida.';
 		    }
+		
 		    this.messageService.add({severity: 'error', summary: 'Erro', detail: message});
 		    console.log('Ocorreu um erro:' + errorResponse);
 		  }

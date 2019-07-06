@@ -40,6 +40,7 @@ Configuration:
 		('cloudConfigUri' ':' cloudConfigUri=STRING) &
 		('messagingCore' '{' 'version' ':' messagingCoreVersion=STRING '}')? &
 		('databaseCore' '{' 'version' ':' databaseCoreVersion=STRING '}')? &
+		('serviceCore' '{' 'version' ':' serviceCoreVersion=STRING '}')? &
 		('java' '{' 'version' ':' javaVersion=STRING '}')? &
 		('springFrameworkBoot' '{' 'version' ':' springFrameworkBootVersion=STRING '}')? &
 		('springCloud' '{' 'version' ':' springCloudVersion=STRING '}')? &
@@ -47,7 +48,6 @@ Configuration:
 		('queryDSL' '{' 'version' ':' queryDSLVersion=STRING '}')? &
 		('apacheCommonsLang' '{' 'version' ':' apacheCommonsLangVersion=STRING '}')? &
 		('flywayCore' '{' 'version' ':' flywayCoreVersion=STRING '}')? &
-		('modelMapper' '{' 'version' ':' modelMapperVersion=STRING '}')? &
 		('buildHelperMavenPlugin' '{' 'version' ':' buildHelperMavenPluginVersion=STRING '}')? &
 		('aptMavenPlugin' '{' 'version' ':' aptMavenPluginVersion=STRING '}')? &
 		('templatingMavenPlugin' '{' 'version' ':' templatingMavenPluginVersion=STRING '}')?

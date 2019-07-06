@@ -284,11 +284,6 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		            <scope>runtime</scope>
 		        </dependency>
 		        <dependency>
-		          <groupId>org.modelmapper</groupId>
-		          <artifactId>modelmapper</artifactId>
-		          <version>${modelmapper.version}</version>
-		        </dependency>
-		        <dependency>
 		          <groupId>com.querydsl</groupId>
 		          <artifactId>querydsl-core</artifactId>
 		        </dependency>
@@ -307,6 +302,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		        <dependency>
 				    <groupId>br.com.kerubin.api</groupId>
 				    <artifactId>database-core</artifactId>
+				</dependency>
+		        <dependency>
+				    <groupId>br.com.kerubin.api</groupId>
+				    <artifactId>service-core</artifactId>
 				</dependency>
 				<dependency>
 					<groupId>org.projectlombok</groupId>
@@ -495,9 +494,9 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<querydsl.version>«configuration.queryDSLVersion»</querydsl.version>
 				<commons.lang.version>«configuration.apacheCommonsLangVersion»</commons.lang.version>
 				<database.core.version>«configuration.databaseCoreVersion»</database.core.version>
+				<service.core.version>«configuration.serviceCoreVersion»</service.core.version>
 				<flyway.core.version>«configuration.flywayCoreVersion»</flyway.core.version>
 				<kerubin.messaging.core.version>«configuration.messagingCoreVersion»</kerubin.messaging.core.version>
-				<modelmapper.version>«configuration.modelMapperVersion»</modelmapper.version>
 				<build.helper.maven.plugin.version>«configuration.buildHelperMavenPluginVersion»</build.helper.maven.plugin.version>
 				<apt.maven.plugin.version>«configuration.aptMavenPluginVersion»</apt.maven.plugin.version>
 				<templating.maven.plugin.version>«configuration.templatingMavenPluginVersion»</templating.maven.plugin.version>
@@ -576,6 +575,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 						<groupId>br.com.kerubin.api</groupId>
 						<artifactId>database-core</artifactId>
 						<version>${database.core.version}</version>
+					</dependency>
+					<dependency>
+						<groupId>br.com.kerubin.api</groupId>
+						<artifactId>service-core</artifactId>
+						<version>${service.core.version}</version>
 					</dependency>
 					
 					«buildMessagingDependency(true)»

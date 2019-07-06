@@ -49,7 +49,7 @@ class JavaObjectMapperGenerator extends GeneratorExecutor implements IGeneratorE
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.stereotype.Component;
 		
-		import br.com.kerubin.api.messaging.annotation.Password;
+		import br.com.kerubin.api.servicecore.annotation.Password
 		
 		@Component("«service.domain».«service.name».«CLASS_NAME»")
 		public class «CLASS_NAME» {
