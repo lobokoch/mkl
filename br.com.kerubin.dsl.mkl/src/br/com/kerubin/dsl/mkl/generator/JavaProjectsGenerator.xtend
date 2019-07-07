@@ -56,6 +56,7 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		val mainClassName = service.domain.textUnderToTextCamel + service.name.textUnderToTextCamel + 'Application'
 		
 		generateFileForApp(pomFileName, generateApplicationPOM(PROJECT_SERVER))
+		generateFileForApp('Dockerfile', generateDockerfile(PROJECT_SERVER))
 		
 		val appSourceFolder = applicationSourceFolder
 		val path = service.servicePackagePath
@@ -65,6 +66,17 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		
 		val dbMigrationPath = getApplicationResourcesFolder + 'db/migration/' + service.domain + '/' + service.name + '/' + DEFAULT_DATABASE_TYPE + '/'
 		generateFileForApp(dbMigrationPath + 'V1__Creation_Tables_PostgreSQL.sql', generateResourceDBMigration)
+	}
+	
+	def CharSequence generateDockerfile(String serverProjectName) {
+		val applicationProjectName = getArtifactId(projectApplicationName)
+		
+		'''
+		FROM openjdk:8-jdk-alpine
+		VOLUME /tmp
+		COPY target/*.jar «applicationProjectName».jar
+		ENTRYPOINT ["java","-jar","/«applicationProjectName».jar"]
+		'''
 	}
 	
 	def CharSequence generateResourceDBMigration() {
@@ -184,6 +196,13 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		
 			<name>«applicationProjectName»</name>
 			<description>Kerubin «applicationProjectName» Service</description>
+			
+			<properties>
+				<spring.security.oauth2>2.3.5.RELEASE</spring.security.oauth2>
+				<spring.security.jwt>1.0.10.RELEASE</spring.security.jwt>
+				<docker.image.prefix>lobokoch</docker.image.prefix>
+				<dockerfile.maven.plugin.version>1.4.10</dockerfile.maven.plugin.version>
+			</properties>
 		
 			«getPOMParentSectionFull»
 		
@@ -247,6 +266,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 								</goals>
 							</execution>
 						</executions>
+					</plugin>
+					<!-- For Build and Publish Docker image -->
+					<!-- mvn clean package dockerfile:build -->
+					<!-- mvn dockerfile:push -->
+					<plugin>
+						<groupId>com.spotify</groupId>
+						<artifactId>dockerfile-maven-plugin</artifactId>
+						<version>${dockerfile.maven.plugin.version}</version>
+						<configuration>
+							<repository>${docker.image.prefix}/${project.artifactId}</repository>
+							<tag>${project.version}</tag>
+		        			<useMavenSettingsForAuth>true</useMavenSettingsForAuth>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>

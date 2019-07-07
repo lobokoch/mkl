@@ -51,7 +51,6 @@ class JavaEntityDTOConverterGenerator extends GeneratorExecutor implements IGene
 		builder.addImport('import javax.inject.Inject')
 		builder.addImport('org.springframework.stereotype.Component')
 		builder.addImport('import br.com.kerubin.api.servicecore.mapper.ObjectMapper')
-		//builder.addImport('''«service.servicePackage».ObjectMapper''')
 		
 		if (hasSubscribeEntityEvents) {
 			builder.addImport('''«entity.getImportExternalEntityEvent»''')
