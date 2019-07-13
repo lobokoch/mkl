@@ -78,10 +78,11 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 			
 			@RabbitListener(queues = "#{«entityDTONameFirstLower»Queue.name}")
 			public void onReceiveEvent(DomainEventEnvelope<«entityDTOName»Event> envelope) {
-				«IF ruleSubscribeCode !== null»
-				«ruleSubscribeCode»
-				«ENDIF»
+				// WARNING: all the code MUST be inside the try catch code. If an error occurs, must be throw AmqpRejectAndDontRequeueException.
 				try {
+					«IF ruleSubscribeCode !== null»
+					«ruleSubscribeCode»
+					«ENDIF»
 					switch (envelope.getPrimitive()) {
 					«IF entity.hasSubscribeCreated»
 					case «entityDTOName»Event.«entity.toEntityEventConstantName('created')»:
@@ -141,7 +142,12 @@ class JavaEntitySubscriberEventHandlerGenerator extends GeneratorExecutor implem
 					try {
 						«entityDTONameFirstLower»Service.delete(«entityDTONameFirstLower»Event.getId());
 					} catch(DataIntegrityViolationException e) {
-						save«entityDTOName»(«entityDTONameFirstLower»Event, true);
+						log.warn("Record cannot be deleted, will be deactivated instead: " + «entityDTONameFirstLower»Event);
+						try {
+							save«entityDTOName»(«entityDTONameFirstLower»Event, true);
+						} catch(Exception e2) {
+							log.error("Record cannot be deactivated: " + «entityDTONameFirstLower»Event, e2);
+						}
 					}
 				}
 			}

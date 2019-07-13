@@ -314,11 +314,20 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«ruleFormWithDisableCUDMethodName»(«getEntityMethod»(«idVar»));
 				
 				«ENDIF»
+				«IF entity.hasPublishDeleted»
+				
+				// First load the delete candidate entity.
+				«entityName» entity = «getEntityMethod»(«idVar»);
+				«ENDIF»
+				
+				// Delete it.
 				«repositoryVar».deleteById(«idVar»);
 				
+				// Force flush to the database, for relationship validation and must throw exception because of this here.
+				«repositoryVar».flush();
+				
 				«IF entity.hasPublishDeleted»
-				«entityName» entity = new «entityName»();
-				«entity.id.buildMethodSet('entity', idVar)»;
+				// Replicate the delete event.
 				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('deleted')»);
 				«ENDIF»
 			}
