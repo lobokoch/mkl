@@ -557,6 +557,14 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			this.«ownerEntity.fieldName».«slot.fieldName» = null;
 		}
 		
+		«slot.toAutoCompleteOnBlurMethodName»(event) {
+			// Seems a PrimeNG bug, if clear an autocomplete field, on onBlur event, the null value is empty string.
+			// Until PrimeNG version: 7.1.3.
+			if (String(this.«ownerEntity.fieldName».«slot.fieldName») === '') {
+				this.«ownerEntity.fieldName».«slot.fieldName» = null;
+			}
+		}
+		
 		«slot.toAutoCompleteName»(event) {
 			«IF hasAutoCompleteWithOwnerParams»
 			const «ownerEntity.fieldName» = (JSON.parse(JSON.stringify(this.«ownerEntity.fieldName»)));
@@ -577,13 +585,29 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		«IF !resultSlots.isEmpty»
 		«slot.webAutoCompleteFieldConverter»(«slot.fieldName»: «entity.toAutoCompleteName») {
+			let text = '';
 			if («slot.fieldName») {
-				return «resultSlots.map['''(«slot.resolveAutocompleteFieldNameForWeb(it)» || '<nulo>')'''].join(" + ' - ' + ")»;
-			} else {
-				return null;
+				«resultSlots.map[slot.resolveAutocompleteFieldNameForWeb(it).buildAutoCompleteFieldConverter(slot.getAutocompleteFieldNameForWeb(it))].join()»
 			}
+			
+			if (text === '') {
+				text = null;
+			}
+			return text;
 		}
 		«ENDIF»
+		'''
+	}
+	
+	def CharSequence buildAutoCompleteFieldConverter(String resolvedFieldName, String fieldName) {
+		'''
+		if («fieldName») {
+		    if (text !== '') {
+		      text += ' - ';
+		    }
+		    text += «resolvedFieldName»; 
+		}
+		
 		'''
 	}
 	

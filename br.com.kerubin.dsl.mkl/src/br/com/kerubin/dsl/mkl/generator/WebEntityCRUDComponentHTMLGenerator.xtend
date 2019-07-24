@@ -301,12 +301,13 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			webComponentType = 'p-autoComplete'
 			builder
 			.concat('''«webComponentType» ''')
-			.concat('''«IF slot.isWebReadOnly»[disabled]="true"«ENDIF»''')
-			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''')
-			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''')
-			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''')
-			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''')
-			.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''')
+			.concat('''«IF slot.isWebReadOnly»[disabled]="true"«ENDIF»''').concat('\r\n')
+			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''').concat('\r\n')
+			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''').concat('\r\n')
+			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''').concat('\r\n')
+			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''').concat('\r\n')
+			.concat(''' (onBlur)="«slot.toAutoCompleteOnBlurMethodName»($event)"''').concat('\r\n')
+			.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''').concat('\r\n')
 			return
 		}
 		else if (slot.isEnum){

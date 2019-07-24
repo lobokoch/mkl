@@ -903,6 +903,19 @@ class EntityUtils {
 		return slot.resolveAutocompleteFieldNameForWebType(fieldName)
 	}
 	
+	def static String getAutocompleteFieldNameForWeb(Slot parentSlot, Slot slot) {
+		var fieldName = parentSlot.fieldName + '.' + slot.fieldName
+		if (slot.isEntity) { // If slot is an entity, returns first string auto complete key configurated.
+			val entity = slot.asEntity
+			val autoCompleteSlot = entity.slots.filter[it.isAutoCompleteResult && !it.isHiddenSlot].head
+			if (autoCompleteSlot !== null) {
+				fieldName += '.' + autoCompleteSlot.fieldName
+				return fieldName
+			}
+		}
+		return fieldName
+	}
+	
 	def static resolveAutocompleteFieldNameForWebType(Slot slot, String fieldName) {
 		if (slot.isDate) {
 			 return '''moment(«fieldName»).format('DD/MM/YYYY')'''.toString
@@ -1118,6 +1131,10 @@ class EntityUtils {
 	
 	def static toAutoCompleteClearMethodName(Slot slot) {
 		slot.toAutoCompleteName + 'Clear'
+	}
+	
+	def static toAutoCompleteOnBlurMethodName(Slot slot) {
+		slot.toAutoCompleteName + 'OnBlur'
 	}
 	
 	def static toRuleWithSlotAppyStyleClassMethodName(Slot slot) {
