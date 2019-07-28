@@ -161,8 +161,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 				.then(response => {
 				  this.«entitySumFieldsClassName.toFirstLower» = response;
 				})
-				.catch(error => {
-				  this.messageHandler.showError('Erro ao buscar totais:' + error);
+				.catch(e => {
+				  this.messageHandler.showError(e);
 				});
 			}
 			«ENDIF»
@@ -181,7 +181,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			          this.«entity.toEntityListListMethod»(0);
 			        })
 			        .catch((e) => {
-			          this.messageHandler.showError('Erro ao excluir registro: ' + e);
+			          this.messageHandler.showError(e);
 			        });
 			      }
 			    });
