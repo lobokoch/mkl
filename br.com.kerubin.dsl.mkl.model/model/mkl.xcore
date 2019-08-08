@@ -270,9 +270,24 @@ class RuleApply {
 	contains MakeCopiesExpression makeCopiesExpression
 	contains RuleFunction ruleFunction
 	contains DisableCUD disableCUD
+	contains HideCUDWebListActions hideCUDWebListActions
+	contains HideWebListActions hideWebListActions
+	contains WebActionsColumn webActionsColumn
+	
+	op boolean hasHideWebListActions() {
+		hideWebListActions !== null
+	}
+	
+	op boolean hasWebActionsColumn() {
+		webActionsColumn !== null
+	}
 	
 	op boolean hasDisableCUD() {
 		disableCUD !== null
+	}
+	
+	op boolean hasHideCUDWebListActions() {
+		hideCUDWebListActions !== null
 	}
 	
 	op boolean hasRuleFunction() {
@@ -321,6 +336,18 @@ class RuleApply {
 
 class DisableCUD {
 	boolean disableCUD
+}
+
+class HideCUDWebListActions {
+	boolean hideCUDWebListActions
+}
+
+class HideWebListActions {
+	boolean hideWebListActions
+}
+
+class WebActionsColumn {
+	String width
 }
 
 class AbstractRuleTarget {

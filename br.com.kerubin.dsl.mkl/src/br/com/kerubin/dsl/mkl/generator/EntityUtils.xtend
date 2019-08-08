@@ -600,7 +600,9 @@ class EntityUtils {
 	}
 	
 	def static getRuleActions(Entity entity) {
-		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS] 
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS &&
+			it.action !== null
+		] 
 	}
 	
 	def static getRuleFormActions(Entity entity) {
@@ -621,6 +623,27 @@ class EntityUtils {
 	def static getRulesFormWithDisableCUD(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM && 
 			it.apply !== null && it.apply.hasDisableCUD]
+		
+		rules		
+	}
+	
+	def static getRulesGridActionsHideCUDWebListActions(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS && 
+			it.apply !== null && it.apply.hasHideCUDWebListActions]
+		
+		rules
+	}
+	
+	def static getRulesGridActionsHideWebListActions(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS && 
+			it.apply !== null && it.apply.hasHideWebListActions]
+		
+		rules
+	}
+	
+	def static getRulesGridActionsWebActionsColumn(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS && 
+			it.apply !== null && it.apply.hasWebActionsColumn]
 		
 		rules
 	}

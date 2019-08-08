@@ -36,6 +36,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence doGenerateEntityComponentHTML(Entity entity) {
+		val hasHideWebListActions = entity.getRulesGridActionsHideWebListActions.size > 0
+		
 		'''
 		<div class="container">
 			«entity.generateEntityTitle»
@@ -43,8 +45,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		  	<div class="ui-g">
 				«entity.generateHTMLFilters»
 				«entity.generateHTMLGrid»
+				«IF !hasHideWebListActions»
 				«entity.generateHTMLButtons»
-				«entity.generateHTMLExtras»
+				«ENDIF»
 			</div>
 			
 			</p-panel>
@@ -120,6 +123,21 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val hasRulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD.size > 0
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
 		
+		val hasHideCUDWebListActions = entity.getRulesGridActionsHideCUDWebListActions.size > 0
+		
+		val hasHideWebListActions = entity.getRulesGridActionsHideWebListActions.size > 0
+		
+		var webActionsColumnWidth = '12em';
+		val ruleWebActionsColumn = entity.getRulesGridActionsWebActionsColumn
+		if (ruleWebActionsColumn !== null && !ruleWebActionsColumn.isEmpty) {
+			val rule = ruleWebActionsColumn.head
+			webActionsColumnWidth = rule.apply.webActionsColumn.width
+		}
+		
+		var attrColSpan = slots.size
+		if (!hasHideWebListActions) {
+			attrColSpan++ // + 1 for actions column
+		} 
 		
 		'''
 		
@@ -145,26 +163,31 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	            		«ENDIF»
 		            	'''
 		            ].join»
-						<th style="width: 12em">Ações</th>
+						«IF !hasHideWebListActions»<th style="width: «webActionsColumnWidth»">Ações</th>«ENDIF»
 		            </tr>
 		        </ng-template>
 		        
 			    <ng-template pTemplate="body" let-«entity.fieldName»>
 		            <tr [pSelectableRow]="«entity.fieldName»">
 		            	«slots.map[generateHTMLGridDataRow].join»
+		              	«IF !hasHideWebListActions»
 		              	<td class="kb-actions">
+		              		«IF hasHideCUDWebListActions»
+		              		<!-- CUD actions hidden by rules -->
+		              		«ELSE»
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
-		              		<!-- <button (click)="mostrarPagarConta(«entity.fieldName»)" pButton icon="pi pi-money"  pTooltip="Pagar esta conta" tooltipPosition="top"></button> -->
 		              		<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»(«entity.fieldName»)"«ENDIF» (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
+		              		«ENDIF»
 		              		«ruleActions.map[it.generateRuleActions].join»
 		              	</td>
+		              	«ENDIF»
 		            </tr>
 		        </ng-template>
 		        
 		        
 		        <ng-template pTemplate="emptymessage" let-columns>
 				    <tr>
-				        <td [attr.colspan]="«slots.size + 1»">
+				        <td [attr.colspan]="«attrColSpan»">
 				            Nenhum registro encontrado.
 				        </td>
 				    </tr>
@@ -173,9 +196,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 				«IF hasSum»
 				<ng-template pTemplate="footer">
 					<tr>
-						<td class="kb-sum-footer">Totais</td>
+						<td class="kb-sum-footer">Totais«IF hasHideWebListActions» «entity.buildEntityRuleWithSum»«ENDIF»</td>
 						«slots.tail.map[it.generateSumField].join»
-						<td class="kb-sum-footer">«entity.buildEntityRuleWithSum»</td>
+						«IF !hasHideWebListActions»<td class="kb-sum-footer">«entity.buildEntityRuleWithSum»</td>«ENDIF»
 					</tr>
 				</ng-template>
 				«ENDIF»

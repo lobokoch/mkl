@@ -403,8 +403,25 @@ RuleApply:
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
 		(disableCUD = DisableCUD)? &
+		(hideCUDWebListActions = HideCUDWebListActions)? &
+		(hideWebListActions = HideWebListActions)? &
+		(webActionsColumn = WebActionsColumn)? &
 		(ruleFunction = RuleFunction)? 
 	)
+;
+
+WebActionsColumn:
+	'webActionsColumn' '{'
+		'width' ':' width = STRING
+	'}'
+;
+
+HideCUDWebListActions:
+	hideCUDWebListActions ?= 'hideCUDWebListActions'
+;
+
+HideWebListActions:
+	hideWebListActions ?= 'hideWebListActions'
 ;
 
 DisableCUD:
