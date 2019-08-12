@@ -660,6 +660,19 @@ class Web {
 	boolean readOnly
 }
 
+class ColumnIndex {
+	String name
+	boolean ^unique
+	String expression
+}
+
+class Validation {
+	String name
+	String message
+	String ^package
+	String custom
+}
+
 abstract class Slotted extends Element {
 	contains Slot[] slots opposite ownerObject
 }
@@ -670,7 +683,7 @@ class Slot extends Element {
 	boolean optional
 	boolean parent
 	boolean many
-	boolean indexed
+	contains ColumnIndex index
 	boolean password
 	boolean ^transient
 	Boolean hidden
@@ -689,6 +702,7 @@ class Slot extends Element {
 	contains Grid grid
 	AssociationType associationType
 	EnumType enumType
+	contains Validation[] validations
 	
 	String help
 	String label
@@ -700,6 +714,14 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasValidations() {
+		return validations !== null && !validations.empty
+	}
+	
+	op boolean hasIndex() {
+		index !== null
+	}
 	
 	op boolean hasSort() {
 		sort !== null && !sort.order.trim.empty
@@ -789,6 +811,19 @@ class Slot extends Element {
 		}
 		
 		false
+	}
+	
+	op int getLength() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			if (basicType instanceof StringType) {
+				//val length = (basicType as StringType).length
+				val length = basicType.length
+				return length
+			}
+		}
+		
+		return 0
 	}
 	
 	op boolean isUUID() {
@@ -1094,6 +1129,10 @@ class Entity extends PublicObject, Rulled {
 	// Hibernate filters
 	contains HibFilterDef[] hibFilterDefList
 	contains HibFilters[] hibFiltersList
+	
+	op boolean hasIndex() {
+		slots.exists[it.hasIndex]
+	}
 	
 	op boolean hasPassword() {
 		slots.exists[it.isPassword]

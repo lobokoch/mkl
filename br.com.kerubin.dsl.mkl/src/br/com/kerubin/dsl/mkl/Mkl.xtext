@@ -209,7 +209,7 @@ Slot:
 			(autoComplete = AutoComplete)? &
 			(listFilter = ListFilter)? &
 			('enumType' ':' enumType=EnumType)? &
-			(indexed?='indexed')? &
+			(index = ColumnIndex)? &
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
 			('help' ':' help=STRING)? &
@@ -224,9 +224,39 @@ Slot:
 			(grid = Grid)? &
 			(web = Web)? &
 			(sort = Sort)? &
+			(validations += Validation*) &
+			//(hibFilterDefList += HibFilterDef*) &
 			(autoCompleteWithOwnerParams?='autoCompleteWithOwnerParams')?
 			
 		)
+;
+
+Validation:
+	'validation' '('
+		(
+			('name' ':' name = ID_KEYWORD) &
+			('message' ':' message = STRING)? &
+			('custom' ':' custom = STRING)? &
+			('package' ':' package = QualifiedName)?
+			
+		)
+	')'
+;
+
+QualifiedName:
+    ID_KEYWORD ('.' ID_KEYWORD)*;
+
+ColumnIndex:
+{ColumnIndex}	
+	'index' ('('
+		(
+			('name' ':' name = ID_KEYWORD)? &	
+			(unique ?= 'unique')? &	
+			('expression' ':' expression = STRING)?
+			
+		)
+	')')?
+	
 ;
 
 fragment Rules returns Rulled:

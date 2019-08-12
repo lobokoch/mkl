@@ -81,15 +81,8 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
-		// Bean Validations
-		val hasNotBlankValidation = !slot.isUUID && (slot.isRequired && slot.isString)
-		val hasNotNullValidation = !slot.isUUID && (slot.isRequired && !slot.isString)
-		if (hasNotBlankValidation) {
-			entity.addImport('import javax.validation.constraints.NotBlank;')
-		}
-		if (hasNotNullValidation) {
-			entity.addImport('import javax.validation.constraints.NotNull;')
-		}
+		// Bean Validations imports
+		slot.resolveBeanValidationImports
 		
 		if (slot.isDTOFull) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
@@ -101,9 +94,12 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
 		}
 		
+		val validationAnnotations = slot.resolveBeanValidationAnnotations
+		
 		'''
-		«IF hasNotBlankValidation»«slot.buildFieldRequiredValidationAnnotation('NotBlank')»«ENDIF»
-		«IF hasNotNullValidation»«slot.buildFieldRequiredValidationAnnotation('NotNull')»«ENDIF»
+		«IF !validationAnnotations.isEmpty»
+		«validationAnnotations.map[it.toString].join('\r')»
+		«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSE»

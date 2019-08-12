@@ -10,6 +10,7 @@ import org.eclipse.xtend2.lib.StringConcatenation
 
 abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGeneratorExecutor {
 	
+	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
 	}
@@ -280,7 +281,37 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence createIndexes() {
 		'''
+		
+		/* INDEXES */
+		«entities.filter[it.hasIndex].map[it.createEntityIndexes].join»
 		'''
 	}
+	
+	def CharSequence createEntityIndexes(Entity entity) {
+		val slots = entity.slots.filter[it.hasIndex]
+		'''
+		«slots.map[it.buildSlotIndex].join»
+		'''
+	}
+	
+	def CharSequence buildSlotIndex(Slot slot) {
+		val index = slot.index
+		val indexName = index.name ?: slot.toSlotIndexName
+		val tableName = slot.ownerEntity.databaseName
+		val columnName = slot.databaseName
+		val expression = index.expression
+		val hasExpression = expression !== null && !expression.trim.isEmpty
+		val isUnique = index.unique
+		
+		'''
+		CREATE«IF isUnique» UNIQUE«ENDIF» INDEX «indexName» ON «tableName» «IF hasExpression»(«expression»)«ELSE»(«columnName»)«ENDIF»;
+		'''
+	}
+	
+	
+	
+	
+	
+	
 	
 }

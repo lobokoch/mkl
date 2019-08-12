@@ -116,6 +116,10 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		// Bean Validations imports
+		slot.resolveBeanValidationImports
+		val validationAnnotations = slot.resolveBeanValidationAnnotations
+		
 		val isOneToManyWithMapsId = slot.isOneToOne && slot.isRelationRefers
 		if (slot.isEntity) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityName + ';')
@@ -128,6 +132,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		
 		'''
+		«IF !validationAnnotations.isEmpty»
+		«validationAnnotations.map[it.toString].join('\r')»
+		«ENDIF»
 		«IF isOneToManyWithMapsId»
 		@Id /* OneTone will be PK and FK pointing to «slot.asEntity.toEntityName» */
 		@Column(name="«slot.databaseName»")

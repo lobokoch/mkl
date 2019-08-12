@@ -55,10 +55,96 @@ class EntityUtils {
 	public static val DELETED_FIELD_NAME = 'deleted'
 	public static val DELETED_FIELD_LABEL = 'inativo'
 	
+	public static val VALIDATION_MAP_IMPORTS = #{
+		'CpfOrCnpj' -> 'br.com.kerubin.api.servicecore.validator.constraint.CpfOrCnpj',
+		'CPF' -> 'org.hibernate.validator.constraints.br.CPF',
+		'CNPJ' -> 'org.hibernate.validator.constraints.br.CNPJ',
+		'Size' -> 'javax.validation.constraints.Size',
+		'Email' -> 'javax.validation.constraints.Email',
+		'URL' -> 'org.hibernate.validator.constraints.URL',
+		'EAN' -> 'org.hibernate.validator.constraints.EAN'
+	}
+	
 	def static generateEntityImports(Entity entity) {
 		'''
 		«entity.imports.map[it].join('\r\n')»
 		'''
+	}
+	
+	def static resolveBeanValidationImports(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		// Resolve Bean Validation imports
+		val hasNotBlankValidation = (slot !== entity.id) && (slot.isRequired && slot.isString)
+		val hasNotNullValidation = (slot !== entity.id) && (slot.isRequired && !slot.isSmallint) // TODO: @Version is smallint
+		if (hasNotBlankValidation) {
+			entity.addImport('import javax.validation.constraints.NotBlank;')
+		}
+		if (hasNotNullValidation) {
+			entity.addImport('import javax.validation.constraints.NotNull;')
+		}
+		
+		if (slot.isString) {
+			entity.addImport('import javax.validation.constraints.Size;')
+		}
+		
+		if (slot.hasValidations) {
+			val validations = slot.validations
+			validations.forEach[validation |
+				var package_ = validation.package
+				if (package_ === null || package_.trim.isEmpty) {
+					val name = validation.name
+					if (VALIDATION_MAP_IMPORTS.containsKey(name)) {
+						package_ = VALIDATION_MAP_IMPORTS.get(name)
+					}
+					else {
+						package_ = '<UNKNOWN VALIDATION IMPORT FOR VALIDATION NAME: ' + name + '>'
+					}
+				}
+				
+				package_ = 'import ' + package_ + ';'
+				entity.addImport(package_)
+			]
+		}
+	}
+	
+	def static List<String> resolveBeanValidationAnnotations(Slot slot) {
+		val result = newArrayList();
+		val entity = slot.ownerEntity
+		val label = slot?.label ?: slot.name
+		
+		// Resolve Bean Validation imports
+		val hasNotBlankValidation = (slot !== entity.id) && (slot.isRequired && slot.isString)
+		val hasNotNullValidation = (slot !== entity.id) && (slot.isRequired && !slot.isSmallint) // TODO: @Version is smallint
+		if (!hasNotBlankValidation && hasNotNullValidation) {
+			result.add('''@NotNull(message="\"«label»\" é obrigatório.")''')
+		}
+		
+		if (hasNotBlankValidation) {
+			result.add('''@NotBlank(message="\"«label»\" é obrigatório.")''')
+		}
+		
+		if (slot.isString) {
+			val length = slot.length
+			result.add('''@Size(max = «length», message = "\"«label»\" pode ter no máximo «length» caracteres.")''')
+		}
+		
+		if (slot.hasValidations) {
+			val validations = slot.validations
+			validations.forEach[validation |
+				val custom = validation.custom
+				if (custom !== null && !custom.isEmpty) {
+					result.add('''«custom»''')
+				}
+				else {
+					val name = validation.name
+					var message = validation?.message ?: '\\"' + label + '\\" possui valor inválido.'
+					result.add('''@«name»(message="«message»")''')
+				}
+			]
+		}
+		
+		result
 	}
 	
 	def static String getRelationIntermediateTableName(Slot slot) {
@@ -67,6 +153,11 @@ class EntityUtils {
 	
 	def static String getEntityIdAsKey(Entity entity) {
 		entity.id.databaseName
+	}
+	
+	def static String toSlotIndexName(Slot slot) {
+		val entity = slot.ownerEntity
+		entity.databaseName + '_' + slot.databaseName + '_idx'
 	}
 	
 	def static String getSlotAsEntityIdFK(Slot slot) {

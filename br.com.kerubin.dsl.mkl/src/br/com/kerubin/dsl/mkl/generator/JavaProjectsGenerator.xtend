@@ -439,6 +439,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		    		<groupId>org.springframework.boot</groupId>
 		    		<artifactId>spring-boot-starter-web</artifactId>
 		    	</dependency>
+		    	<dependency>
+				    <groupId>br.com.kerubin.api</groupId>
+				    <artifactId>service-core</artifactId>
+				</dependency>
 		    	«buildMessagingDependency»
 		    </dependencies>
 		    <build>
