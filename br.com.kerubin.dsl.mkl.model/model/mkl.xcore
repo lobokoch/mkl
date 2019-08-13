@@ -644,6 +644,12 @@ class SumField {
 	}
 }
 
+class ShowDataWithIcon {
+	String icon = 'pi pi-info-circle'
+	String iconSize = '2em'
+	String onlyNotNullValue = 'true'
+}
+
 class Grid {
 	boolean slotIsHidden
 	boolean slotIsUnordered
@@ -652,6 +658,11 @@ class Grid {
 	String label
 	String styleClass
 	String columnWidth
+	contains ShowDataWithIcon showDataWithIcon
+	
+	op boolean hasShowDataWithIcon() {
+		return showDataWithIcon !== null
+	}
 }
 
 class Web {
@@ -676,6 +687,7 @@ class Validation {
 abstract class Slotted extends Element {
 	contains Slot[] slots opposite ownerObject
 }
+
 
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
@@ -751,8 +763,16 @@ class Slot extends Element {
 		return mask !== null && !mask.trim.isEmpty
 	}
 	
+	op boolean hasShowDataWithIcon() {
+		return hasGrid && grid.hasShowDataWithIcon
+	}
+	
+	op ShowDataWithIcon getShowDataWithIcon() {
+		return grid?.showDataWithIcon
+	}
+	
 	op boolean isShowOnGrid() {
-		return !isHiddenSlot && (!hasGrid || !grid.isSlotIsHidden) 
+		return (!hasGrid || !grid.isSlotIsHidden) || !isHiddenSlot  
 	}
 	
 	op boolean hasGridStyleClass() {

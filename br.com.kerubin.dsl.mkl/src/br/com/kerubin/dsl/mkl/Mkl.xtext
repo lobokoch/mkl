@@ -547,9 +547,22 @@ Grid:
 			(noCurrencySimbol ?= 'noCurrencySimbol')? &
 			('label' ':' label = STRING)? &
 			('columnWidth' ':' columnWidth = STRING)? &
+			(showDataWithIcon = ShowDataWithIcon)? &
 			('styleClass' ':' styleClass = STRING)?
 		)
 	')'
+;
+
+ShowDataWithIcon:
+{ShowDataWithIcon}	
+	'showDataWithIcon' 
+	('('
+		(
+			('icon' ':' icon = STRING)? &
+			('size' ':' iconSize = STRING)? &
+			('onlyNotNullValue' ':' onlyNotNullValue = ('true' | 'false') )? 
+		)
+	')')?
 ;
 
 Web:

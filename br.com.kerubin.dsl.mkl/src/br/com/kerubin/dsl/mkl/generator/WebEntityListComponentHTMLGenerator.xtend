@@ -139,11 +139,14 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			attrColSpan++ // + 1 for actions column
 		} 
 		
+		
+		
 		'''
 		
 		<!-- Begin GRID -->
 		<div class="ui-g-12" name="data-grid">
-			<p-table selectionMode="single" [loading]="loading" [responsive]="true" [customSort]="true" [paginator]="true" 
+			<p-table selectionMode="single" [loading]="loading" 
+				[responsive]="true" [customSort]="true" [paginator]="true" [resizableColumns]="true"
 				[value]="«entity.toEntityWebListItems»"
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
 			    [totalRecords]="«entity.toEntityWebListItemsTotalElements»"
@@ -383,11 +386,14 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val userClasses = slot.getUserWebClassesArray
 		
 		val hasStyleClass = slot.hasGridStyleClass
+		val hasDataIcon = slot.hasShowDataWithIcon
+		val showDataWithIcon = slot.showDataWithIcon
+		
 		'''
-		<td«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
+		<td«IF hasDataIcon» style="text-align: center"«ENDIF»«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
-			{{«fieldName» | date:'dd/MM/yyyy'}}
+			{{«fieldName» | date:'dd/MM/yyyy' }}
 			«ELSEIF slot.isDateTime»
 			{{«fieldName» | date:'dd/MM/yyyy HH:mm'}}
 			«ELSEIF slot.isTime»
@@ -401,11 +407,15 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«ELSEIF slot.isEnum»
 			«slot.getTranslationKeyFunc(fieldName + '?.toLowerCase()')»
 			«ELSE»
-			{{«fieldName»}}
+			«IF hasDataIcon»<i«IF 'true' == showDataWithIcon.onlyNotNullValue» *ngIf="«fieldName»"«ENDIF» class="«showDataWithIcon.icon»" style="font-size: «showDataWithIcon.iconSize»" [pTooltip]=«fieldName»></i>«ELSE»{{ «fieldName» }}«ENDIF»
 			«ENDIF»
 			«IF hasStyleClass»</div">«ENDIF»
 		</td>
 		'''
+	}
+	
+	def CharSequence getColumnData(Slot slot) {
+		
 	}
 	
 	def CharSequence getBooleanValue(Slot slot) {
