@@ -598,6 +598,7 @@ enum FilterOperatorEnum {
 	isNotNull as 'isNotNull'
 	isNull as 'isNull'
 	isNotNull_isNull as 'isNotNull_isNull'
+	isEqualTo as 'isEqualTo'
 }
 
 class FilterOperator {

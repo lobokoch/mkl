@@ -589,7 +589,7 @@ FilterOperator:
 ;
 
 enum FilterOperatorEnum:
-	 many='many' | between='between' | isNotNull='isNotNull' | isNull='isNull' | isNotNull_isNull='isNotNull_isNull'
+	 many='many' | between='between' | isNotNull='isNotNull' | isNull='isNull' | isNotNull_isNull='isNotNull_isNull' | isEqualTo='isEqualTo'
 ;
 
 AutoComplete:

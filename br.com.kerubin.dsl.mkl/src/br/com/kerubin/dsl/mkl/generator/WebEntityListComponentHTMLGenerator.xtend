@@ -523,12 +523,18 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		    <div class="ui-g-12 ui-md-2 ui-fluid">
 		      	<label class="label-r">«slot.getFilterIsBetweenLabel(0)»</label>
 		        <input pInputText type="text" name="«slot.toIsBetweenFromName»"
+		        «IF slot.isNumber»
+		        currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"
+		        «ENDIF»
 		        [(ngModel)]="«entity.toEntityListFilterName».«slot.toIsBetweenFromName»" />
 		    </div>
 		
 		    <div class="ui-g-12 ui-md-2 ui-fluid">
 		        <label class="label-l label-r">«slot.getFilterIsBetweenLabel(1)»</label>
-		        <input pInputText type="text" name="«slot.toIsBetweenToName»" dateFormat="dd/mm/yy"
+		        <input pInputText type="text" name="«slot.toIsBetweenToName»"
+		        «IF slot.isNumber»
+		        currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"
+		        «ENDIF»
 		        [(ngModel)]="«entity.toEntityListFilterName».«slot.toIsBetweenToName»" />
 		    </div>
 		    

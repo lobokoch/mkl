@@ -131,7 +131,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			) { }
 			
 			ngOnInit() {
-				«filterSlots.filter[isBetween].map['''this.«toIsBetweenOptionsOnClickMethod»(null);'''].join('\r\n')»
+				«filterSlots.filter[it.isBetween && it.isDate].map['''this.«toIsBetweenOptionsOnClickMethod»(null);'''].join('\r\n')»
 				«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 				this.initializeDateFilterIntervalDropdownItems();
 				«ENDIF»
@@ -222,7 +222,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 				  ];
 			}
 			
-			«filterSlots.filter[isBetween].map[generatePeriodIntervalSelectMethod].join»
+			«filterSlots.filter[it.isBetween && it.isDate].map[generatePeriodIntervalSelectMethod].join»
 			«ENDIF»
 			
 			«IF entity.hasRules»«entity.buildRulesForGridRowStyleClass»«ENDIF»

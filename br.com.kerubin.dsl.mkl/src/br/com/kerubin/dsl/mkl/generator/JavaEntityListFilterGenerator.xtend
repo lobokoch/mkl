@@ -168,9 +168,10 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def CharSequence buildFieldPredicateBetween(Slot slot, String varFilter, String varQEntity) {
-		//slot.ownerEntity.addImport("import org.springframework.util.CollectionUtils;")
-		val fieldFrom = 'fieldFrom'
-		val fieldTo = 'fieldTo'
+		val fieldName = slot.fieldName.toFirstUpper
+		
+		val fieldFrom = 'fieldFrom' + fieldName
+		val fieldTo = 'fieldTo' + fieldName
 		var String[] labels = slot.listFilter.filterOperator?.label?.split(';')
 		if (labels !== null) {
 			if (labels.size == 0) {
@@ -185,6 +186,8 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		}
 		
 		'''
+		
+		// Begin for field: «fieldName»
 		«slot.toJavaType» «fieldFrom» = «slot.buildMethodGet(varFilter, BETWEEN_FROM)»;
 		«slot.toJavaType» «fieldTo» = «slot.buildMethodGet(varFilter, BETWEEN_TO)»;
 		
@@ -206,6 +209,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 				where.and(«varQEntity».«slot.fieldName».loe(«fieldTo»));				
 			}
 		}
+		// End for field: «fieldName»
 		'''
 	}
 	

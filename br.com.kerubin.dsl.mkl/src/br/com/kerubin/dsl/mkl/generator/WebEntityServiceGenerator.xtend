@@ -453,6 +453,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		if («VAR_FILTER».«fieldName») {
 		«IF slot.isDate»
 			const value = this.dateToStr(«VAR_FILTER».«fieldName»);
+		«ELSEIF slot.isNumber»
+			const value = «VAR_FILTER».«fieldName».toString();
 		«ELSE»
 			const value = «VAR_FILTER».«fieldName»;
 		«ENDIF»
@@ -463,6 +465,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		if («VAR_FILTER».«fieldName») {
 		«IF slot.isDate»
 			const value = this.dateToStr(«VAR_FILTER».«fieldName»);
+		«ELSEIF slot.isNumber»
+			const value = «VAR_FILTER».«fieldName».toString();
 		«ELSE»
 			const value = «VAR_FILTER».«fieldName»;
 		«ENDIF»
@@ -470,6 +474,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		}
 		«ENDIF»
 		'''
+	}
+	
+	def String getSlotValueAsParam(Slot slot) {
+		
 	}
 	
 	def void initializeImports(Entity entity) {
