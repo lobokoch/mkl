@@ -414,6 +414,26 @@ class EntityUtils {
 		"<UNKNOWN2>"
 	}
 	
+	def static String getStyleClass(String styleClass) {
+		val defaultUI_MD = '2'
+		getStyleClass(styleClass, defaultUI_MD)
+	}
+	
+	def static String getStyleClass(String styleClass, String defaultUI_MD) {
+		var result = 'ui-md-' + defaultUI_MD;
+		if (styleClass !== null && !styleClass.trim.isEmpty) {
+			if (!styleClass.containsWord('ui-md-')) {
+				result += ' ' + styleClass; 
+			}
+			else {
+				result = styleClass
+			}
+		}
+		
+		result
+		
+	}
+	
 	def static String getWebClass(Slot slot) {
 		var class = 'ui-g-12 ui-fluid'
 		if (slot.hasWebClass) 

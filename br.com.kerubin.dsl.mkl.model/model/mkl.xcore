@@ -625,6 +625,7 @@ class FilterOperator {
 
 class ListFilter {
 	contains FilterOperator filterOperator
+	String styleClass = 'ui-md-2'
 }
 
 class SumField {

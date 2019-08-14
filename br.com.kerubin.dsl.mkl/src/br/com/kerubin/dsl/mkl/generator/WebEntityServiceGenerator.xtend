@@ -427,7 +427,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			«IF slot.isNumber»
 			const value = «VAR_FILTER».«fieldName».toString();
 			«ELSEIF slot.isEnum»
-			const value = «VAR_FILTER».«fieldName».value;
+			const value = String(«VAR_FILTER».«fieldName»);
 			«ELSE»
 			const value = «VAR_FILTER».«fieldName»;
 			«ENDIF»

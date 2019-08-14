@@ -66,7 +66,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		<!-- Begin Filters -->
 		<p-accordion class="ui-g-12">
-			<p-accordionTab header="Filtro">
+			<p-accordionTab header="Filtros">
 			
 				<div class="ui-g">
 					<div class="ui-g-12">
@@ -108,7 +108,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterSearchButton(Entity entity) {
 		'''
-		  <p-button label="Pesquisar" (click)="«entity.toWebEntityFilterSearchMethod»"></p-button>
+		  <p-button label="Aplicar os filtros e pesquisar" icon="pi pi-search" iconPos="left" (click)="«entity.toWebEntityFilterSearchMethod»"></p-button>
 		'''
 	}
 	
@@ -488,12 +488,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterIsBetweenIsDateField(Slot slot) {
 		val entity = slot.ownerEntity
+		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
 		'''
 		
 		<div class="ui-g-12">
 		
-		    <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <div class="ui-g-12 «styleClass» ui-fluid">
 		        <label style="display: block">«slot.getFilterIsBetweenLabel(2)»</label>
 		        <p-dropdown #«slot.toIsBetweenOptionsVarName» 
 			        [options]="dateFilterIntervalDropdownItems" 
@@ -502,13 +503,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        </p-dropdown>
 		    </div>
 		
-		    <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <div class="ui-g-12 «styleClass» ui-fluid">
 		      	<label class="label-r">«slot.getFilterIsBetweenLabel(0)»</label>
 		        <p-calendar name="«slot.toIsBetweenFromName»"
 		        dateFormat="dd/mm/yy" [(ngModel)]="«entity.toEntityListFilterName».«slot.toIsBetweenFromName»"></p-calendar>
 		    </div>
 		
-		    <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <div class="ui-g-12 «styleClass» ui-fluid">
 		        <label class="label-l label-r">«slot.getFilterIsBetweenLabel(1)»</label>
 		        <p-calendar name="«slot.toIsBetweenToName»" dateFormat="dd/mm/yy"
 		        [(ngModel)]="«entity.toEntityListFilterName».«slot.toIsBetweenToName»"></p-calendar>
@@ -520,12 +521,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterIsBetween(Slot slot) {
 		val entity = slot.ownerEntity
+		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
 		'''
 		
 		<div class="ui-g-12">
 		
-		    <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <div class="ui-g-12 «styleClass» ui-fluid">
 		      	<label class="label-r">«slot.getFilterIsBetweenLabel(0)»</label>
 		        <input pInputText type="text" name="«slot.toIsBetweenFromName»"
 		        «IF slot.isNumber»
@@ -534,7 +536,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        [(ngModel)]="«entity.toEntityListFilterName».«slot.toIsBetweenFromName»" />
 		    </div>
 		
-		    <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <div class="ui-g-12 «styleClass» ui-fluid">
 		        <label class="label-l label-r">«slot.getFilterIsBetweenLabel(1)»</label>
 		        <input pInputText type="text" name="«slot.toIsBetweenToName»"
 		        «IF slot.isNumber»
@@ -549,10 +551,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterIsNotNullField(Slot slot) {
 		val entity = slot.ownerEntity
+		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
 		'''
 		
-		<div class="ui-g-12 ui-md-2 ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid">
 			<label style="display: block" class="label-l label-r">«slot.getIsNotNull_isNullLabel(0)»</label>
 			<p-inputSwitch [(ngModel)]="«entity.toEntityListFilterName».«slot.isNotNullFieldName»"></p-inputSwitch>
 		</div>
@@ -561,10 +564,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterIsNullField(Slot slot) {
 		val entity = slot.ownerEntity
+		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
 		'''
 		
-		<div class="ui-g-12 ui-md-2 ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid">
 			<label style="display: block" class="label-l label-r">«slot.getIsNotNull_isNullLabel(1)»</label>
 			<p-inputSwitch [(ngModel)]="«entity.toEntityListFilterName».«slot.isNullFieldName»"></p-inputSwitch>
 		</div>
@@ -576,16 +580,18 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val fieldName = slot.fieldName
 		val isInputText = slot.isNumber || slot.isString || slot.isUUID
 		
+		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
+		
 		'''
 		
-		<div class="ui-g-12 ui-md-2 ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid">
 			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: fieldName»</label>
 			«IF isInputText»
-			<input pInputText type="text" name="«fieldName»"
+			<input pInputText type="text"
 			«IF slot.isNumber»
 			currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"
-			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»" />
 			«ENDIF»
+			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»"/>
 			«ELSEIF slot.isEnum»
 			<p-dropdown [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."
 			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»"></p-dropdown>
@@ -596,10 +602,14 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterManyField(Slot slot) {
 		val entity = slot.ownerEntity
+		var styleClass = slot?.listFilter?.styleClass?.getStyleClass
+		if ('ui-md-2' == styleClass) {
+			styleClass = 'ui-md-12'
+		}
 		
 		'''
 		
-		<div class="ui-g-12 ui-md-12 ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid">
 			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
 			<p-autoComplete name="«slot.toAutoCompleteName»" 
 			placeholder="Digite para pesquisar..." [dropdown]="true" 

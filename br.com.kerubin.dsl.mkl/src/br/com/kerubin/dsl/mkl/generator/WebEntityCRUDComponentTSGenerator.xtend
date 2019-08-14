@@ -517,6 +517,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 		private «slot.webDropdownOptionsInitializationMethod»() {
 		    this.«slot.webDropdownOptions» = [
+		    	{ label: 'Selecione um item', value: null },
 		    	«enumerarion.items.map['''{ label: this.getTranslation('«slot.translationKey + '_' + it.name.toLowerCase»'), value: '«it.name»' }'''].join(', \r\n')»
 		    ];
 		}

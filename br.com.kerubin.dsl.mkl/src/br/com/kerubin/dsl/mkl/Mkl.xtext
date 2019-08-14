@@ -578,9 +578,11 @@ Web:
 
 
 ListFilter:
-{ListFilter}
 	'listFilter' '(' 
-		filterOperator = FilterOperator
+		(
+			(filterOperator = FilterOperator) &
+			('styleClass' ':' styleClass = STRING)?
+		)
 	')'	
 ;
 
