@@ -108,6 +108,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		val isNotNull = slot.isNotNull
 		val isNull = slot.isNull
 		val isBetween = slot.isBetween
+		val isEqualTo = slot.isEqualTo
 		
 		if (isMany) {
 			slot.buildFieldPredicateMany(varFilter, varQEntity)			
@@ -119,7 +120,23 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		else if (isNotNull || isNull) {
 			slot.buildFieldPredicateBoolean(varFilter, varQEntity)
 		}
+		else if (isEqualTo) {
+			slot.buildFieldPredicateIsEqualTo(varFilter, varQEntity)
+		}
 		
+	}
+	
+	def CharSequence buildFieldPredicateIsEqualTo(Slot slot, String varFilter, String varQEntity) {
+		val fieldName = slot.fieldName
+		val varName = fieldName + IS_EQUAL_TO
+		'''
+		// Begin field: «fieldName»
+		if («varFilter».«slot.buildMethodGet» != null) {
+			BooleanExpression «varName» = «varQEntity».«fieldName».eq(«varFilter».«slot.buildMethodGet»);
+			where.and(«varName»);
+		}
+		// End field: «fieldName»
+		'''
 	}
 	
 	def CharSequence buildFieldPredicateBoolean(Slot slot, String varFilter, String varQEntity) {
@@ -131,6 +148,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		val isNotNullStr = 'is' + fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper + '()'
 		
 		'''
+		// Begin field: «fieldName»
 		«IF isNotNull && isNull»		
 		if ( ! («varFilter».«isNullStr» && «varFilter».«isNotNullStr») ) {
 					
@@ -164,6 +182,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 			where.and(«varQEntity».«slot.fieldName».isNull());				
 		}
 		«ENDIF»
+		// End field: «fieldName»
 		'''
 	}
 	
@@ -187,7 +206,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		'''
 		
-		// Begin for field: «fieldName»
+		// Begin field: «fieldName»
 		«slot.toJavaType» «fieldFrom» = «slot.buildMethodGet(varFilter, BETWEEN_FROM)»;
 		«slot.toJavaType» «fieldTo» = «slot.buildMethodGet(varFilter, BETWEEN_TO)»;
 		
@@ -209,18 +228,21 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 				where.and(«varQEntity».«slot.fieldName».loe(«fieldTo»));				
 			}
 		}
-		// End for field: «fieldName»
+		// End field: «fieldName»
 		'''
 	}
 	
 	def CharSequence buildFieldPredicateMany(Slot slot, String varFilter, String varQEntity) {
 		slot.ownerEntity.addImport("import org.springframework.util.CollectionUtils;")
+		val fieldName = slot.fieldName
 		
 		'''
+		// Begin field: «fieldName»
 		if (!CollectionUtils.isEmpty(«varFilter».«slot.buildMethodGet»)) {
-			BooleanExpression inExpression = «varQEntity».«slot.name.toFirstLower».in(«varFilter».«slot.buildMethodGet»);
+			BooleanExpression inExpression = «varQEntity».«fieldName».in(«varFilter».«slot.buildMethodGet»);
 			where.and(inExpression);
 		}
+		// End field: «fieldName»
 		'''
 	}
 	
@@ -282,6 +304,9 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		if (slot.isDate) {
 			entity.addImport("import org.springframework.format.annotation.DateTimeFormat;")
 		}
+		else if(slot.isEnum) {
+			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
+		}
 		
 		val isNotNull = slot.isNotNull
 			
@@ -291,7 +316,12 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val isBetween = slot.isBetween 
 		
+		val isEqualTo = slot.isEqualTo
+		
 		'''
+		«IF isEqualTo»
+		private «slot.toJavaType» «slot.fieldName»;
+		«ENDIF»
 		«IF isMany»
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -327,9 +357,16 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 			
 		val isMany = isMany(slot)
 		
-		val isBetween = slot.isBetween 
+		val isBetween = slot.isBetween
+		
+		val isEqualTo = slot.isEqualTo
 		
 		'''
+		«IF isEqualTo»
+		«slot.getGetMethod»
+				
+		«slot.getSetMethod»
+		«ENDIF»
 		«IF isMany»
 		«slot.getListMethod»
 		

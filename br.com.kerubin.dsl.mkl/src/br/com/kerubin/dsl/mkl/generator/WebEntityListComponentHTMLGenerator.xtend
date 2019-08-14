@@ -455,8 +455,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val isMany = isMany(slot)
 		
 		val isBetween = slot.isBetween 
+		
+		val isEqualTo = slot.isEqualTo
 			
 			'''
+			«IF isEqualTo»
+			«slot.generateHTMLFilterIsEqualToField»
+			«ENDIF»
 			«IF isMany»
 			«slot.generateHTMLFilterManyField»
 			«ELSEIF isNotNull || isNull»
@@ -562,6 +567,29 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		<div class="ui-g-12 ui-md-2 ui-fluid">
 			<label style="display: block" class="label-l label-r">«slot.getIsNotNull_isNullLabel(1)»</label>
 			<p-inputSwitch [(ngModel)]="«entity.toEntityListFilterName».«slot.isNullFieldName»"></p-inputSwitch>
+		</div>
+		'''
+	}
+	
+	def CharSequence generateHTMLFilterIsEqualToField(Slot slot) {
+		val entity = slot.ownerEntity
+		val fieldName = slot.fieldName
+		val isInputText = slot.isNumber || slot.isString || slot.isUUID
+		
+		'''
+		
+		<div class="ui-g-12 ui-md-2 ui-fluid">
+			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: fieldName»</label>
+			«IF isInputText»
+			<input pInputText type="text" name="«fieldName»"
+			«IF slot.isNumber»
+			currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"
+			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»" />
+			«ENDIF»
+			«ELSEIF slot.isEnum»
+			<p-dropdown [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."
+			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»"></p-dropdown>
+			«ENDIF»
 		</div>
 		'''
 	}

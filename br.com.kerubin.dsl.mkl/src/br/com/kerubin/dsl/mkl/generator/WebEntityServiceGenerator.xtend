@@ -415,9 +415,25 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val isMany = isMany(slot)
 		
 		val isBetween = slot.isBetween 
+		
+		val isEqualTo = slot.isEqualTo
+		
 		var fieldName = '<unknown>'
 		
 		'''
+		«IF isEqualTo»
+		// «fieldName = slot.fieldName»
+		if («VAR_FILTER».«fieldName») {
+			«IF slot.isNumber»
+			const value = «VAR_FILTER».«fieldName».toString();
+			«ELSEIF slot.isEnum»
+			const value = «VAR_FILTER».«fieldName».value;
+			«ELSE»
+			const value = «VAR_FILTER».«fieldName»;
+			«ENDIF»
+			params = params.set('«fieldName»', value);
+		}
+		«ENDIF»
 		«IF isMany»
 		// «fieldName = slot.fieldName»
 		if («VAR_FILTER».«fieldName») {

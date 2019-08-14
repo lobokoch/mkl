@@ -86,6 +86,12 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «it.toAutoCompleteClassName» } from './«entity.toEntityWebModelName»';''')
 		]
 		
+		filterSlots.filter[it.isEqualTo && it.isEnum].forEach[
+			val slotAsEnum = it.asEnum
+			imports.newLine
+			imports.add('''import { «slotAsEnum.toDtoName» } from '«service.serviceWebEnumsPathName»';''')
+		]
+		
 		entity.slots.filter[it.isEntity].forEach[
 			val slotAsEntity = it.asEntity
 			imports.newLine
@@ -118,6 +124,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«filterSlots.generateFilterSlotsInitializationVars»
 			dateFilterIntervalDropdownItems: SelectItem[];
 			«ENDIF»
+			
 			
 			«IF entity.hasSumFields»
 			«entitySumFieldsClassName.toFirstLower» = new «entitySumFieldsClassName»();
@@ -199,6 +206,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«filterSlots.filter[isListFilterMany].map[generateAutoCompleteMethod].join»
 			
+			«filterSlots.filter[it.isEqualTo && it.isEnum].map[it.generateEnumInitializationOptions].join»
+			
 			«entity.slots.filter[isEntity].map[generateAutoCompleteFieldConverter].join»
 			
 			«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
@@ -249,6 +258,25 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence generateEnumInitializationOptions(Slot slot) {
+		val enumerarion = slot.asEnum
+		'''
+		private «slot.webDropdownOptionsInitializationMethod»() {
+		    this.«slot.webDropdownOptions» = [
+		    	«enumerarion.items.map['''{ label: this.getTranslation('«slot.translationKey + '_' + it.name.toLowerCase»'), value: '«it.name»' }'''].join(', \r\n')»
+		    ];
+		}
+		  
+		'''
+	}
+	
+	def CharSequence mountDropdownOptionsVar(Slot slot) {
+		val enumerarion = slot.asEnum
+		'''
+		«slot.webDropdownOptions»: «enumerarion.toDtoName»[];
+		'''
 	}
 	
 	def CharSequence generateRuleFormWithDisableCUD(Rule rule) {
@@ -656,9 +684,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 		val isMany = isMany(slot)
 		
-		val isBetween = slot.isBetween 
+		val isBetween = slot.isBetween
+		
+		val isEqualTo = slot.isEqualTo
 			
 		'''
+		«IF isEqualTo && slot.isEnum»
+		«slot.mountDropdownOptionsVar»
+		«ENDIF»
 		«IF isMany»
 		«slot.webAutoCompleteSuggestions»: «slot.toAutoCompleteClassName»[];
 		«ELSEIF isNotNull || isNull»
@@ -695,9 +728,14 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 		val isMany = isMany(slot)
 		
-		val isBetween = slot.isBetween 
+		val isBetween = slot.isBetween
+		
+		val isEqualTo = slot.isEqualTo
 			
 		'''
+		«IF isEqualTo && slot.isEnum»
+		this.«slot.webDropdownOptionsInitializationMethod»();
+		«ENDIF»
 		«IF isMany»
 		«ELSEIF isNotNull || isNull»
 		

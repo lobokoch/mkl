@@ -44,6 +44,7 @@ class EntityUtils {
 	
 	public static val BETWEEN_FROM = 'From'
 	public static val BETWEEN_TO = 'To'
+	public static val IS_EQUAL_TO = 'IsEqualTo'
 	public static val VAR_FILTER = 'filter'
 	public static val LIST_FILTER_PAGE_SIZE = 'pageSize'
 	public static val UNKNOWN = '<UNKNOWN>'
@@ -1628,5 +1629,9 @@ class EntityUtils {
 	
 	public static def boolean isBetween(Slot slot) {
 		slot.listFilter.filterOperator.filterOperatorEnum.equals(FilterOperatorEnum.BETWEEN)
+	} 
+	
+	public static def boolean isEqualTo(Slot slot) {
+		FilterOperatorEnum.IS_EQUAL_TO.equals(slot.listFilter.filterOperator.filterOperatorEnum)
 	} 
 }
