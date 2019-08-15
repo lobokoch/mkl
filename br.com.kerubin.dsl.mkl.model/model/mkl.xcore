@@ -21,6 +21,7 @@ class DisableEntityGeneration {
 	boolean serviceInterface
 	boolean serviceImpl
 	boolean entityDTO
+	boolean sqlDDL
 	
 	// All means, have no other
 	op boolean isAll() {
@@ -29,6 +30,7 @@ class DisableEntityGeneration {
 			!entityDTO &&
 			!repository &&
 			!serviceInterface &&
+			!sqlDDL &&
 			!serviceImpl 
 	}
 }

@@ -21,6 +21,10 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		generateSQLForEntities
 	}
 	
+	override getEntities() {
+		baseGenerator.entities.filter[canGenerateSQLDDL]
+	}
+	
 	def generateSQLForEntities() {
 		// Based on: https://flywaydb.org/documentation/migrations
 		val sqlFileName =  'Entity_Resources/db/migration/V1__Creation_Tables_' + databaseName + '.sql'

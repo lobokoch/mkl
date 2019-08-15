@@ -75,6 +75,11 @@ class GeneratorExecutor {
 		!not
 	}
 	
+	def canGenerateSQLDDL(Entity entity) {
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.sqlDDL)
+		!not
+	}
+	
 	
 	def getEntities() {
 		baseGenerator.entities.filter[canGenerateEntity]

@@ -151,7 +151,8 @@ DisableEntityGeneration:
 			(entityDTO ?= 'entityDTO')? &
 			(repository ?= 'repository')? &
 			(serviceImpl ?= 'serviceImpl')? & 
-			(serviceInterface ?= 'serviceInterface')?
+			(serviceInterface ?= 'serviceInterface')? &
+			(sqlDDL ?= 'sqlDDL')?
 		)
 	')'))
 ;
