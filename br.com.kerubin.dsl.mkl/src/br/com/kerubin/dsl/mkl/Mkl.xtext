@@ -189,7 +189,7 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 'transient'
+	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 'transient' | 'validation'
 ;
 
  fragment Name returns Named:
@@ -233,12 +233,13 @@ Slot:
 ;
 
 Validation:
+{Validation}	
 	'validation' '('
 		(
 			('name' ':' name = ID_KEYWORD) &
 			('message' ':' message = STRING)? &
 			('custom' ':' custom = STRING)? &
-			('package' ':' package = QualifiedName)?
+			('package' ':' validationPackage = STRING)?
 			
 		)
 	')'

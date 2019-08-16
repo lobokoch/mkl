@@ -63,7 +63,11 @@ class EntityUtils {
 		'Size' -> 'javax.validation.constraints.Size',
 		'Email' -> 'javax.validation.constraints.Email',
 		'URL' -> 'org.hibernate.validator.constraints.URL',
-		'EAN' -> 'org.hibernate.validator.constraints.EAN'
+		'EAN' -> 'org.hibernate.validator.constraints.EAN',
+		'DecimalMin' -> 'javax.validation.constraints.DecimalMin',
+		'DecimalMax' -> 'javax.validation.constraints.DecimalMax',
+		'Future' -> 'javax.validation.constraints.Future',
+		'FutureOrPresent' -> 'javax.validation.constraints.FutureOrPresent'
 	}
 	
 	def static generateEntityImports(Entity entity) {
@@ -92,7 +96,7 @@ class EntityUtils {
 		if (slot.hasValidations) {
 			val validations = slot.validations
 			validations.forEach[validation |
-				var package_ = validation.package
+				var package_ = validation.validationPackage
 				if (package_ === null || package_.trim.isEmpty) {
 					val name = validation.name
 					if (VALIDATION_MAP_IMPORTS.containsKey(name)) {
@@ -133,15 +137,27 @@ class EntityUtils {
 		if (slot.hasValidations) {
 			val validations = slot.validations
 			validations.forEach[validation |
-				val custom = validation.custom
-				if (custom !== null && !custom.isEmpty) {
-					result.add('''«custom»''')
+				val name = validation.name
+				val custom = validation?.custom ?: ''
+				var message = validation?.message ?: ''
+				
+				var str = '(' + custom
+				
+				if (!custom.empty && !message.empty) {
+					str += ', '
 				}
-				else {
-					val name = validation.name
-					var message = validation?.message ?: '\\"' + label + '\\" possui valor inválido.'
-					result.add('''@«name»(message="«message»")''')
+				
+				if (!message.empty) {
+					str += 'message="' + message + '"'
 				}
+				
+				str += ')'
+				
+				if (str == '()') {
+					str = null
+				}
+				
+				result.add('''@«name»«IF str !== null»«str»«ENDIF»''')
 			]
 		}
 		

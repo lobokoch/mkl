@@ -684,7 +684,7 @@ class ColumnIndex {
 class Validation {
 	String name
 	String message
-	String ^package
+	String validationPackage
 	String custom
 }
 
