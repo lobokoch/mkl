@@ -227,9 +227,26 @@ Slot:
 			(sort = Sort)? &
 			(validations += Validation*) &
 			//(hibFilterDefList += HibFilterDef*) &
+			(repositoryFindBy += RepositoryFindBy*) &
 			(autoCompleteWithOwnerParams?='autoCompleteWithOwnerParams')?
 			
 		)
+;
+
+RepositoryFindBy:
+{RepositoryFindBy}
+	'findBy' ('('
+		(
+			('custom' ':' custom = STRING)? &
+			('resultKind' ':' resultKind = RepositoryResultKind)? & 
+			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')?
+			
+		)
+	')')?
+;
+
+enum RepositoryResultKind:
+	OPTIONAL='Optional' | COLLECTION='Collection' | ENTITY='Entity'
 ;
 
 Validation:
@@ -239,7 +256,7 @@ Validation:
 			('name' ':' name = ID_KEYWORD) &
 			('message' ':' message = STRING)? &
 			('custom' ':' custom = STRING)? &
-			('package' ':' validationPackage = STRING)?
+			('package' ':' package = STRING)?
 			
 		)
 	')'

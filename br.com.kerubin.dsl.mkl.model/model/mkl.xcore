@@ -248,6 +248,11 @@ class RuleWhenOperator {
 	String operator
 }
 
+enum RepositoryResultKind {
+	OPTIONAL as 'Optional'
+	COLLECTION as 'Collection'
+	ENTITY as 'Entity'
+}
 
 enum RuleWhenTemporalConstants {
 	NOW as 'now'
@@ -684,8 +689,16 @@ class ColumnIndex {
 class Validation {
 	String name
 	String message
-	String validationPackage
+	String ^package
 	String custom
+}
+
+class RepositoryFindBy {
+	String name
+	String custom
+	RepositoryResultKind resultKind
+	String[] packages
+	refers Slot ownerSlot opposite repositoryFindBy
 }
 
 abstract class Slotted extends Element {
@@ -719,6 +732,7 @@ class Slot extends Element {
 	AssociationType associationType
 	EnumType enumType
 	contains Validation[] validations
+	contains RepositoryFindBy[] repositoryFindBy opposite ownerSlot
 	
 	String help
 	String label
@@ -730,6 +744,10 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasRepositoryFindBy() {
+		return repositoryFindBy !== null && !repositoryFindBy.isEmpty
+	}
 	
 	op boolean hasValidations() {
 		return validations !== null && !validations.empty

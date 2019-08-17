@@ -4,6 +4,8 @@ import br.com.kerubin.dsl.mkl.model.Entity
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
+import br.com.kerubin.dsl.mkl.model.RepositoryResultKind
 
 class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -26,15 +28,21 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def CharSequence generateEntityRepository(Entity entity) {
+		entity.imports.clear
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val autoCompleteSlots = entity.slots.filter[it.hasAutoComplete || (entity.enableVersion && it.name.toLowerCase == 'version')]
 		val hasAutoComplete = !autoCompleteSlots.isEmpty
+		
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		findBySlots.forEach[it.generateRepositoryFindByForEntityImports]
+		
 		
 		'''
 		package «entity.package»;
 		
 		import org.springframework.data.jpa.repository.JpaRepository;
 		import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+		«entity.imports.map[it].join('\r\n')»
 		«IF hasAutoComplete»
 		import java.util.Collection;
 		import org.springframework.data.repository.query.Param;
@@ -57,8 +65,66 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			«IF entity.hasListFilterMany»
 			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
 			«ENDIF»
+			«IF !findBySlots.empty»
 			
+			// Begin generated findBy
+			«findBySlots.map[it.generateRepositoryFindByForEntity].join»
+			// End generated findBy
+			«ENDIF»
 		}
+		'''
+	}
+	
+	def void generateRepositoryFindByForEntityImports(Slot slot) {
+		val findByList = slot.repositoryFindBy;
+		findByList.forEach[it.generateSlotFindByImports]
+	}
+	
+	def void generateSlotFindByImports(RepositoryFindBy findByObj) {
+		val slot = findByObj?.ownerSlot
+		val entity = slot?.ownerEntity
+		val packages =  findByObj?.packages
+		
+		if (packages !== null && !packages.empty) {
+			packages.forEach[
+				entity.addImport('''import «it.toString»;''')
+			]
+		}
+		entity.addImport('import java.util.Optional;')
+	}
+	
+	def CharSequence generateRepositoryFindByForEntity(Slot slot) {
+		val findByList = slot.repositoryFindBy;
+		'''
+		// findBy for field «slot.fieldName»
+		«findByList.map[it.generateSlotFindBy].join»
+		'''
+	}
+	
+	def CharSequence generateSlotFindBy(RepositoryFindBy findByObj) {
+		val slot = findByObj.ownerSlot
+		val entity = slot.ownerEntity
+		val custom = findByObj?.custom
+		
+		var resultKind = findByObj.resultKind.literal
+		if (resultKind == RepositoryResultKind.ENTITY.literal) {
+			resultKind = entity.toEntityName
+		}
+		else {
+			resultKind += '<' + entity.toEntityName + '>'
+		}
+		
+		var findBy = ''
+		
+		if (custom !== null) {
+			findBy = custom
+		}
+		else {
+			findBy = 'findBy' + slot.name.toFirstUpper + '('  + slot.toJavaType + ' ' + slot.fieldName + ')'
+		}
+		
+		'''
+		«resultKind» «findBy»;
 		'''
 	}
 	

@@ -61,13 +61,26 @@ class EntityUtils {
 		'CPF' -> 'org.hibernate.validator.constraints.br.CPF',
 		'CNPJ' -> 'org.hibernate.validator.constraints.br.CNPJ',
 		'Size' -> 'javax.validation.constraints.Size',
+		'Max' -> 'javax.validation.constraints.Max',
+		'Min' -> 'javax.validation.constraints.Min',
 		'Email' -> 'javax.validation.constraints.Email',
 		'URL' -> 'org.hibernate.validator.constraints.URL',
 		'EAN' -> 'org.hibernate.validator.constraints.EAN',
 		'DecimalMin' -> 'javax.validation.constraints.DecimalMin',
 		'DecimalMax' -> 'javax.validation.constraints.DecimalMax',
 		'Future' -> 'javax.validation.constraints.Future',
-		'FutureOrPresent' -> 'javax.validation.constraints.FutureOrPresent'
+		'FutureOrPresent' -> 'javax.validation.constraints.FutureOrPresent',
+		'PastOrPresent' -> 'javax.validation.constraints.PastOrPresent',
+		'Past' -> 'javax.validation.constraints.Past',
+		'Positive' -> 'javax.validation.constraints.Positive',
+		'PositiveOrZero' -> 'javax.validation.constraints.PositiveOrZero',
+		'Negative' -> 'javax.validation.constraints.Negative',
+		'NegativeOrZero' -> 'javax.validation.constraints.NegativeOrZero',
+		'Pattern' -> 'javax.validation.constraints.Pattern',
+		'Null' -> 'javax.validation.constraints.Null',
+		'AssertFalse' -> 'javax.validation.constraints.AssertFalse',
+		'AssertTrue' -> 'javax.validation.constraints.AssertTrue',
+		'Digits' -> 'javax.validation.constraints.Digits'
 	}
 	
 	def static generateEntityImports(Entity entity) {
@@ -96,7 +109,7 @@ class EntityUtils {
 		if (slot.hasValidations) {
 			val validations = slot.validations
 			validations.forEach[validation |
-				var package_ = validation.validationPackage
+				var package_ = validation.package
 				if (package_ === null || package_.trim.isEmpty) {
 					val name = validation.name
 					if (VALIDATION_MAP_IMPORTS.containsKey(name)) {
