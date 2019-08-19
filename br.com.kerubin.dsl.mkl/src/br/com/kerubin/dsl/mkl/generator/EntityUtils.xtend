@@ -93,8 +93,8 @@ class EntityUtils {
 		val entity = slot.ownerEntity
 		
 		// Resolve Bean Validation imports
-		val hasNotBlankValidation = (slot !== entity.id) && (slot.isRequired && slot.isString)
-		val hasNotNullValidation = (slot !== entity.id) && (slot.isRequired && !slot.isSmallint) // TODO: @Version is smallint
+		val hasNotBlankValidation = slot.isRequired && slot.isString && slot !== entity.id
+		val hasNotNullValidation = !hasNotBlankValidation && slot.isRequired && !slot.isSmallint && slot !== entity.id // TODO: @Version is smallint
 		if (hasNotBlankValidation) {
 			entity.addImport('import javax.validation.constraints.NotBlank;')
 		}
@@ -132,9 +132,9 @@ class EntityUtils {
 		val label = slot?.label ?: slot.name
 		
 		// Resolve Bean Validation imports
-		val hasNotBlankValidation = (slot !== entity.id) && (slot.isRequired && slot.isString)
-		val hasNotNullValidation = (slot !== entity.id) && (slot.isRequired && !slot.isSmallint) // TODO: @Version is smallint
-		if (!hasNotBlankValidation && hasNotNullValidation) {
+		val hasNotBlankValidation = slot.isRequired && slot.isString && slot !== entity.id
+		val hasNotNullValidation = !hasNotBlankValidation && slot.isRequired && !slot.isSmallint && slot !== entity.id // TODO: @Version is smallint
+		if (hasNotNullValidation) {
 			result.add('''@NotNull(message="\"«label»\" é obrigatório.")''')
 		}
 		
