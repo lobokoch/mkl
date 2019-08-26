@@ -36,6 +36,7 @@ class JavaServiceHandlerInterceptorAdapterGenerator extends GeneratorExecutor im
 			
 			public static final String HEADER_USER = "X-User-Header";
 			public static final String HEADER_TENANT = "X-Tenant-Header";
+			public static final String HEADER_TENANT_ACCOUNT_TYPE = "X-Tenant-AccountType-Header";
 			
 			@Override
 			public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -49,9 +50,11 @@ class JavaServiceHandlerInterceptorAdapterGenerator extends GeneratorExecutor im
 			private void updateServiceContext(HttpServletRequest request) {
 				String currentTenant = request.getHeader(HEADER_TENANT);
 				String currentUser = request.getHeader(HEADER_USER);
+				String currentTenantAccountType = request.getHeader(HEADER_TENANT_ACCOUNT_TYPE);
 				
 				ServiceContext.setTenant(currentTenant);
 				ServiceContext.setUser(currentUser);
+				ServiceContext.setTenantAccountType(currentTenantAccountType);
 				
 				ServiceContext.setDomain(«domaAndService».DOMAIN);
 				ServiceContext.setService(«domaAndService».SERVICE);

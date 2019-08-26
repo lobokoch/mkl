@@ -1082,7 +1082,7 @@ class Enumeration extends ServiceObject {
 	op int getDefaultIndex() {
 		for (var i = 0; i < items.size(); i++) {
 			if (items.get(i).isDefaultItem) {
-				return i
+				return i + 1 // + 1 because of first item is: { label: 'Selecione um item', value: null }, ...
 			}
 		}
 		
