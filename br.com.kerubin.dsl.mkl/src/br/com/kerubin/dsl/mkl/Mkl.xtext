@@ -71,7 +71,7 @@ EnumItem:
 
 Entity:
 	(
-		(enableVersion?='@version')? &
+		(entityVersion = EntityVersion)? &
 		(hibFilterDefList += HibFilterDef*) &
 		(hibFiltersList += HibFilters*) &
 		(disableGeneration=DisableEntityGeneration)? &
@@ -90,6 +90,16 @@ Entity:
 		Slots
 		Rules?
 	'}'
+;
+
+EntityVersion:
+{EntityVersion}	
+	'@version' 
+	(
+	'('
+		('columnName' ':' columnName = STRING)?
+	')'
+	)?
 ;
 
 // Hibernate @FilterDef

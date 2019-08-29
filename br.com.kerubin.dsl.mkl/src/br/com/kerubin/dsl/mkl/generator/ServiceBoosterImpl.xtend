@@ -85,7 +85,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 			entity.createAuditingFields
 		}
 		
-		if (entity.enableVersion) {
+		if (entity.hasEntityVersion) {
 			entity.boostVersion
 		}
 		
@@ -103,6 +103,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 	def void boostVersion(Entity entity) {
 		val slot = ModelFactory.eINSTANCE.createSlot
 		slot.name = 'version'
+		slot._alias = entity.entityVersion.columnName
 		slot.label = 'Versão'
 		slot.implicit = true
 		slot.hidden = true

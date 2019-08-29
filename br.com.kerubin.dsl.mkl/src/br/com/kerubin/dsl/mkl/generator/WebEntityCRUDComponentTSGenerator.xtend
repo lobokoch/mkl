@@ -545,7 +545,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val serviceName = ownerEntity.toEntityWebServiceClassName.toFirstLower
 		
-		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id && !(entity.enableVersion && it.name.toLowerCase == 'version')]
+		var resultSlots = entity.slots.filter[it.autoCompleteResult && it !== entity.id && !(entity.hasEntityVersion && it.name.toLowerCase == 'version')]
 		if (resultSlots.isEmpty) {
 			resultSlots = entity.slots.filter[it.autoCompleteResult]
 		}

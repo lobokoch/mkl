@@ -1030,7 +1030,7 @@ class Slot extends Element {
 		return (hasAutoComplete &&  
 			(this.getAutoComplete.isResult || !(this.autoComplete.isData || this.getAutoComplete.isResult || this.getAutoComplete.isKey)) ) ||
 				// version field must figured out in the results.
-			ownerEntity.enableVersion && this.name.toLowerCase == 'version'
+			ownerEntity.hasEntityVersion && this.name.toLowerCase == 'version'
 	}
 	
 	op boolean isAutoCompleteData() {
@@ -1154,6 +1154,10 @@ class HibFilter {
 	String condition
 }
 
+class EntityVersion {
+	String columnName = 'entityVersion'
+}
+
 class Entity extends PublicObject, Rulled {
 	refers Entity parent
 	boolean secure
@@ -1162,7 +1166,6 @@ class Entity extends PublicObject, Rulled {
 	boolean baseRepository
 	boolean enableReplication
 	boolean externalEntity = 'false'
-	boolean enableVersion
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
@@ -1171,6 +1174,15 @@ class Entity extends PublicObject, Rulled {
 	// Hibernate filters
 	contains HibFilterDef[] hibFilterDefList
 	contains HibFilters[] hibFiltersList
+	contains EntityVersion entityVersion
+	
+	op boolean hasEntityVersion () {
+		return entityVersion !== null
+	}
+	
+	op String getEntityVersionColumnNane() {
+		return entityVersion.columnName
+	}
 	
 	op boolean hasIndex() {
 		slots.exists[it.hasIndex]
