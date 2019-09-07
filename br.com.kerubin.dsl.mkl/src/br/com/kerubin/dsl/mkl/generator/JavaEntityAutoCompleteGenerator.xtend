@@ -55,6 +55,8 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		public interface «entity.toAutoCompleteName» {
 		
 			«slots.generateGetters(imports)»
+			
+			«slots.generateSetters(imports)»
 		
 		}
 		'''
@@ -65,12 +67,23 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		'''
 		«slots.map[generateGetter(imports)].join('\r\n')»
 		'''
-		
+	}
+	
+	def CharSequence generateSetters(Iterable<Slot> slots, Set<String> imports) {
+		'''
+		«slots.map[generateSetter(imports)].join('\r\n')»
+		'''
 	}
 	
 	def CharSequence generateGetter(Slot slot, Set<String> imports) {
 		'''
 		«slot.resolveSlotAutocomplete(imports)» get«slot.name.toFirstUpper»();
+		'''
+	}
+	
+	def CharSequence generateSetter(Slot slot, Set<String> imports) {
+		'''
+		void set«slot.name.toFirstUpper»(«slot.resolveSlotAutocomplete(imports)» «slot.fieldName»);
 		'''
 	}
 	
