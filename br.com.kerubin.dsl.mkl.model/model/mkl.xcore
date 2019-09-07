@@ -125,13 +125,61 @@ class RuleExpression {
 }
 
 class FieldMathExpression {
-	contains FieldObject leftField
-	MathOperator operator
-	contains FieldMathExpression rightField
+	contains TerminalFieldMathExpression left
+	MathOperator[] operators
+	contains TerminalFieldMathExpression[] rights
+	
+	op FieldObject getLeftField() {
+		left?.field
+	}
+	
+	op FieldObject getRightField() {
+		return getRightFieldByIndex(0)
+	}
+	
+	op FieldObject getRightFieldByIndex(int index) {
+		if (rights !== null && rights.size > index) {
+			return rights.get(index)?.field
+		}
+		else {
+			return null
+		}
+	}
+	
+	op MathOperator getOperator() {
+		return getOperatorByIndex(0)
+	}
+	
+	op MathOperator getOperatorByIndex(int index) {
+		if (operators !== null && operators.size > index) {
+			return operators.get(index)
+		}
+		else {
+			return null
+		}
+	}
+}
+
+class TerminalFieldMathExpression {
+	contains FieldMathExpression expression
+	contains FieldObject field
+}
+
+abstract class Parentheses {
+	String parentheses
+}
+
+class LeftParentheses extends Parentheses {
+	
+}
+
+class RightParentheses extends Parentheses {
+	
 }
 
 abstract class AbstractObject {
-	
+	boolean leftParentheses
+	boolean rightParentheses
 }
 
 class StringObject extends AbstractObject {
@@ -150,13 +198,6 @@ class FormObject extends AbstractObject {
 class FieldObject extends AbstractObject {
 	refers Slot field
 }
-
-
-
-/*class EnumObject extends AbstractObject {
-	refers Enumeration enumeration
-	String enumItem
-}*/
 
 class NumberObject extends AbstractObject {
 	Double value
@@ -272,7 +313,7 @@ class RuleApply {
 	String styleClass
 	String styleCss
 	String label
-	contains FieldMathExpression sumFieldExpression
+	contains FieldMathExpression fieldMathExpression
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
 	contains RuleFunction ruleFunction
@@ -307,6 +348,10 @@ class RuleApply {
 	
 	op boolean hasMakeCopiesExpression() {
 		makeCopiesExpression !== null
+	}
+	
+	op boolean hasFieldMathExpression() {
+		fieldMathExpression !== null
 	}
 	
 	op boolean hasStyleClass() {
@@ -944,6 +989,17 @@ class Slot extends Element {
 		if (this.slotType instanceof BasicTypeReference) {
 			val basicType = (this.slotType as BasicTypeReference).basicType
 			return basicType instanceof TimeType
+		}
+		
+		false
+	}
+	
+	op boolean isTemporal() {
+		if (this.slotType instanceof BasicTypeReference) {
+			val basicType = (this.slotType as BasicTypeReference).basicType
+			return basicType instanceof DateType ||
+				basicType instanceof DateTimeType ||
+				basicType instanceof TimeType 
 		}
 		
 		false

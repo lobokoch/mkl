@@ -18,6 +18,9 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
+import br.com.kerubin.dsl.mkl.model.FieldObject
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	val closedHTMLTags = #['p-', 'textarea']
@@ -241,10 +244,69 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.decorateWebComponentAppFocus(builder)
 		slot.decorateWebComponentNgModel(builder)
 		slot.decorateWebComponentName(builder)
+		slot.decorateWebComponentRulesWithSlotAppyMathExpression(builder)
 		slot.decorateWebComponentRules(builder)
 		
 		// Tem que ser por último, porque fecha a tag.
 		slot.decorateWebComponentAutoCompleteTemplate(builder)
+	}
+	
+	def void decorateWebComponentRulesWithSlotAppyMathExpression(Slot slot, StringConcatenationExt builder) {
+		
+		val entity = slot.ownerEntity
+		val rulesWithSlotAppyMathExpression = entity.getRulesWithSlotAppyMathExpression
+		
+		val onBlurList = newArrayList
+		if (!rulesWithSlotAppyMathExpression.empty) {
+			rulesWithSlotAppyMathExpression.forEach[ rule |
+				
+				// Looks in the target "with" part
+				val targetSlot = (rule.target as RuleTargetField).target.field
+				var hasField = targetSlot.name == slot.name
+				
+				if (!hasField) { // If not found, looks inside the equation
+					var expression = rule.apply.fieldMathExpression
+					
+					val sb = new StringBuilder
+					expression.buildRuleApplyFieldMathExpression(sb)
+					val expressionStr = sb.toString
+					if (expressionStr !== null) {
+						val slotName = slot.name
+						hasField =  expressionStr.contains('.' + slotName)
+					}
+				}
+				
+				if(!hasField && rule.hasWhen) { // and finally, if not found yet, looks in the "when" part.
+					var whenExpression = rule.when.expression
+					if (whenExpression.left.whenObject instanceof FieldObject) {
+						var fieldObject = whenExpression.left.whenObject as FieldObject
+						hasField = fieldObject.field.name == slot.name
+						while (!hasField && whenExpression.rigth !== null) {
+							whenExpression = whenExpression.rigth
+							if (whenExpression.left.whenObject instanceof FieldObject) {
+								fieldObject = whenExpression.left.whenObject as FieldObject
+								hasField = fieldObject.field.name == slot.name
+							}
+						}
+					}
+				}
+				
+				if (hasField) {
+					val methodName = targetSlot.toRuleWithSlotAppyMathExpressionMethodName
+					if (slot.isTemporal) {
+						onBlurList.add('''(onBlur)="«methodName»($event)"''')
+						onBlurList.add('''(onClose)="«methodName»($event)"''')
+						
+					}
+					else {
+						onBlurList.add('''(blur)="«methodName»($event)"''')
+					}
+				}
+			]
+		}
+		
+		onBlurList.forEach[builder.concat(''' «it.toString» ''').concat('\r\n')]
+		
 	}
 	
 	def void decorateWebComponentAppFocus(Slot slot, StringConcatenationExt builder) {
@@ -296,6 +358,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def void decorateWebComponentType(Slot slot, StringConcatenationExt builder) {
+		
 		if (slot.isEntity) {
 			// Pega como resultado o primeiro campo de resultado que não seja o id da entidade, caso não tenha nenhum, ai traz o id da entidade como campo de resultado.
 			webComponentType = 'p-autoComplete'
@@ -306,8 +369,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''').concat('\r\n')
 			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''').concat('\r\n')
 			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''').concat('\r\n')
-			.concat(''' (onBlur)="«slot.toAutoCompleteOnBlurMethodName»($event)"''').concat('\r\n')
-			.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''').concat('\r\n')
+			.concat(''' (blur)="«slot.toAutoCompleteOnBlurMethodName»($event)"''').concat('\r\n')
+			builder.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''').concat('\r\n')
 			return
 		}
 		else if (slot.isEnum){

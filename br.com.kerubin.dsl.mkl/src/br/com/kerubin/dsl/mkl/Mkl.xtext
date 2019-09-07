@@ -418,7 +418,6 @@ EnumObject:
 ;
 
 FieldObject:
-{FieldObject}	
 	field=[Slot]
 ;
 
@@ -458,7 +457,7 @@ RuleApply:
 		('styleClass' ':' styleClass = STRING)? & 
 		('styleCss' ':' styleCss = STRING)? &
 		('label' ':' label = STRING)? &
-		('(' sumFieldExpression = FieldMathExpression ')')? &
+		('equation' '(' fieldMathExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
 		(disableCUD = DisableCUD)? &
@@ -520,9 +519,15 @@ FieldAndValue:
 	field = FieldObject '=' value = (FieldObject | TemporalObject | NumberObject | NullObject)
 ;
 
+//  x + (x) + (( x + y) * x + y) 
+
 FieldMathExpression:
-	leftField = FieldObject 
-		(operator = MathOperator rightField = FieldMathExpression)?
+	left = TerminalFieldMathExpression (operators += MathOperator rights += TerminalFieldMathExpression)*
+;
+
+TerminalFieldMathExpression:
+    '(' expression = FieldMathExpression ')' |
+    field = FieldObject
 ;
 
 enum MathOperator:

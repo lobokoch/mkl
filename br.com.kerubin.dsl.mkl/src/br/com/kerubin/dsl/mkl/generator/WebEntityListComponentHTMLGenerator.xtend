@@ -267,6 +267,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence buildEntityRuleWithSum(Entity entity) {
+		
 		val rule = entity.rulesWithTargetEnum.filter[it.ruleAsTargetEnum == RuleTarget.GRID_SUMROW_LAST_CELL].head
 		if (rule === null) {
 			return ''
@@ -274,22 +275,25 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		val sbLabels = new StringBuilder
 		val sbField = new StringBuilder
-		var expression = rule.apply.sumFieldExpression
+		var expression = rule.apply.fieldMathExpression
 		var slot = expression.getLeftField.getField
 		sbLabels.append(slot.getSumSlotLabelWithStyle)
 		sbField.append(slot.getEntitySumFieldName)
-		while (expression.getRightField !== null) {
-			sbLabels.append(expression.getOperator.literal)
-			sbField.concatSB(expression.getOperator.literal)
+		var index = 0
+		while (expression.getRightFieldByIndex(index) !== null) {
+			val operator = expression.getOperatorByIndex(index)
+			val operation = operator.literal
+			sbLabels.append(operation)
+			sbField.concatSB(operation)
 			
-			expression = expression.getRightField
-			
-			slot = expression.getLeftField.getField
+			slot = expression.getRightFieldByIndex(index).field
 			sbLabels.append(slot.getSumSlotLabelWithStyle)
 			sbField.concatSB(slot.getEntitySumFieldName)
+			index++
 		}
 		
 		'''(«sbLabels.toString»): {{ («sbField.toString») | currency:'BRL':'symbol':'1.2-2':'pt' }}'''
+		
 	}
 	
 	def String getSumSlotLabelWithStyle(Slot slot) {

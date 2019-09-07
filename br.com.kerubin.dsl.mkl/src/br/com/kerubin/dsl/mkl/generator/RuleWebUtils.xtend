@@ -32,6 +32,8 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
 import br.com.kerubin.dsl.mkl.model.StringObject
+import br.com.kerubin.dsl.mkl.model.FieldMathExpression
+import br.com.kerubin.dsl.mkl.model.TerminalFieldMathExpression
 
 class RuleWebUtils {
 	
@@ -101,6 +103,56 @@ class RuleWebUtils {
 	
 	def static void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp) {
 		expression.buildRuleWhenExpression(resultStrExp)
+	}
+	
+	def static void buildRuleApplyFieldMathExpression(FieldMathExpression fieldMathExpression, StringBuilder result) {
+		var expression = fieldMathExpression
+		result.append('(')		
+		
+		// Execute the left operation
+		val left = expression.left
+		if (left !== null) {
+			left.processTerminalExpression(result)
+		}
+		
+		// Execute a list of right operations and same number of expressions
+		val rights = expression.rights
+		if (rights !== null && rights.size > 0) {
+			var index = 0
+			while (index < rights.size) {
+				// Trata a operação
+				val op = expression.getOperators.get(index)
+				val operation = op.literal
+				result.concatSB(operation).append('\r\n')
+				
+				// Execute the right operation
+				val rightExpression = rights.get(index)
+				rightExpression.processTerminalExpression(result)
+				index++
+			}
+		}
+		
+		result.append(')')
+	}
+	
+	def static processTerminalExpression(TerminalFieldMathExpression terminalExpression, StringBuilder result) {
+		if (terminalExpression.field !== null) {
+			terminalExpression.field.addFieldMathExpressionAsNumber(result)
+		}
+		else {
+			terminalExpression.expression.buildRuleApplyFieldMathExpression(result)
+		}
+	}
+		
+	def static addFieldMathExpressionAsNumber(FieldObject fieldObject, StringBuilder result) {
+		val slot = fieldObject.getField
+		if (slot !== null) {
+			val entity = slot.ownerEntity
+			val thisEntity = 'this.' + entity.fieldName
+			result.append('Number(')
+			result.append(thisEntity + '.' + slot.fieldName)
+			result.append(')')
+		}
 	}
 	
 	def static void buildRuleWhenExpression(RuleWhenExpression expression, StringBuilder resultStrExp) {
@@ -201,7 +253,7 @@ class RuleWebUtils {
 					resultStrExp.concatSB('(').append(objName).concatSB('||').concatSB(objName).append('.trim().length > 0)')						
 				}
 				else {
-					resultStrExp.concatSB(objName)					
+					resultStrExp.concatSB(objName).append(' !== null')				
 				}
 			}
 			else if (op instanceof RuleWhenOpIsBetween) {

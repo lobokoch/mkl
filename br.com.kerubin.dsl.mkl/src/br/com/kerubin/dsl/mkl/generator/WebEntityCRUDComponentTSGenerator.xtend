@@ -52,6 +52,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rulesWithSlotAppyStyleClass = entity.rulesWithSlotAppyStyleClass
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
 		
+		val rulesWithSlotAppyMathExpression = entity.getRulesWithSlotAppyMathExpression
+		
 		val hasCalendar = entity.hasDate
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
@@ -280,6 +282,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			// End Begin RuleWithSlotAppyStyleClass
 			«ENDIF»
 			
+			«IF !rulesWithSlotAppyMathExpression.empty»
+												
+			// Begin RulesWithSlotAppyMathExpression 
+			«rulesWithSlotAppyMathExpression.map[it.generateRuleWithSlotAppyMathExpression].join»
+			// End Begin RulesWithSlotAppyMathExpression
+			«ENDIF»
+			
 			«IF !rulesFormWithDisableCUD.empty»
 			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD»
 			«ENDIF»
@@ -320,6 +329,41 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		«methodName»() {
 			const expression = «expression»;
 			return expression;
+			
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleWithSlotAppyMathExpression(Rule rule) {
+		val slot = (rule.target as RuleTargetField).target.field
+		val methodName = slot.toRuleWithSlotAppyMathExpressionMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String whenExpression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			whenExpression = resultStrExp.toString
+		}
+		
+		var applyExpression = 'null'
+		if (rule.apply !== null && rule.apply.hasFieldMathExpression) {
+			val resultStrExp = new StringBuilder
+			rule.apply.fieldMathExpression.buildRuleApplyFieldMathExpression(resultStrExp)
+			applyExpression = resultStrExp.toString
+		}
+		
+		val entity = slot.ownerEntity
+		val thisEntity = 'this.' + entity.fieldName
+		
+		'''
+		«methodName»(event) {
+			if («thisEntity») {
+				const whenExpression = «whenExpression»;
+				if (whenExpression) {
+					«thisEntity».«slot.fieldName» = «applyExpression»;
+				}
+			}
 			
 		}
 		'''

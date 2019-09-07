@@ -832,6 +832,10 @@ class EntityUtils {
 		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasStyleClass] 
 	}
 	
+	def static getRulesWithSlotAppyMathExpression(Entity entity) {
+		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasFieldMathExpression] 
+	}
+	
 	def static getRuleWithSlotAppyStyleClassForSlot(Slot slot) {
 		val entity = slot.ownerEntity
 		val rules = entity.rulesWithSlotAppyStyleClass
@@ -1303,6 +1307,11 @@ class EntityUtils {
 	
 	def static toRuleWithSlotAppyStyleClassMethodName(Slot slot) {
 		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyStyleClass'
+		name
+	}
+	
+	def static toRuleWithSlotAppyMathExpressionMethodName(Slot slot) {
+		val name = 'rule' + slot.ownerEntity.fieldName.toFirstUpper + slot.name.toFirstUpper + 'OnAppyMathExpression'
 		name
 	}
 	
