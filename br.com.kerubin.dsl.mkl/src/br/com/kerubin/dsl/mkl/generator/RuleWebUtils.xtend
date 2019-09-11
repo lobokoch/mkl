@@ -399,7 +399,7 @@ class RuleWebUtils {
 		if (tf instanceof TemporalFunctionNextDays) {
 			val func = tf as TemporalFunctionNextDays
 			val days = func.days
-			result = "moment().add(" + days + ", 'day')"
+			result = getMomentUTCZero() + ".add(" + days + ", 'day')"
 		}
 		result
 		
@@ -411,18 +411,22 @@ class RuleWebUtils {
 		}
 		switch (tc) {
 			case RuleWhenTemporalConstants.TOMORROW: {
-				"moment().add(1, 'day')"
+				getMomentUTCZero() + ".add(1, 'day')"
 			}
 			case RuleWhenTemporalConstants.YESTERDAY: {
-				"moment().add(-1, 'day')"
+				getMomentUTCZero() + ".add(-1, 'day')"
 			}
 			case RuleWhenTemporalConstants.END_OF_WEEK: {
-				"moment().endOf('week')"
+				getMomentUTCZero() + ".endOf('week')"
 			}
 			default: {
-				'moment()' // Now and Today
+				getMomentUTCZero() // Now and Today
 			}
 		}
+	}
+	
+	def static String getMomentUTCZero() {
+		'moment({h: 0, m: 0, s: 0, ms: 0})'
 	}
 	
 }
