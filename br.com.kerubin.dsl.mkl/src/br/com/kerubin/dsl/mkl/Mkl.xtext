@@ -605,7 +605,8 @@ Web:
 		(
 			('styleClass' ':' styleClass = STRING)? &
 			('label' ':' label = STRING)? &
-			(readOnly ?= 'readOnly')?
+			(readOnly ?= 'readOnly')? &
+			(rememberValue ?= 'rememberValue')?
 		)
 	')'
 ;

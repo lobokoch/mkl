@@ -56,6 +56,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val hasCalendar = entity.hasDate
 		
+		val rememberedSlots = entity.slots.filter[it.isWebRememberValue]
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
@@ -105,6 +107,12 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ENDIF»
 			«IF !ruleMakeCopies.empty»«initializeMakeCopiesVars(ruleMakeCopies.head)»«ENDIF»
 			«fieldName» = new «dtoName»();
+			«IF !rememberedSlots.empty»
+			
+			// Remember fields values
+			«entity.buildRememberValueEntityField» = new «dtoName»();
+			
+			«ENDIF»
 			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
 			«entity.slots.filter[isEnum].map[mountDropdownOptionsVar].join('\n\r')»
 			«IF entity.isEnableReplication»«entity.entityReplicationQuantity» = 1;«ENDIF»
@@ -153,6 +161,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      «IF entity.hasEnumSlotsWithDefault»
 			      this.initializeEnumFieldsWithDefault();
 			      «ENDIF»
+				  «IF !rememberedSlots.empty»
+				  	
+				  	this.«entity.buildApplyRememberValuesMethodName»();
+				  	
+				  «ENDIF»
 			    }.bind(this), 1);
 			}
 			
@@ -173,7 +186,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.validateAllFormFields(form);
 			      return;
 			    }
-				    
+				«IF !rememberedSlots.empty»
+				
+				this.«entity.buildRememberValuesMethodName»();
+				
+				«ENDIF»
 			    if (this.isEditing) {
 			      this.update();
 			    } else {
@@ -295,11 +312,37 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF hasCalendar»
 			«generateInitLocaleSettings»
 			«ENDIF»
+			
+			«IF !rememberedSlots.empty»
+			«entity.buildApplyRememberValuesMethodName»() {
+				if (this.«entity.fieldName») {
+					«rememberedSlots.map[it.buildAssignRememberValue].join»
+				}
+			}
+			
+			«entity.buildRememberValuesMethodName»() {
+				if (this.«entity.fieldName») {
+					«rememberedSlots.map[it.buildApplyRememberValue].join»
+				}
+			}
+			«ENDIF»
 		}
 		'''
 		
 		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
+	}
+	
+	def CharSequence buildAssignRememberValue(Slot slot) {
+		'''
+		«slot.buildAssignFieldForRememberValue»
+		'''
+	}
+	
+	def CharSequence buildApplyRememberValue(Slot slot) {
+		'''
+		«slot.buildApplyFieldFromRememberValue»
+		'''
 	}
 	
 	def CharSequence generateInitLocaleSettings() {

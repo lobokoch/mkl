@@ -723,6 +723,7 @@ class Web {
 	String styleClass
 	String label
 	boolean readOnly
+	boolean rememberValue
 }
 
 class ColumnIndex {
@@ -884,6 +885,10 @@ class Slot extends Element {
 	
 	op boolean isWebReadOnly() {
 		return web !== null && web.readOnly
+	}
+	
+	op boolean isWebRememberValue() {
+		return web !== null && web.rememberValue
 	}
 	
 	op boolean hasWebLabel() {
@@ -1231,6 +1236,7 @@ class Entity extends PublicObject, Rulled {
 	contains HibFilterDef[] hibFilterDefList
 	contains HibFilters[] hibFiltersList
 	contains EntityVersion entityVersion
+	
 	
 	op boolean hasEntityVersion () {
 		return entityVersion !== null

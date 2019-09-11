@@ -149,9 +149,9 @@ class RuleWebUtils {
 		if (slot !== null) {
 			val entity = slot.ownerEntity
 			val thisEntity = 'this.' + entity.fieldName
-			result.append('Number(')
+			result.append('(')
 			result.append(thisEntity + '.' + slot.fieldName)
-			result.append(')')
+			result.append(' || 0)')
 		}
 	}
 	
@@ -253,7 +253,7 @@ class RuleWebUtils {
 					resultStrExp.concatSB('(').append(objName).concatSB('||').concatSB(objName).append('.trim().length > 0)')						
 				}
 				else {
-					resultStrExp.concatSB(objName).append(' !== null')				
+					resultStrExp.concatSB(objName) // (!== undefined && !== null)				
 				}
 			}
 			else if (op instanceof RuleWhenOpIsBetween) {

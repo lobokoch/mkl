@@ -1510,6 +1510,44 @@ class EntityUtils {
 		'''
 	}
 	
+	def static String buildRememberValuesMethodName(Entity entity) {
+		val result = entity.fieldName + 'RememberValues'
+		result
+	}
+	
+	def static String buildApplyRememberValuesMethodName(Entity entity) {
+		val result = entity.fieldName + 'ApplyRememberValues'
+		result
+	}
+	
+	def static String buildRememberValueEntityField(Entity entity) {
+		val result = entity.fieldName + 'RememberValue'
+		result
+	}
+	
+	def static String buildRememberValueField(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		val result = 'this.' + entity.buildRememberValueEntityField + '.' + slot.fieldName
+		result
+	}
+	
+	def static CharSequence buildAssignFieldForRememberValue(Slot slot) {
+		val entityFieldName = slot.ownerEntity.fieldName
+		val value = slot.buildRememberValueField
+		'''
+		this.«entityFieldName».«slot.fieldName» = «value»;
+		'''
+	}
+	
+	def static CharSequence buildApplyFieldFromRememberValue(Slot slot) {
+		val entityFieldName = slot.ownerEntity.fieldName
+		val value = slot.buildRememberValueField
+		'''
+		«value» = this.«entityFieldName».«slot.fieldName»;
+		'''
+	}
+	
 	def static String toWebFieldName(Slot slot) {
 		// e.g.: this.caixaDiario.caixaDiarioSituacao
 		val entityAsFieldName = slot.ownerEntity.fieldName
