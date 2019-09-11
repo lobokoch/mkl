@@ -369,7 +369,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''').concat('\r\n')
 			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''').concat('\r\n')
 			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''').concat('\r\n')
-			.concat(''' (blur)="«slot.toAutoCompleteOnBlurMethodName»($event)"''').concat('\r\n')
+			.concat(''' (onBlur)="«slot.toAutoCompleteOnBlurMethodName»($event)"''').concat('\r\n')
 			builder.concat(''' [field]="«slot.webAutoCompleteFieldConverter»"''').concat('\r\n')
 			return
 		}
