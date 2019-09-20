@@ -7,6 +7,7 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*;
 import br.com.kerubin.dsl.mkl.model.BasicTypeReference
 import br.com.kerubin.dsl.mkl.model.ObjectTypeReference
 import org.eclipse.xtend2.lib.StringConcatenation
+//import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -28,7 +29,12 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 	def generateSQLForEntities() {
 		// Based on: https://flywaydb.org/documentation/migrations
 		val sqlFileName =  'Entity_Resources/db/migration/V1__Creation_Tables_' + databaseName + '.sql'
-		generateFile(sqlFileName, generateSQL)
+		val sqlGenerated = generateSQL
+		generateFile(sqlFileName, sqlGenerated)
+		
+		/*val basePakage = getServerTestResourceGenSourceFolder
+		val sqlFileNameForTest = basePakage + 'db/migration/test/V1__Creation_Tables_' + databaseName + '.sql'
+		generateFile(sqlFileNameForTest, sqlGenerated)*/
 	}
 	
 	def CharSequence generateSQL() {

@@ -2,6 +2,12 @@ package br.com.kerubin.dsl.mkl.generator
 
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
+import java.util.List
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityServiceTestGenerator
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestResourcesGenerator
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestApplicationGenerator
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestRepositoryGenerator
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityBaseTestGenerator
 
 class JavaGenerator extends BaseGenerator {
 	
@@ -16,7 +22,8 @@ class JavaGenerator extends BaseGenerator {
 	}
 	
 	def generateJavaFiles() {
-		val IGeneratorExecutor[] generators = #[
+		
+		var List<IGeneratorExecutor> generators = newArrayList(
 			new JavaProjectsGenerator(this),
 			new JavaServerConfigGenerator(this),
 			new JavaCustomResponseEntityExceptionHandlerGenerator(this),
@@ -44,8 +51,16 @@ class JavaGenerator extends BaseGenerator {
 			new JavaServiceHandlerInterceptorAdapterGenerator(this),
 			new JavaServiceWebMvcConfigurerAdapterGenerator(this),
 			new JavaMessagingAfterReceivePostProcessorsGenerator(this),
-			new JavaEntityRuleFunctionsGenerator(this)
-		]
+			new JavaEntityRuleFunctionsGenerator(this)						
+		)
+		
+		if (canGenerateServiceBackendTest) {
+			generators.add(new JavaEntityTestApplicationGenerator(this))
+			generators.add(new JavaEntityBaseTestGenerator(this))
+			generators.add(new JavaEntityServiceTestGenerator(this))
+			generators.add(new JavaEntityTestRepositoryGenerator(this))
+			generators.add(new JavaEntityTestResourcesGenerator(this))
+		}
 		
 		generators.forEach[it.generate]	 
 	}

@@ -45,6 +45,11 @@ class GeneratorExecutor {
 		can
 	}
 	
+	def canGenerateTest(Entity entity) {
+		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.test)
+		!not
+	}
+	
 	def canGenerateController(Entity entity) {
 		val not = entity.isGenerationDisabled() || (entity.hasDisableGeneration && entity.disableGeneration.controller)
 		!not
@@ -244,6 +249,10 @@ class GeneratorExecutor {
 	
 	def String getExternalEntityPakage(Entity entity) {
 		entity.getExternalServicePackage + '.entity.' + entity.name.toLowerCase
+	}
+	
+	def String toMainTestApplicationClassName(Service service) {
+		service.domain.toCamelCase + service.name.toCamelCase + "TestApplication"
 	}
 	
 	def String toServiceConstantsName(Service service) {

@@ -5,11 +5,13 @@ import java.util.LinkedHashSet
 
 class DisableServiceGeneration {
 	boolean backend
+	boolean backendTest
 	boolean frontend
 	
 	// All means, have no other
 	op boolean isAll() {
 		return !backend &&
+		 	!backendTest &&
 			!frontend
 	}
 }
@@ -22,6 +24,7 @@ class DisableEntityGeneration {
 	boolean serviceImpl
 	boolean entityDTO
 	boolean sqlDDL
+	boolean test
 	
 	// All means, have no other
 	op boolean isAll() {
@@ -31,7 +34,8 @@ class DisableEntityGeneration {
 			!repository &&
 			!serviceInterface &&
 			!sqlDDL &&
-			!serviceImpl 
+			!serviceImpl && 
+			!test 
 	}
 }
 
@@ -505,6 +509,11 @@ class Service extends Element {
 	
 	op boolean canGenerateBackend() {
 		val not = isGenerationDisabled() || (hasDisableGeneration && disableGeneration.backend)
+		!not
+	}
+	
+	op boolean canGenerateBackendTest() {
+		val not = isGenerationDisabled() || (hasDisableGeneration && disableGeneration.backendTest)
 		!not
 	}
 	

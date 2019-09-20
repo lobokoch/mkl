@@ -348,6 +348,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<!-- Begin Entity Dependencies -->
 				«service?.dependencies.map[buildEntityMavenDependency]?.join»
 				<!-- End Entity Dependencies -->
+				
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-test</artifactId>
+					<scope>test</scope>
+				</dependency>
+				
+				<dependency>
+					<groupId>com.h2database</groupId>
+					<artifactId>h2</artifactId>
+					<scope>test</scope>
+				</dependency>
+						
 		    </dependencies>
 		    <build>
 		        <plugins>
@@ -375,6 +388,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
                 <configuration>
                   <sources>
                     <source>«getJavaSourceGen»</source>
+                    <source>«getJavaTestSourceGen»</source>
+                    <source>«getJavaTestResourceGen»</source>
                   </sources>
                 </configuration>
               </execution>

@@ -35,9 +35,7 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 	
 	def CharSequence generateEntityLookupResultDTO(Entity entity) {
 		entity.initializeEntityImports
-		val slots = entity.slots.filter[
-			it === entity.id || it.isAutoCompleteResult || it.isAutoCompleteData || (entity.hasEntityVersion && it.name.toLowerCase == 'version')
-		]
+		val slots = entity.getEntityLookupResultSlots
 		
 		val package = '''
 		package «entity.package»;

@@ -145,6 +145,7 @@ DisableServiceGeneration:
 	'(' 
 		(
 			(backend ?= 'backend')? & 
+			(backendTest ?= 'backendTest')? & 
 			(frontend ?= 'frontend')?
 		)
 	')')	
@@ -162,7 +163,8 @@ DisableEntityGeneration:
 			(repository ?= 'repository')? &
 			(serviceImpl ?= 'serviceImpl')? & 
 			(serviceInterface ?= 'serviceInterface')? &
-			(sqlDDL ?= 'sqlDDL')?
+			(sqlDDL ?= 'sqlDDL')? &
+			(test ?= 'test')?
 		)
 	')'))
 ;

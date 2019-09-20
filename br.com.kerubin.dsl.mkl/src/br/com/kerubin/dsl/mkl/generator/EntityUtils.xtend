@@ -83,6 +83,14 @@ class EntityUtils {
 		'Digits' -> 'javax.validation.constraints.Digits'
 	}
 	
+	def static boolean isAuditingSlot(Slot slot) {
+		if (slot.ownerEntity.isAuditing) {
+			ServiceBoosterImpl.ENTITY_AUDITING_FIELDS.exists[it == slot.name]
+		} else {
+			false
+		}
+	}
+	
 	def static generateEntityImports(Entity entity) {
 		'''
 		«entity.imports.map[it].join('\r\n')»
@@ -385,6 +393,14 @@ class EntityUtils {
 	def static boolean isDTOFull(Slot slot) {
 		slot.relationContains && 
 		(slot.isOneToOne || slot.isOneToMany) 
+	}
+	
+	def static Iterable<Slot> getEntityLookupResultSlots(Entity entity) {
+		val slots = entity.slots.filter[
+			it === entity.id || it.isAutoCompleteResult || it.isAutoCompleteData || (entity.hasEntityVersion && it.name.toLowerCase == 'version')
+		]
+		
+		slots
 	}
 	
 	def static boolean isDTOLookupResult(Slot slot) {
@@ -1380,6 +1396,10 @@ class EntityUtils {
 		entity.name.toFirstLower
 	}
 	
+	def static getEntityFieldName(Entity entity) {
+		entity.name.toFirstLower + "Entity"
+	}
+	
 	def static buildMethodGet(Slot slot) {
 		slot.name.buildMethodGet
 	}
@@ -1604,6 +1624,14 @@ class EntityUtils {
 		entity.name.toFirstUpper + "ServiceImpl"
 	}
 	
+	def static toServiceTestName(Entity entity) {
+		entity.name.toFirstUpper + "ServiceTest"
+	}
+	
+	def static toServiceTestConfigurationName(Entity entity) {
+		entity.name.toFirstUpper + "ServiceTestConfig"
+	}
+	
 	def static toControllerName(Entity entity) {
 		entity.name.toFirstUpper + "Controller"
 	}
@@ -1730,4 +1758,10 @@ class EntityUtils {
 	public static def boolean isEqualTo(Slot slot) {
 		FilterOperatorEnum.IS_EQUAL_TO.equals(slot.listFilter.filterOperator.filterOperatorEnum)
 	} 
+	
+	// BEGIN For tests
+	
+		
+	
+	// END For tests
 }

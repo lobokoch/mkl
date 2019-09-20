@@ -21,6 +21,8 @@ class Utils {
 	static val SOURCE_BASE_DIR = 'src/'
 	static val JAVA_BASE_DIR = 'main/java/'
 	static val RESOURCES_BASE_DIR = 'main/resources/'
+	static val JAVA_TEST_BASE_DIR = 'test/java/'
+	static val RESOURCES_TEST_BASE_DIR = 'test/resources/'
 	static val SERVER_SOURCE_GEN_DIR = BASE_SERVER_DIR + SOURCE_GEN_BASE_DIR
 	static val CLIENT_SOURCE_GEN_DIR = BASE_CLIENT_DIR + SOURCE_GEN_BASE_DIR
 	
@@ -114,6 +116,14 @@ class Utils {
 		SOURCE_GEN_BASE_DIR + JAVA_BASE_DIR
 	}
 	
+	def static getJavaTestSourceGen() {
+		SOURCE_GEN_BASE_DIR + JAVA_TEST_BASE_DIR
+	}
+	
+	def static getJavaTestResourceGen() {
+		SOURCE_GEN_BASE_DIR + RESOURCES_TEST_BASE_DIR
+	}
+	
 	def static getProjectParentName() {
 		PROJECT_PARENT
 	}
@@ -144,6 +154,14 @@ class Utils {
 	
 	def static getServerGenSourceFolder() {
 		SERVER_SOURCE_GEN_DIR + JAVA_BASE_DIR
+	}
+	
+	def static getServerTestGenSourceFolder() {
+		SERVER_SOURCE_GEN_DIR + JAVA_TEST_BASE_DIR
+	}
+	
+	def static getServerTestResourceGenSourceFolder() {
+		SERVER_SOURCE_GEN_DIR + RESOURCES_TEST_BASE_DIR
 	}
 	
 	def static getClientGenSourceFolder() {
