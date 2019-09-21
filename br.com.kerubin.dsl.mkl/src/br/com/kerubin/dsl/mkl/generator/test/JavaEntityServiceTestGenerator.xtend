@@ -51,16 +51,27 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		«entity.generateTestAnnotations»
 		public class «entity.toServiceTestName» extends «service.toServiceEntityBaseTestClassName» {
 			
+			«entity.generateIgnoredFieldsConstant»
+			
 			«entity.generateTestConfiguration»
 			
 			«entity.generateFields»
 			
+			// BEGIN CREATE TESTS
 			«entity.generateCreateTests»
-			«entity.generateReadTests»
+			// END CREATE TESTS
 			
-			// BEGIN tests dependencies
+			// BEGIN READ TESTS
+			«entity.generateReadTests»
+			// END READ TESTS
+			
+			// BEGIN UPDATE TESTS
+			«entity.generateUpdateTests»
+			// END UPDATE TESTS
+			
+			// BEGIN TESTS DEPENDENCIES
 			«dependenciesSource»
-			// END tests dependencies
+			// END TESTS DEPENDENCIES
 			
 		
 		}
@@ -98,6 +109,11 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateCreateTests(Entity entity) {
 		val createTests = entity.generateCreateTest1
 		createTests
+	}
+	
+	def CharSequence generateUpdateTests(Entity entity) {
+		val updateTest1 = entity.generateUpdateTest1
+		updateTest1
 	}
 	
 	def CharSequence generateReadTests(Entity entity) {
@@ -142,6 +158,39 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersForDTO»
+			
+			«entity.buildServiceCreateFromDTO»
+			«buildEntityManagerFlush»
+			
+			«entity.buildEntityToDTOAsActual»
+			
+			«entity.buildEntityCheckActualWithDTO»
+		}
+		'''
+	}
+	
+	def CharSequence generateUpdateTest1(Entity entity) {
+		
+		val fieldName = entity.fieldName
+		val id = entity.id
+		
+		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
+		
+		'''
+		/**
+		 * Explanation of this test:
+		 * - Creates a new record setting all attributes
+		 * - Check the results and orders for fields descricao, dataVencimento.
+		 * */
+		@Test
+		public void testUpdate1() throws Exception {
+			«entity.buildNewOldEntityVar»
+			«entity.buildGetEntityIdVarFromOldVar»
+					
+			«entity.buildNewEntityDTOVar»
+			«fieldName».«id.buildMethodSet('id')»;
+			
+			«entity.generateSettersForDTO(#[id])»
 			
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush»

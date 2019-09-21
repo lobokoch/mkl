@@ -20,10 +20,12 @@ import org.apache.commons.lang3.RandomStringUtils
 import java.util.Random
 import br.com.kerubin.dsl.mkl.generator.ServiceBoosterImpl
 import br.com.kerubin.dsl.mkl.model.Service
+import java.util.List
 
 class TestUtils {
 	
 	static val ACTUAL = 'actual'
+	static val IGNORED_FIELDS = 'IGNORED_FIELDS'
 	
 	def static buildEntityManagerFlush() {
 		'''
@@ -62,6 +64,13 @@ class TestUtils {
 		'''"«entity.id.fieldName»"'''
 	}
 	
+	def static CharSequence generateIgnoredFieldsConstant(Entity entity) {
+		
+		'''
+		private static final String[] «IGNORED_FIELDS» = { «entity.getIgnoredFields» };
+		'''
+	}
+	
 	def static CharSequence getIgnoredFields(Entity entity) {
 		val auditinFields = ServiceBoosterImpl.ENTITY_AUDITING_FIELDS.map['"' + it + '"'].join(', ')
 		
@@ -72,7 +81,7 @@ class TestUtils {
 		val fieldName = entity.fieldName
 		
 		'''
-		assertThat(«varName»).isEqualToIgnoringGivenFields(«fieldName», «entity.getIgnoredFields»);
+		assertThat(«varName»).isEqualToIgnoringGivenFields(«fieldName», «IGNORED_FIELDS»);
 		'''
 	}
 	
@@ -82,7 +91,7 @@ class TestUtils {
 		val fieldName = entity.fieldName
 		
 		'''
-		assertThat(«varName».«getField»).isEqualToIgnoringGivenFields(«fieldName».«getField», «entity.getIgnoredFields»);
+		assertThat(«varName».«getField»).isEqualToIgnoringGivenFields(«fieldName».«getField», «IGNORED_FIELDS»);
 		'''
 	}
 	
@@ -151,6 +160,21 @@ class TestUtils {
 		val name = entity.toEntityName
 		val fieldName = entity.getEntityParamFieldName
 		'''«name» «fieldName» = new«name»();'''
+	}
+	
+	def static CharSequence buildNewOldEntityVar(Entity entity) {
+		val name = entity.toEntityName
+		val nameUpper = name.toFirstUpper
+		
+		'''«name» old«nameUpper» = new«nameUpper»();'''
+	}
+	
+	def static CharSequence buildGetEntityIdVarFromOldVar(Entity entity) {
+		val name = entity.toEntityName
+		val nameUpper = name.toFirstUpper
+		val id = entity.id
+		
+		'''«id.toJavaType» id = old«nameUpper».«id.getMethod2»;'''
 	}
 	
 	def static CharSequence buildNewEntityWithVar(Entity entity) {
@@ -238,7 +262,16 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateSettersForDTO(Entity entity) {
-		val slots = entity.slots.filter[!it.isAuditingSlot]
+		return entity.generateSettersForDTO(null)
+	}
+	
+	def static CharSequence generateSettersForDTO(Entity entity, List<Slot> excludedSlots) {
+		var slots = entity.slots.filter[!it.isAuditingSlot]
+		
+		if (excludedSlots !== null) {
+			slots = slots.filter[ slot | !excludedSlots.exists[it === slot]]
+		}
+		
 		'''
 		«slots.map[generateSetterForDTO].join»
 		'''
@@ -303,7 +336,6 @@ class TestUtils {
 			'''java.time.LocalTime.now()'''
 		}
 		else if (basicType instanceof DateTimeType) {
-			// "java.util.Date"
 			'''java.time.LocalDateTime.now()'''
 		}
 		else if (basicType instanceof UUIDType) {
@@ -324,7 +356,7 @@ class TestUtils {
 					val result = asEnum.items.get(index).name
 					return asEnum.name + '.' + result.toString
 				} 
-			} // slot.isEnum
+			} 
 			else if (slot.isEntity && slot.ownerEntity.isNotSameName(slot.asEntity)) {
 				'''new«slot.asEntity.entityFieldName.toFirstUpper»()'''
 			}
