@@ -147,23 +147,30 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		val isNullStr = 'is' + fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper + '()'
 		val isNotNullStr = 'is' + fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper + '()'
 		
+		val getNullStr = 'get' + fieldName + FilterOperatorEnum.IS_NULL.getName.toFirstUpper + '()'
+		val getNotNullStr = 'get' + fieldName + FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper + '()'
+		
 		'''
 		// Begin field: «fieldName»
 		«IF isNotNull && isNull»		
 		if ( ! («varFilter».«isNullStr» && «varFilter».«isNotNullStr») ) {
-					
-			if («varFilter».«isNullStr») {
-				where.and(«varQEntity».«slot.fieldName».isNull());
-			}
-			else {
-				where.and(«varQEntity».«slot.fieldName».isNotNull());				
+			
+			if («varFilter».«getNullStr» != null) {
+				if («varFilter».«isNullStr») {
+					where.and(«varQEntity».«slot.fieldName».isNull());
+				}
+				else {
+					where.and(«varQEntity».«slot.fieldName».isNotNull());				
+				}
 			}
 			
-			if («varFilter».«isNotNullStr») {
-				where.and(«varQEntity».«slot.fieldName».isNotNull());
-			}
-			else {
-				where.and(«varQEntity».«slot.fieldName».isNull());				
+			if («varFilter».«getNotNullStr» != null) {
+				if («varFilter».«isNotNullStr») {
+					where.and(«varQEntity».«slot.fieldName».isNotNull());
+				}
+				else {
+					where.and(«varQEntity».«slot.fieldName».isNull());				
+				}
 			}
 			
 		}

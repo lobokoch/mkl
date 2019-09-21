@@ -35,6 +35,8 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateEntityTest(Entity entity) {
 		
 		entity.imports.clear
+		entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.generateRandomString;')
+		
 		entity.resolveEntityImports
 		
 		val dependenciesSource = new StringBuilder() 
@@ -68,6 +70,14 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			// BEGIN UPDATE TESTS
 			«entity.generateUpdateTests»
 			// END UPDATE TESTS
+			
+			// BEGIN DELETE TESTS
+			«entity.generateDeleteTests»
+			// END DELETE TESTS
+			
+			// BEGIN LIST TESTS
+			«entity.generateListTests»
+			// END LIST TESTS
 			
 			// BEGIN TESTS DEPENDENCIES
 			«dependenciesSource»
@@ -121,6 +131,77 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		readTest1
 	}
 	
+	def CharSequence generateDeleteTests(Entity entity) {
+		val deleteTest1 = entity.generateDeleteTest1
+		deleteTest1
+	}
+	
+	def CharSequence generateListTests(Entity entity) {
+		val hasSomeListFilterMany = entity.slots.exists[it.isListFilterMany]
+		if (! hasSomeListFilterMany) {
+			return ''
+		}
+		
+		entity.addImport('import java.util.List;')
+		entity.addImport('import java.util.ArrayList;')
+		entity.addImport('import java.util.stream.Collectors;')
+		entity.addImport('import org.springframework.data.domain.Sort;')
+		entity.addImport('import org.springframework.data.domain.Pageable;')
+		entity.addImport('import org.springframework.data.domain.Page;')
+		entity.addImport('import org.springframework.data.domain.PageRequest;')
+		entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.getRandomItemsOf;')
+		entity.addImport(service.importPageResult)
+		
+		val test1 = entity.generateListTest1
+		test1
+	}
+	
+	def CharSequence generateListTest1(Entity entity) {
+		val firstRecordVar = 'firstRecord'
+		val lastRecordVar = 'lastRecord'
+		val countVar = 'count'
+		val entityName = entity.toEntityName
+		
+		val firstListFilterSlot = entity.slots.filter[it.isListFilterMany].head
+		
+		'''
+		
+		@Test
+		public void testList1() {
+			
+			final int «firstRecordVar» = 1;
+			final int «lastRecordVar» = 33;
+			
+			List<«entityName»> testData = new ArrayList<>();
+			for (int i = «firstRecordVar»; i <= «lastRecordVar»; i++) {
+				testData.add(new«entityName»());
+			}
+			
+			long count = «entity.toRepositoryName.toFirstLower».count();
+			«countVar.buildAssertThatIsEqualTo(lastRecordVar)»
+			
+			// Endpoint Input
+			«entity.generateNewEntityListFilterVar»
+			final int resultSize = 7;
+			
+			List<«entityName»> filterTestData = getRandomItemsOf(testData, resultSize);
+			
+			«firstListFilterSlot?.generateAndSetListFilterToSlot»
+			
+			«generatePageable(0, 10, firstListFilterSlot?.fieldName, true)»
+			
+			«entity.generateEntityList»
+			
+			«entity.generatePageContentMapToPageResult»
+			
+			«firstListFilterSlot?.assertThatSlotListFilterResultContent»
+			
+			«generateAssertThatPageResult(1)»
+			
+		}
+		'''
+	}
+	
 	def CharSequence generateReadTest1(Entity entity) {
 		val name = entity.toDtoName
 		val varName = entity.fieldName
@@ -139,6 +220,29 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			assertThat(actual).isEqualToComparingFieldByField(expected);
 			
+		}
+		'''
+	}
+	
+	def CharSequence generateDeleteTest1(Entity entity) {
+		val entityName = entity.toEntityName
+		val expected = 'expected'
+		val idVar = 'id'
+		
+		'''
+		
+		@Test
+		public void testDelete1() {
+			«entityName» «expected» = new«entityName»();
+			«entity.id.toJavaType» «idVar» = «expected».«entity.id.getMethod2»;
+			
+			«entity.generateEntityManagerFind»
+			«expected.buildAssertThatIsNotNull»
+			
+			«entity.generateServiceDelete»
+			
+			«entity.generateEntityManagerFind»
+			«expected.buildAssertThatIsNull»
 		}
 		'''
 	}

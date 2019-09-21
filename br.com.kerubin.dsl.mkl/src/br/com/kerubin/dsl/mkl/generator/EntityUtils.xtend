@@ -1452,6 +1452,10 @@ class EntityUtils {
 		public Boolean is«name»() {
 			return «name.toFirstLower» != null && «name.toFirstLower»;
 		}
+		
+		public Boolean get«name»() {
+			return «name.toFirstLower»;
+		}
 		''' 
 	}
 	

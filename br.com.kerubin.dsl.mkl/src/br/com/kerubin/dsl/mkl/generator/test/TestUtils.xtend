@@ -1,26 +1,25 @@
 package br.com.kerubin.dsl.mkl.generator.test
 
-import br.com.kerubin.dsl.mkl.model.Entity
-
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import br.com.kerubin.dsl.mkl.model.Slot
-import br.com.kerubin.dsl.mkl.model.StringType
-import br.com.kerubin.dsl.mkl.model.IntegerType
-import br.com.kerubin.dsl.mkl.model.SmallintType
-import br.com.kerubin.dsl.mkl.model.DoubleType
-import br.com.kerubin.dsl.mkl.model.MoneyType
-import br.com.kerubin.dsl.mkl.model.BooleanType
-import br.com.kerubin.dsl.mkl.model.DateType
-import br.com.kerubin.dsl.mkl.model.TimeType
-import br.com.kerubin.dsl.mkl.model.DateTimeType
-import br.com.kerubin.dsl.mkl.model.UUIDType
-import br.com.kerubin.dsl.mkl.model.ByteType
-import org.apache.commons.lang3.RandomStringUtils
-import java.util.Random
 import br.com.kerubin.dsl.mkl.generator.ServiceBoosterImpl
+import br.com.kerubin.dsl.mkl.model.BooleanType
+import br.com.kerubin.dsl.mkl.model.ByteType
+import br.com.kerubin.dsl.mkl.model.DateTimeType
+import br.com.kerubin.dsl.mkl.model.DateType
+import br.com.kerubin.dsl.mkl.model.DoubleType
+import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.IntegerType
+import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.Service
+import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.SmallintType
+import br.com.kerubin.dsl.mkl.model.StringType
+import br.com.kerubin.dsl.mkl.model.TimeType
+import br.com.kerubin.dsl.mkl.model.UUIDType
 import java.util.List
+import java.util.Random
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 
 class TestUtils {
 	
@@ -37,9 +36,21 @@ class TestUtils {
 		ACTUAL.buildAssertThatIsNotNull
 	}
 	
+	def static CharSequence buildAssertThatIsEqualTo(String actual, String expected) {
+		'''
+		assertThat(«actual»).isEqualTo(«expected»);
+		'''
+	}
+	
 	def static CharSequence buildAssertThatIsNotNull(String varName) {
 		'''
 		assertThat(«varName»).isNotNull();
+		'''
+	}
+	
+	def static CharSequence buildAssertThatIsNull(String varName) {
+		'''
+		assertThat(«varName»).isNull();
 		'''
 	}
 	
@@ -297,15 +308,15 @@ class TestUtils {
 	def static CharSequence generateRandomTestValueForDTO(Slot slot) {
 		val basicType = slot.basicType
 		if (basicType instanceof StringType) {
-			val length = if (slot.length > 30) 30 else slot.length 
-			val chars = RandomStringUtils.randomAlphabetic(length - 1) + ' ' 
+			//val length = if (slot.length > 30) 30 else slot.length 
+			/*val chars = RandomStringUtils.randomAlphabetic(length - 1) + ' ' 
 			var value = RandomStringUtils.random(length, chars).trim
 			
 			// Must remove white spaces in the begining. 
 			while (value.length < length) {
 				value = RandomStringUtils.random(length, chars).trim
-			} 
-			'''"«value»"'''
+			}*/
+			'''generateRandomString(«slot.length»)'''
 		}
 		else if (basicType instanceof IntegerType) {
 			val ran = new Random();
@@ -313,7 +324,7 @@ class TestUtils {
 		}
 		else if (basicType instanceof SmallintType) {
 			val ran = new Random();
-			ran.nextInt(java.lang.Short.MAX_VALUE) + ''
+			ran.nextInt(Short.MAX_VALUE) + ''
 		}
 		else if (basicType instanceof DoubleType) {
 			val ran = new Random();
@@ -321,8 +332,8 @@ class TestUtils {
 		}
 		else if (basicType instanceof MoneyType) {
 			val ran = new Random();
-			val a = ran.nextInt(java.lang.Short.MAX_VALUE)
-			val b = ran.nextInt(java.lang.Short.MAX_VALUE)
+			val a = ran.nextInt(Short.MAX_VALUE)
+			val b = ran.nextInt(Short.MAX_VALUE)
 			'''new java.math.BigDecimal("«a».«b»")'''
 		}
 		else if (basicType instanceof BooleanType) {
@@ -436,6 +447,121 @@ class TestUtils {
 		val baseName = service.toServiceEntityBaseTestClassName
 		val name = baseName + 'Config'
 		name
+	}
+	
+	def static CharSequence generateEntityManagerFind(Entity entity) {
+		val expected = 'expected'
+		entity.generateEntityManagerFind(expected)
+	}
+	
+	def static CharSequence generateEntityManagerFind(Entity entity, String varName) {
+		val entityName = entity.toEntityName
+		val id = entity.id
+		
+		'''
+		«varName» = em.find(«entityName».class, «id.fieldName»);
+		'''		
+	}
+	
+	def static CharSequence generateServiceDelete(Entity entity) {
+		val idVar = 'id'
+		
+		'''
+		«entity.fieldName»Service.delete(«idVar»);
+		'''		
+	}
+	
+	def static CharSequence generateNewEntityListFilterVar(Entity entity) {
+		val name = entity.toDtoName
+		
+		'''
+		«name»ListFilter listFilter = new «name»ListFilter();
+		'''
+	}
+	
+	def static CharSequence generateAndSetListFilterToSlot(Slot slot) {
+		
+		if (slot === null) {
+			val result = '''
+			// generateAndSetListFilterToSlot = null
+			'''
+			
+			return result
+		}
+		
+		val entity = slot.ownerEntity
+		val fieldName = slot.fieldName
+		val fieldUpper = fieldName.toFirstUpper
+		val entityName = entity.toEntityName
+		
+		'''
+		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		listFilter.set«fieldUpper»(«fieldName»ListFilter);
+		'''
+	}
+	
+	def static CharSequence generatePageable(int pageIndex, int pageSize, String orderByField, boolean isASC) {
+		val sort = isASC.getOrderBy
+		
+		'''
+		Sort sort = Sort.by("«orderByField»").«sort»(); // order by «orderByField» «sort»
+		int pageIndex = «pageIndex»; // First page starts at index zero.
+		int size = «pageSize»; // Max of «pageSize» records per page.
+		Pageable pageable = PageRequest.of(pageIndex, size, sort);
+		'''
+	}
+	
+	def static String getOrderBy(boolean isASC) {
+		val result = if (isASC) 'ascending' else 'descending'
+		result
+	}
+	
+	def static CharSequence generateEntityList(Entity entity) {
+		val entityName = entity.toEntityName
+		val entityFieldName = entity.fieldName
+		
+		'''
+		Page<«entityName»> page = «entityFieldName»Service.list(listFilter, pageable);
+		'''
+	}
+	
+	def static CharSequence generatePageContentMapToPageResult(Entity entity) {
+		val name = entity.toEntityDTOName
+		val entityFieldName = entity.fieldName
+		
+		'''
+		List<«name»> content = page.getContent().stream().map(it -> «entityFieldName»DTOConverter.convertEntityToDto(it)).collect(Collectors.toList());
+		PageResult<«name»> pageResult = new PageResult<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
+		'''
+	}
+	
+	def static CharSequence assertThatSlotListFilterResultContent(Slot listFilterSlot) {
+		
+		if (listFilterSlot === null) {
+			val result = '''
+			// listFilterSlot == null
+			'''
+			
+			return result
+		}
+		
+		val fieldName = listFilterSlot.fieldName
+		
+		'''
+		assertThat(pageResult.getContent()).hasSize(resultSize)
+		.extracting("«fieldName»")
+		.containsExactlyInAnyOrderElementsOf(«fieldName»ListFilter);
+		'''
+	}
+	
+	def static CharSequence generateAssertThatPageResult(int totalPages) {
+		
+		'''
+		assertThat(pageResult.getNumber()).isEqualTo(pageIndex);
+		assertThat(pageResult.getNumberOfElements()).isEqualTo(resultSize);
+		assertThat(pageResult.getTotalElements()).isEqualTo(resultSize);
+		assertThat(pageResult.getTotalPages()).isEqualTo(«totalPages»);
+		'''
 	}
 	
 }
