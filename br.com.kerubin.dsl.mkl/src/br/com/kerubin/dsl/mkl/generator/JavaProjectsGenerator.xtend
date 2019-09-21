@@ -379,6 +379,8 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
             <artifactId>build-helper-maven-plugin</artifactId>
             <version>${build.helper.maven.plugin.version}</version>
             <executions>
+              
+              <!-- src source folder -->
               <execution>
                 <id>add-source</id>
                 <phase>generate-sources</phase>
@@ -388,15 +390,30 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
                 <configuration>
                   <sources>
                     <source>«getJavaSourceGen»</source>
+                  </sources>
+                </configuration>
+              </execution>
+              
+              <!-- src test source folder -->
+              <execution>
+                <id>add-test-source</id>
+                <phase>generate-test-sources</phase>
+                <goals>
+                  <goal>add-test-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
                     <source>«getJavaTestSourceGen»</source>
                     <source>«getJavaTestResourceGen»</source>
                   </sources>
                 </configuration>
               </execution>
+              
             </executions>
           </plugin>
 		'''
 	}
+	
 	
 	def static getMySemaMavenPlugin() {
 		'''

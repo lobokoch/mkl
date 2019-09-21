@@ -2,8 +2,7 @@ package br.com.kerubin.dsl.mkl.generator.test
 
 import br.com.kerubin.dsl.mkl.model.Entity
 
-// import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.StringType
@@ -392,7 +391,7 @@ class TestUtils {
 	}
 	
 	def static String toServiceEntityBaseTestClassName(Service service) {
-		service.domain.toFirstUpper + service.name.toFirstUpper + "BaseEntityTest"
+		service.domain.toCamelCase + service.name.toCamelCase + "BaseEntityTest"
 	}
 	
 	def static String toServiceEntityBaseTestConfigClassName(Service service) {
