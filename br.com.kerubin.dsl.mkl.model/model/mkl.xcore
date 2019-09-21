@@ -945,6 +945,10 @@ class Slot extends Element {
 		false
 	}
 	
+	op boolean isId() {
+		this === ownerEntity.slots.head
+	}
+	
 	op boolean isEntity() {
 		if (this.slotType instanceof ObjectTypeReference) {
 			val reference = (this.slotType as ObjectTypeReference)

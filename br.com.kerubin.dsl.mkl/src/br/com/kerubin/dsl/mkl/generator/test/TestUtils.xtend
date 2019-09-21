@@ -182,12 +182,18 @@ class TestUtils {
 		var name = entity.toEntityName
 		val fieldName = entity.entityFieldName
 		
+		val slots = entity.slots.filter[
+			val result = !it.isAuditingSlot && !(it.isId && !entity.isExternalEntity)
+			
+			return result
+		]
+		
 		'''
 		
 		private «name» new«name»() {
 			«entity.buildNewEntityWithVar»
 			
-			«entity.slots.filter[!it.isAuditingSlot].map[generateSetterForTest].join»
+			«slots.filter[!it.isAuditingSlot].map[generateSetterForTest].join»
 			
 			«fieldName» = em.persistAndFlush(«fieldName»);
 			

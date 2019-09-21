@@ -56,6 +56,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.generateFields»
 			
 			«entity.generateCreateTests»
+			«entity.generateReadTests»
 			
 			// BEGIN tests dependencies
 			«dependenciesSource»
@@ -94,11 +95,36 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 
 	
-	
-	
 	def CharSequence generateCreateTests(Entity entity) {
 		val createTests = entity.generateCreateTest1
 		createTests
+	}
+	
+	def CharSequence generateReadTests(Entity entity) {
+		val readTest1 = entity.generateReadTest1
+		readTest1
+	}
+	
+	def CharSequence generateReadTest1(Entity entity) {
+		val name = entity.toDtoName
+		val varName = entity.fieldName
+		val entityName = entity.toEntityName
+		
+		'''
+		
+		@Test
+		public void testRead1() {
+			«entityName» expected«entityName» = new«entityName»();
+			«entity.id.toJavaType» id = expected«entityName».«entity.id.getMethod2»;
+			«name» expected = «varName»DTOConverter.convertEntityToDto(expected«entityName»);
+			
+			«entityName» read«entityName» = «varName»Service.read(id);
+			«name» actual = «varName»DTOConverter.convertEntityToDto(read«entityName»);
+			
+			assertThat(actual).isEqualToComparingFieldByField(expected);
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateCreateTest1(Entity entity) {

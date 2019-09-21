@@ -1514,6 +1514,14 @@ class EntityUtils {
 		'get' + name.toFirstUpper + '(' + ')'
 	}
 	
+	def static getMethod2(Slot slot) {
+		'get' + slot.name.toFirstUpper + '(' + ')'
+	}
+	
+	def static getIdGetMethod(Entity entity) {
+		'get' + entity.id.name.toFirstUpper + '(' + ')'
+	}
+	
 	def static buildMethodSet(Slot slot, String param) {
 		slot.name.buildMethodSet(param)
 	}
