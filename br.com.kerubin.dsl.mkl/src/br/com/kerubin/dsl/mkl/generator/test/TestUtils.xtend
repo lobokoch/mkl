@@ -489,13 +489,19 @@ class TestUtils {
 	
 	def static CharSequence generateAndSetListFilterToSlot(Slot slot) {
 		
-		if (slot === null) {
-			val result = '''
-			// generateAndSetListFilterToSlot = null
-			'''
-			
-			return result
-		}
+		val entity = slot.ownerEntity
+		val fieldName = slot.fieldName
+		val fieldUpper = fieldName.toFirstUpper
+		val entityName = entity.toEntityName
+		
+		'''
+		// Extracts a list with only «entityName».«fieldName» field and configure this list as a filter.
+		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		listFilter.set«fieldUpper»(«fieldName»ListFilter);
+		'''
+	}
+	
+	def static CharSequence generateAndSetListFilterToSlotWithFakeData(Slot slot) {
 		
 		val entity = slot.ownerEntity
 		val fieldName = slot.fieldName
@@ -503,8 +509,8 @@ class TestUtils {
 		val entityName = entity.toEntityName
 		
 		'''
-		// Extracts a list with only «entityName».«fieldName» fields and configure this list as a filter.
-		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		// Generates a list with only «entityName».«fieldName» field with 1 not found data in the database and configure this list as a filter.
+		List<«slot.toJavaType»> «fieldName»ListFilter = Arrays.asList(«slot.generateRandomTestValueForDTO»);
 		listFilter.set«fieldUpper»(«fieldName»ListFilter);
 		'''
 	}
@@ -596,6 +602,16 @@ class TestUtils {
 		.hasSize(«resultSize»)
 		.extracting(«slot.toLambdaGetMethod»)
 		.containsExactlyInAnyOrderElementsOf(«fieldName»ListFilter);
+		'''
+	}
+	
+	def static CharSequence assertThatSlotListFilterResultContentIsZero(Slot slot) {
+		val resultSize = 0;
+		val fieldName = slot.fieldName
+		
+		'''
+		// Asserts that result has size «resultSize» for unknown «fieldName» field.
+		assertThat(pageResult.getContent()).hasSize(«resultSize»);
 		'''
 	}
 	

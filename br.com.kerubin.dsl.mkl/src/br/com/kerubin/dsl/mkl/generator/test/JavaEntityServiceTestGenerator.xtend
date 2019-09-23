@@ -151,14 +151,15 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		entity.addImport('import org.springframework.data.domain.Pageable;')
 		entity.addImport('import org.springframework.data.domain.Page;')
 		entity.addImport('import org.springframework.data.domain.PageRequest;')
-		// entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.getRandomItemsOf;')
 		entity.addImport(service.importPageResult)
 		
 		var CharSequence test1 = ''
 		var CharSequence test2 = ''
+		var CharSequence test3 = ''
 		
 		if (entity.slots.exists[it.isListFilterMany]) {
 			test1 = entity.generateListTest1
+			test3 = entity.generateListTest3
 		}
 		
 		if (entity.slots.exists[it.hasSort]) {
@@ -167,6 +168,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		'''
 		«test1»
+		«test3»
 		«test2»
 		'''
 	}
@@ -189,7 +191,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«entity.generateGetRandomItemsOf(resultSize)»
 			
-			«firstListFilterSlot?.generateAndSetListFilterToSlot»
+			«firstListFilterSlot.generateAndSetListFilterToSlot»
 			
 			«generatePageableWithoutSort(0, size)»
 			
@@ -197,9 +199,40 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«entity.generatePageContentMapToPageResult»
 			
-			«firstListFilterSlot?.assertThatSlotListFilterResultContent(resultSize)»
+			«firstListFilterSlot.assertThatSlotListFilterResultContent(resultSize)»
 			
 			«generateAssertThatPageResult(1, resultSize, resultSize)»
+			
+		}
+		'''
+	}
+	
+	def CharSequence generateListTest3(Entity entity) {
+		
+		entity.addImport('import java.util.Arrays;')
+		
+		val firstListFilterSlot = entity.slots.filter[it.isListFilterMany].head
+		val size = 33;
+		
+		'''
+		
+		@Test
+		public void testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»WithoutResults() {
+			«generateCallResetNextDate»
+						
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateNewEntityListFilterVar»
+			
+			«firstListFilterSlot.generateAndSetListFilterToSlotWithFakeData»
+			
+			«generatePageableWithoutSort(0, size)»
+			
+			«entity.generateCallServiceList»
+			
+			«entity.generatePageContentMapToPageResult»
+			
+			«firstListFilterSlot.assertThatSlotListFilterResultContentIsZero»
 			
 		}
 		'''
