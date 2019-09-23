@@ -117,13 +117,25 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 
 	
 	def CharSequence generateCreateTests(Entity entity) {
-		val createTests = entity.generateCreateTest1
-		createTests
+		val sb = new StringBuilder
+		
+		sb.append(entity.generateCreateTest1)
+		sb.append(entity.generateCreateTest2)
+		
+		'''
+		«sb.toString»
+		'''
 	}
 	
 	def CharSequence generateUpdateTests(Entity entity) {
-		val updateTest1 = entity.generateUpdateTest1
-		updateTest1
+		val sb = new StringBuilder
+		
+		sb.append(entity.generateUpdateTest1)
+		sb.append(entity.generateUpdateTest2)
+		
+		'''
+		«sb.toString»
+		'''
 	}
 	
 	def CharSequence generateReadTests(Entity entity) {
@@ -320,13 +332,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
 		
 		'''
-		/**
-		 * Explanation of this test:
-		 * - Creates a new record setting all attributes
-		 * - Check the results and orders for fields descricao, dataVencimento.
-		 * */
+		
 		@Test
-		public void testCreate1() throws Exception {
+		public void testCreateWithAllFields() throws Exception {
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersForDTO»
@@ -341,6 +349,57 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		'''
 	}
 	
+	def CharSequence generateCreateTest2(Entity entity) {
+		
+		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
+		
+		'''
+		
+		@Test
+		public void testCreateWithOnlyRecairedFields() throws Exception {
+			«entity.buildNewEntityDTOVar»
+			
+			«entity.generateSettersOnlyRequiredSlotsForDTO»
+			
+			«entity.buildServiceCreateFromDTO»
+			«buildEntityManagerFlush»
+			
+			«entity.buildEntityToDTOAsActual»
+			
+			«entity.buildEntityCheckActualWithDTOOnlyRequiredSlots»
+		}
+		'''
+	}
+	
+	def CharSequence generateUpdateTest2(Entity entity) {
+		
+		val fieldName = entity.fieldName
+		val id = entity.id
+		
+		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
+		
+		'''
+		
+		@Test
+		public void testUpdateWithOnlyRecairedFields() throws Exception {
+			«entity.buildNewOldEntityVar»
+			«entity.buildGetEntityIdVarFromOldVar»
+					
+			«entity.buildNewEntityDTOVar»
+			«fieldName».«id.buildMethodSet('id')»;
+			
+			«entity.generateSettersOnlyRequiredSlotsForDTO(#[id])»
+			
+			«entity.buildServiceUpdateFromDTO»
+			«buildEntityManagerFlush»
+			
+			«entity.buildEntityToDTOAsActual»
+			
+			«entity.buildEntityCheckActualWithDTOOnlyRequiredSlots»
+		}
+		'''
+	}
+	
 	def CharSequence generateUpdateTest1(Entity entity) {
 		
 		val fieldName = entity.fieldName
@@ -349,13 +408,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
 		
 		'''
-		/**
-		 * Explanation of this test:
-		 * - Creates a new record setting all attributes
-		 * - Check the results and orders for fields descricao, dataVencimento.
-		 * */
+		
 		@Test
-		public void testUpdate1() throws Exception {
+		public void testUpdateWithAllFields() throws Exception {
 			«entity.buildNewOldEntityVar»
 			«entity.buildGetEntityIdVarFromOldVar»
 					
@@ -364,7 +419,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«entity.generateSettersForDTO(#[id])»
 			
-			«entity.buildServiceCreateFromDTO»
+			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
 			
 			«entity.buildEntityToDTOAsActual»
@@ -373,6 +428,8 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		}
 		'''
 	}
+	
+	
 	
 	def CharSequence generateFields(Entity entity) {
 		entity.addImport('import javax.inject.Inject;')

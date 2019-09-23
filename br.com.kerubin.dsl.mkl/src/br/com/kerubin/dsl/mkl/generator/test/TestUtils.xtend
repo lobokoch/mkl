@@ -79,6 +79,13 @@ class TestUtils {
 		'''
 	}
 	
+	def static CharSequence buildAssertThatEntitySlotIsNull(Slot slot, String varName) {
+		
+		'''
+		assertThat(«varName».«slot.buildMethodGet»).isNull();
+		'''
+	}
+	
 	def static CharSequence getIdAsString(Entity entity) {
 		'''"«entity.id.fieldName»"'''
 	}
@@ -123,6 +130,12 @@ class TestUtils {
 		'''
 	}
 	
+	def static buildAssertEntityFKsIsNull(Slot slot, String varName) {
+		'''
+		«slot.buildAssertThatEntitySlotIsNull(varName)»
+		'''
+	}
+	
 	def static buildEntityCheckActualWithDTO(Entity entity) {
 		'''
 		«buildAssertThatActualIsNotNull»
@@ -130,6 +143,20 @@ class TestUtils {
 		«entity.buildAssertThatEntityAsVarIsEqualToIgnoringGivenFields(ACTUAL)»
 		
 		«entity.slots.filter[it.isEntity].map[it.buildAssertEntityFKsIsEqualToIgnoringGivenFields(ACTUAL)].join»
+		
+		'''
+	}
+	
+	def static buildEntityCheckActualWithDTOOnlyRequiredSlots(Entity entity) {
+		val slots = entity.slots.filter[it.isEntity]
+		
+		'''
+		«buildAssertThatActualIsNotNull»
+		«entity.buildAssertThatEntityAsVarIdIsNotNull(ACTUAL)»
+		«entity.buildAssertThatEntityAsVarIsEqualToIgnoringGivenFields(ACTUAL)»
+		
+		«slots.filter[it.isRequired].map[it.buildAssertEntityFKsIsEqualToIgnoringGivenFields(ACTUAL)].join»
+		«slots.filter[!it.isRequired].map[it.buildAssertEntityFKsIsNull(ACTUAL)].join»
 		
 		'''
 	}
@@ -158,6 +185,18 @@ class TestUtils {
 		
 		'''
 		«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
+		'''
+	}
+	
+	def static CharSequence buildServiceUpdateFromDTO(Entity entity) {
+		val entityName = entity.toEntityName
+		val entityVar = entity.toEntityName.toFirstLower
+		val entityDTOVar = entity.toEntityDTOName.toFirstLower
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		val toEntity = 'convertDtoToEntity'
+		
+		'''
+		«entityName» «entityVar» = «entityServiceVar».update(id, «entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
 		'''
 	}
 	
@@ -278,6 +317,20 @@ class TestUtils {
 	
 	def static CharSequence generateSettersForDTO(Entity entity) {
 		return entity.generateSettersForDTO(null)
+	}
+	
+	def static CharSequence generateSettersOnlyRequiredSlotsForDTO(Entity entity, List<Slot> extraExcludedSlots) {
+		var List<Slot> excludedSlots = newArrayList(entity.slots.filter[!it.isRequired])
+		
+		if (extraExcludedSlots !== null) {
+			excludedSlots.addAll(entity.slots.filter[slot | extraExcludedSlots.exists[it === slot]])
+		}
+		
+		return entity.generateSettersForDTO(excludedSlots)
+	}
+	
+	def static CharSequence generateSettersOnlyRequiredSlotsForDTO(Entity entity) {
+		entity.generateSettersOnlyRequiredSlotsForDTO(null)
 	}
 	
 	def static CharSequence generateSettersForDTO(Entity entity, List<Slot> excludedSlots) {
