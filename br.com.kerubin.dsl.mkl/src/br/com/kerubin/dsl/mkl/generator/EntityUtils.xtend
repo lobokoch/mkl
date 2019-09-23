@@ -1119,6 +1119,13 @@ class EntityUtils {
 		slot.name.toFirstLower
 	}
 	
+	def static toLambdaGetMethod(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		val result = entity.toDtoName + '::get' + slot.name.toFirstUpper
+		result
+	}
+	
 	def static resolveFieldInitializationValue(Slot slot) {
 		var value = ''
 		

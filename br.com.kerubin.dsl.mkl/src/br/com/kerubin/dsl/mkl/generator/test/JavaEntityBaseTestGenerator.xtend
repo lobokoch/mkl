@@ -27,10 +27,17 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 	def generateTestApplication() {
 		val basePakage = getServerTestGenSourceFolder
 		val fileName = basePakage + service.servicePackagePath + '/' + service.toServiceEntityBaseTestClassName + '.java'
-		generateFile(fileName, doGenerateTestApplication)
+		generateFile(fileName, doGenerateBaseTest)
 	}
 	
-	def CharSequence doGenerateTestApplication() {
+	def CharSequence doGenerateBaseTest() {
+		
+		imports.add('import java.time.LocalDate;')
+		imports.add('import java.util.List;')
+		imports.add('import java.util.ArrayList;')
+		imports.add('import java.util.Collections;')
+		imports.add('import java.util.Random;')
+		imports.add('import org.apache.commons.lang3.RandomStringUtils;')
 		
 		val package = '''
 		package «service.servicePackage»;
@@ -42,7 +49,18 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		«imports.generateTestAnnotations»
 		public class «service.toServiceEntityBaseTestClassName» {
 			
-			«imports.generateTestConfiguration»			
+			«generateFieldLastDate»
+			
+			«imports.generateTestConfiguration»
+			
+			«generateMethodGetNextDate»
+			
+			«generateMethodResetNextDate»
+			
+			«generateMethodGenerateRandomString»
+			
+			«generateMethodGetRandomItemsOf»
+			
 		
 		}
 		'''
@@ -77,7 +95,7 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		imports.add('import org.springframework.context.annotation.Bean;')
 		
 		'''
-		
+		// BEGIN base configurations
 		@TestConfiguration
 		static class «service.toServiceEntityBaseTestConfigClassName» {
 			
@@ -92,6 +110,7 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 			}
 			
 		}
+		// END base configurations
 		
 		'''
 	}

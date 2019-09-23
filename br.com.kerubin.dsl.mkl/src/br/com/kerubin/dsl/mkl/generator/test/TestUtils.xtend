@@ -23,8 +23,16 @@ import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 
 class TestUtils {
 	
-	static val ACTUAL = 'actual'
-	static val IGNORED_FIELDS = 'IGNORED_FIELDS'
+	public static val ACTUAL = 'actual'
+	public static val IGNORED_FIELDS = 'IGNORED_FIELDS'
+	public static val GET_NEXT_DATE = 'getNextDate()'
+	public static val GENERATE_RANDOM_STRING = 'generateRandomString'
+	public static val GET_RANDOM_ITEMS_OF = 'getRandomItemsOf'
+	
+	public static val FIRST_RECORD_VAR = 'firstRecord'
+	public static val LAST_RECORD_VAR = 'lastRecord'
+	public static val COUNT_VAR = 'count'
+	public static val TEST_DATA = 'testData'
 	
 	def static buildEntityManagerFlush() {
 		'''
@@ -144,12 +152,8 @@ class TestUtils {
 	def static CharSequence buildServiceCreateFromDTO(Entity entity) {
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
-		//val entityDTOName = entity.toEntityDTOName
 		val entityDTOVar = entity.toEntityDTOName.toFirstLower
 		val entityServiceVar = entity.toServiceName.toFirstLower
-		//val idVar = entity.id.name.toFirstLower
-		//val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
-		//val toDTO = 'convertEntityToDto'
 		val toEntity = 'convertDtoToEntity'
 		
 		'''
@@ -225,7 +229,7 @@ class TestUtils {
 		
 		'''
 		
-		private «name» new«name»() {
+		protected «name» new«name»() {
 			«entity.buildNewEntityWithVar»
 			
 			«slots.filter[!it.isAuditingSlot].map[generateSetterForTest].join»
@@ -245,7 +249,7 @@ class TestUtils {
 		
 		'''
 		
-		private «lookupResultName» new«lookupResultName»(«entityFieldName.toFirstUpper» «entityFieldName») {
+		protected «lookupResultName» new«lookupResultName»(«entityFieldName.toFirstUpper» «entityFieldName») {
 			«lookupResultName» «fieldName» = new «lookupResultName»();
 			
 			«slots.map[generateSetterForLookupResult].join»
@@ -308,15 +312,7 @@ class TestUtils {
 	def static CharSequence generateRandomTestValueForDTO(Slot slot) {
 		val basicType = slot.basicType
 		if (basicType instanceof StringType) {
-			//val length = if (slot.length > 30) 30 else slot.length 
-			/*val chars = RandomStringUtils.randomAlphabetic(length - 1) + ' ' 
-			var value = RandomStringUtils.random(length, chars).trim
-			
-			// Must remove white spaces in the begining. 
-			while (value.length < length) {
-				value = RandomStringUtils.random(length, chars).trim
-			}*/
-			'''generateRandomString(«slot.length»)'''
+			'''«GENERATE_RANDOM_STRING»(«slot.length»)'''
 		}
 		else if (basicType instanceof IntegerType) {
 			val ran = new Random();
@@ -341,7 +337,7 @@ class TestUtils {
 			if (slot.hasDefaultValue) slot.defaultValue else ran.nextBoolean + ''
 		}
 		else if (basicType instanceof DateType) {
-			'''java.time.LocalDate.now()'''
+			'''«GET_NEXT_DATE»'''
 		}
 		else if (basicType instanceof TimeType) {
 			'''java.time.LocalTime.now()'''
@@ -475,8 +471,20 @@ class TestUtils {
 		val name = entity.toDtoName
 		
 		'''
+		// Creates a list filter for entity «name».
 		«name»ListFilter listFilter = new «name»ListFilter();
 		'''
+	}
+	
+	def static CharSequence generateGetRandomItemsOf(Entity entity, int resultSize) {
+		val entityName = entity.toEntityName
+		
+		'''
+		// Extracts «resultSize» records of «entityName» randomly from «TEST_DATA».
+		final int resultSize = «resultSize»;
+		List<«entityName»> filterTestData = «GET_RANDOM_ITEMS_OF»(«TEST_DATA», resultSize);
+		'''
+		
 	}
 	
 	def static CharSequence generateAndSetListFilterToSlot(Slot slot) {
@@ -495,19 +503,61 @@ class TestUtils {
 		val entityName = entity.toEntityName
 		
 		'''
+		// Extracts a list with only «entityName».«fieldName» fields and configure this list as a filter.
 		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
 		listFilter.set«fieldUpper»(«fieldName»ListFilter);
 		'''
+	}
+	
+	def static CharSequence generateCollectSlotTestData(Slot slot, String dataSource) {
+		val entity = slot.ownerEntity
+		val fieldName = slot.fieldName
+		val fieldUpper = fieldName.toFirstUpper
+		val entityName = entity.toEntityName
+		
+		'''
+		// Extracts a list with only «entityName».«fieldName» fields.
+		List<«slot.toJavaType»> «slot.generateCollectedSlotTestDataVar» = «dataSource».stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		'''
+	}
+	
+	static def generateCollectedSlotTestDataVar(Slot slot) {
+		slot.fieldName + 'TestDataList'
+	}
+	
+	def static CharSequence generateSortAscCollectedSlotTestData(Slot slot) {
+		'''
+		// Sort «slot.fieldName» in ascending order.
+		Collections.sort(«slot.generateCollectedSlotTestDataVar»);
+		'''
+	}
+	
+	def static CharSequence generatePageableAsc(int pageIndex, int pageSize, Slot slot) {
+		generatePageable(pageIndex, pageSize, slot.fieldName, /*isASC=*/true)
+	}
+	
+	def static CharSequence generatePageableDesc(int pageIndex, int pageSize, Slot slot) {
+		generatePageable(pageIndex, pageSize, slot.fieldName, /*isASC=*/false)
 	}
 	
 	def static CharSequence generatePageable(int pageIndex, int pageSize, String orderByField, boolean isASC) {
 		val sort = isASC.getOrderBy
 		
 		'''
-		Sort sort = Sort.by("«orderByField»").«sort»(); // order by «orderByField» «sort»
+		// Generates a pageable configuration, with sorting.
+		Sort sort = Sort.by("«orderByField»").«sort»(); // select ... order by «orderByField» «sort»
 		int pageIndex = «pageIndex»; // First page starts at index zero.
 		int size = «pageSize»; // Max of «pageSize» records per page.
 		Pageable pageable = PageRequest.of(pageIndex, size, sort);
+		'''
+	}
+	
+	def static CharSequence generatePageableWithoutSort(int pageIndex, int pageSize) {
+		'''
+		// Generates a pageable configuration, without sorting.
+		int pageIndex = «pageIndex»; // First page starts at index zero.
+		int size = «pageSize»; // Max of «pageSize» records per page.
+		Pageable pageable = PageRequest.of(pageIndex, size);
 		'''
 	}
 	
@@ -516,11 +566,12 @@ class TestUtils {
 		result
 	}
 	
-	def static CharSequence generateEntityList(Entity entity) {
+	def static CharSequence generateCallServiceList(Entity entity) {
 		val entityName = entity.toEntityName
 		val entityFieldName = entity.fieldName
 		
 		'''
+		// Call service list method.
 		Page<«entityName»> page = «entityFieldName»Service.list(listFilter, pageable);
 		'''
 	}
@@ -530,37 +581,157 @@ class TestUtils {
 		val entityFieldName = entity.fieldName
 		
 		'''
+		// Converts found entities to DTOs and mount the result page.
 		List<«name»> content = page.getContent().stream().map(it -> «entityFieldName»DTOConverter.convertEntityToDto(it)).collect(Collectors.toList());
 		PageResult<«name»> pageResult = new PageResult<>(content, page.getNumber(), page.getSize(), page.getTotalElements());
 		'''
 	}
 	
-	def static CharSequence assertThatSlotListFilterResultContent(Slot listFilterSlot) {
-		
-		if (listFilterSlot === null) {
-			val result = '''
-			// listFilterSlot == null
-			'''
-			
-			return result
-		}
-		
-		val fieldName = listFilterSlot.fieldName
+	def static CharSequence assertThatSlotListFilterResultContent(Slot slot, int resultSize) {
+		val fieldName = slot.fieldName
 		
 		'''
-		assertThat(pageResult.getContent()).hasSize(resultSize)
-		.extracting("«fieldName»")
+		// Asserts that result has size «resultSize», in any order and has only rows with «fieldName»ListFilter elements based on «fieldName» field.
+		assertThat(pageResult.getContent())
+		.hasSize(«resultSize»)
+		.extracting(«slot.toLambdaGetMethod»)
 		.containsExactlyInAnyOrderElementsOf(«fieldName»ListFilter);
 		'''
 	}
 	
-	def static CharSequence generateAssertThatPageResult(int totalPages) {
+	def static CharSequence assertThatSortSlotResultContent(Slot slot, int size) {
 		
 		'''
+		// Asserts that result has size «size» in a specific order.
+		assertThat(pageResult.getContent())
+		.hasSize(«size»)
+		.extracting(«slot.toLambdaGetMethod»)
+		.containsExactlyElementsOf(«slot.generateCollectedSlotTestDataVar»);
+		'''
+	}
+	
+	def static CharSequence assertThatSortSlotResultContent() {
+		
+		'''
+		
+		'''
+	}
+	
+	def static CharSequence generateAssertThatPageResult(int totalPages, int elements, int totalElements) {
+		
+		'''
+		// Asserts some page result elements.
 		assertThat(pageResult.getNumber()).isEqualTo(pageIndex);
-		assertThat(pageResult.getNumberOfElements()).isEqualTo(resultSize);
-		assertThat(pageResult.getTotalElements()).isEqualTo(resultSize);
+		assertThat(pageResult.getNumberOfElements()).isEqualTo(«elements»);
+		assertThat(pageResult.getTotalElements()).isEqualTo(«totalElements»);
 		assertThat(pageResult.getTotalPages()).isEqualTo(«totalPages»);
+		'''
+	}
+	
+	def static CharSequence generateFieldLastDate() {
+		'''
+		protected LocalDate lastDate = LocalDate.now();
+		'''
+	}
+	
+	def static CharSequence generateMethodGetNextDate() {
+		
+		'''
+		protected LocalDate getNextDate() {
+			if (lastDate == null) {
+				lastDate = LocalDate.now();
+			}
+			LocalDate result = LocalDate.of(lastDate.getYear(), lastDate.getMonth(), lastDate.getDayOfMonth());
+			lastDate = lastDate.plusDays(1);
+			
+			return result;
+			
+		}
+		'''
+	}
+	
+	def static CharSequence generateCallResetNextDate() {
+		'''
+		// Reset lastDate field to start LocalDate fields with today in this test. 
+		resetNextDate();
+		'''
+	}
+	
+	def static CharSequence generateMethodResetNextDate() {
+		
+		'''
+		protected void resetNextDate() {
+			lastDate = null;
+		}
+		'''
+	}
+	
+	def static CharSequence generateMethodGenerateRandomString() {
+		'''
+		protected String generateRandomString(int maxLength) {
+			int length = (maxLength > 30) ? 30 : maxLength; 
+			String chars = RandomStringUtils.randomAlphabetic(length - 1) + " ";
+			String value = RandomStringUtils.random(length, chars).trim();
+			
+			// Must remove white spaces in the begining.
+			int attempts= 0;
+			while (value.length() < length && (attempts < Integer.MAX_VALUE) ) {
+				attempts++;
+				value = RandomStringUtils.random(length, chars).trim();
+			} 
+			return value;
+		}
+		'''
+	}
+	
+	def static CharSequence generateMethodGetRandomItemsOf() {
+		'''
+		protected <T> List<T> getRandomItemsOf(List<T> list, int size) {
+			if (list == null || size <= 0) {
+				return Collections.emptyList();
+			}
+			List<T> result = new ArrayList<>();
+			Random ran = new Random();
+			int bound = list.size();
+			int attempts = 0;
+			do {
+				attempts++;
+				int index = ran.nextInt(bound);
+				T item = list.get(index);
+				if (!result.contains(item)) {
+					result.add(item);
+				}
+			} while (result.size() < size && (attempts < Integer.MAX_VALUE));
+			
+			return result;
+			
+		}
+		'''
+	}
+	
+	def static CharSequence generateInicializeCreateDataForEntity(Entity entity) {
+		entity.generateInicializeCreateDataForEntity(1, 33)
+	}
+	
+	def static CharSequence generateInicializeCreateDataForEntity(Entity entity, int lastRecord) {
+		entity.generateInicializeCreateDataForEntity(1, lastRecord)
+	}
+	
+	def static CharSequence generateInicializeCreateDataForEntity(Entity entity, int firstRecord, int lastRecord) {
+		val entityName = entity.toEntityName
+		
+		'''
+		// Generate «lastRecord» records of data for «entityName» for this test.
+		final int «FIRST_RECORD_VAR» = «firstRecord»;
+		final int «LAST_RECORD_VAR» = «lastRecord»;
+		List<«entityName»> «TEST_DATA» = new ArrayList<>();
+		for (int i = «FIRST_RECORD_VAR»; i <= «LAST_RECORD_VAR»; i++) {
+			«TEST_DATA».add(new«entityName»());
+		}
+		
+		// Check if «lastRecord» records of «entityName» was generated.
+		long «COUNT_VAR» = «entity.toRepositoryName.toFirstLower».count();
+		«COUNT_VAR.buildAssertThatIsEqualTo(LAST_RECORD_VAR)»
 		'''
 	}
 	

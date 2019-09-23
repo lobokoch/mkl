@@ -9,7 +9,12 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class ServiceBoosterImpl implements ServiceBooster {
 	
-	public static val ENTITY_AUDITING_FIELDS = #['createdBy', 'createdDate', 'lastModifiedBy', 'lastModifiedDate'];
+	public static val createdBy = 'createdBy'
+	public static val createdDate = 'createdDate'
+	public static val lastModifiedBy = 'lastModifiedBy'
+	public static val lastModifiedDate = 'lastModifiedDate'
+	
+	public static val ENTITY_AUDITING_FIELDS = #[createdBy, createdDate, lastModifiedBy, lastModifiedDate];
 	
 	Service service
 	
@@ -146,12 +151,14 @@ class ServiceBoosterImpl implements ServiceBooster {
 	
 	def void getCreateAuditingFields(Entity entity) {
 		ENTITY_AUDITING_FIELDS.forEach[
-			val auditinhField = createAuditingField(it, false);
-			entity.slots.add(auditinhField)
+			val auditingField = it.createAuditingField;
+			entity.slots.add(auditingField)
 		]
 	}
 	
-	def Slot createAuditingField(String name, boolean isDate) {
+	def Slot createAuditingField(String name) {
+		// createdBy, createdDate, lastModifiedBy, lastModifiedDate
+		val isDate = name == createdDate || name == lastModifiedDate
 		val slot = ModelFactory.eINSTANCE.createSlot
 		slot.name = name
 		slot.label = slot.name

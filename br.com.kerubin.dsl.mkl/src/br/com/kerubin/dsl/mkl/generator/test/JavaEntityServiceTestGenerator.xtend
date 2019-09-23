@@ -35,7 +35,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateEntityTest(Entity entity) {
 		
 		entity.imports.clear
-		entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.generateRandomString;')
+		//entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.generateRandomString;')
 		
 		entity.resolveEntityImports
 		
@@ -137,66 +137,101 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	def CharSequence generateListTests(Entity entity) {
-		val hasSomeListFilterMany = entity.slots.exists[it.isListFilterMany]
-		if (! hasSomeListFilterMany) {
-			return ''
+		//val hasSomeListFilterMany = entity.slots.exists[it.isListFilterMany]
+		val hasSort = entity.slots.exists[it.hasSort]
+		
+		if (hasSort) {
+			entity.addImport('import java.util.Collections;')
+			entity.addImport('import org.springframework.data.domain.Sort;')
 		}
 		
 		entity.addImport('import java.util.List;')
 		entity.addImport('import java.util.ArrayList;')
 		entity.addImport('import java.util.stream.Collectors;')
-		entity.addImport('import org.springframework.data.domain.Sort;')
 		entity.addImport('import org.springframework.data.domain.Pageable;')
 		entity.addImport('import org.springframework.data.domain.Page;')
 		entity.addImport('import org.springframework.data.domain.PageRequest;')
-		entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.getRandomItemsOf;')
+		// entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.getRandomItemsOf;')
 		entity.addImport(service.importPageResult)
 		
-		val test1 = entity.generateListTest1
-		test1
+		var CharSequence test1 = ''
+		var CharSequence test2 = ''
+		
+		if (entity.slots.exists[it.isListFilterMany]) {
+			test1 = entity.generateListTest1
+		}
+		
+		if (entity.slots.exists[it.hasSort]) {
+			test2 = entity.generateListTest2
+		}
+		
+		'''
+		«test1»
+		«test2»
+		'''
 	}
 	
 	def CharSequence generateListTest1(Entity entity) {
-		val firstRecordVar = 'firstRecord'
-		val lastRecordVar = 'lastRecord'
-		val countVar = 'count'
-		val entityName = entity.toEntityName
 		
 		val firstListFilterSlot = entity.slots.filter[it.isListFilterMany].head
+		val size = 33;
+		val resultSize = 7;
 		
 		'''
 		
 		@Test
-		public void testList1() {
+		public void testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»() {
+			«generateCallResetNextDate»
 			
-			final int «firstRecordVar» = 1;
-			final int «lastRecordVar» = 33;
+			«entity.generateInicializeCreateDataForEntity(size)»
 			
-			List<«entityName»> testData = new ArrayList<>();
-			for (int i = «firstRecordVar»; i <= «lastRecordVar»; i++) {
-				testData.add(new«entityName»());
-			}
-			
-			long count = «entity.toRepositoryName.toFirstLower».count();
-			«countVar.buildAssertThatIsEqualTo(lastRecordVar)»
-			
-			// Endpoint Input
 			«entity.generateNewEntityListFilterVar»
-			final int resultSize = 7;
 			
-			List<«entityName»> filterTestData = getRandomItemsOf(testData, resultSize);
+			«entity.generateGetRandomItemsOf(resultSize)»
 			
 			«firstListFilterSlot?.generateAndSetListFilterToSlot»
 			
-			«generatePageable(0, 10, firstListFilterSlot?.fieldName, true)»
+			«generatePageableWithoutSort(0, size)»
 			
-			«entity.generateEntityList»
+			«entity.generateCallServiceList»
 			
 			«entity.generatePageContentMapToPageResult»
 			
-			«firstListFilterSlot?.assertThatSlotListFilterResultContent»
+			«firstListFilterSlot?.assertThatSlotListFilterResultContent(resultSize)»
 			
-			«generateAssertThatPageResult(1)»
+			«generateAssertThatPageResult(1, resultSize, resultSize)»
+			
+		}
+		'''
+	}
+	
+	def CharSequence generateListTest2(Entity entity) {
+		val size = 10;
+		val sortSlot = entity.slots.filter[it.hasSort].head
+		
+		'''
+		
+		@Test
+		public void testList_SortingBy«sortSlot.fieldName.toFirstUpper»() {
+			«generateCallResetNextDate»
+			
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateNewEntityListFilterVar»
+			
+			«generatePageableAsc(0, size, sortSlot)»
+			
+			«entity.generateCallServiceList»
+			
+			«entity.generatePageContentMapToPageResult»
+			
+			«sortSlot.generateCollectSlotTestData(TEST_DATA)»
+			
+			«sortSlot.generateSortAscCollectedSlotTestData»
+
+			«sortSlot.assertThatSortSlotResultContent(size)»
+			
+			«generateAssertThatPageResult(1, size, size)»
 			
 		}
 		'''
