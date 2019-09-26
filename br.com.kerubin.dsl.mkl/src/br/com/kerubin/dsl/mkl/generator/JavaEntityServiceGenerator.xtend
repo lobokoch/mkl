@@ -172,7 +172,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
 		
 		val pakage = '''
-		package «entity.package»;		
+		package «entity.package»;
 		'''
 		
 		val preImports = ''' 

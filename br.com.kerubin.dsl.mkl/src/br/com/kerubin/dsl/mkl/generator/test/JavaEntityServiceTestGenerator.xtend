@@ -79,6 +79,18 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.generateListTests»
 			// END LIST TESTS
 			
+			«IF entity.hasAutoComplete»
+			// BEGIN Autocomplete TESTS
+			«entity.generateAutoCompleteTests»
+			// END Autocomplete TESTS
+			«ENDIF»
+			
+			«IF entity.hasListFilterMany»
+			// BEGIN ListFilter Autocomplete TESTS
+			«entity.generateListFilterAutoCompleteTests»
+			// END ListFilter Autocomplete TESTS
+			«ENDIF»
+			
 			// BEGIN TESTS DEPENDENCIES
 			«dependenciesSource»
 			// END TESTS DEPENDENCIES
@@ -149,32 +161,30 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	def CharSequence generateListTests(Entity entity) {
-		//val hasSomeListFilterMany = entity.slots.exists[it.isListFilterMany]
-		val hasSort = entity.slots.exists[it.hasSort]
-		
-		if (hasSort) {
-			entity.addImport('import java.util.Collections;')
-			entity.addImport('import org.springframework.data.domain.Sort;')
-		}
-		
-		entity.addImport('import java.util.List;')
-		entity.addImport('import java.util.ArrayList;')
-		entity.addImport('import java.util.stream.Collectors;')
-		entity.addImport('import org.springframework.data.domain.Pageable;')
-		entity.addImport('import org.springframework.data.domain.Page;')
-		entity.addImport('import org.springframework.data.domain.PageRequest;')
-		entity.addImport(service.importPageResult)
+		val hasSomeListFilterMany = entity.slots.exists[it.isListFilterMany]
+		val hasSomeSort = entity.slots.exists[it.hasSort]
 		
 		var CharSequence test1 = ''
 		var CharSequence test2 = ''
 		var CharSequence test3 = ''
 		
-		if (entity.slots.exists[it.isListFilterMany]) {
+		if (hasSomeListFilterMany) {
+			entity.addImport('import java.util.List;')
+			entity.addImport('import java.util.ArrayList;')
+			entity.addImport('import java.util.stream.Collectors;')
+			entity.addImport('import org.springframework.data.domain.Pageable;')
+			entity.addImport('import org.springframework.data.domain.Page;')
+			entity.addImport('import org.springframework.data.domain.PageRequest;')
+			entity.addImport(service.importPageResult)
+			
 			test1 = entity.generateListTest1
 			test3 = entity.generateListTest3
 		}
 		
-		if (entity.slots.exists[it.hasSort]) {
+		if (hasSomeSort) {
+			entity.addImport('import java.util.Collections;')
+			entity.addImport('import org.springframework.data.domain.Sort;')
+			
 			test2 = entity.generateListTest2
 		}
 		
@@ -186,7 +196,6 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	def CharSequence generateListTest1(Entity entity) {
-		
 		val firstListFilterSlot = entity.slots.filter[it.isListFilterMany].head
 		val size = 33;
 		val resultSize = 7;
@@ -306,6 +315,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	
 	def CharSequence generateDeleteTest1(Entity entity) {
 		val entityName = entity.toEntityName
+		val fieldName = entity.fieldName
 		val expected = 'expected'
 		val idVar = 'id'
 		
@@ -316,10 +326,18 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entityName» «expected» = new«entityName»();
 			«entity.id.toJavaType» «idVar» = «expected».«entity.id.getMethod2»;
 			
+			«IF entity.hasPublishEntityEvents»
+			«entityName» «fieldName» = «expected»;
+			«ENDIF»
+			
 			«entity.generateEntityManagerFind»
 			«expected.buildAssertThatIsNotNull»
-			
+			«IF entity.hasPublishEntityEvents»
+			«entity.generatePublishedEventDoAnswer(EVENT_DELETED)»
+			«ENDIF»
 			«entity.generateServiceDelete»
+			
+			«entity.generatePublishedEventVerify(EVENT_DELETED)»
 			
 			«entity.generateEntityManagerFind»
 			«expected.buildAssertThatIsNull»
@@ -338,9 +356,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersForDTO»
-			
+			«IF entity.hasPublishEntityEvents»
+			«entity.generatePublishedEventDoAnswer(EVENT_CREATED)»
+			«ENDIF»
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush»
+			
+			«entity.generatePublishedEventVerify(EVENT_CREATED)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -360,9 +382,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersOnlyRequiredSlotsForDTO»
-			
+			«IF entity.hasPublishEntityEvents»
+			«entity.generatePublishedEventDoAnswer(EVENT_CREATED)»
+			«ENDIF»
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush»
+			
+			«entity.generatePublishedEventVerify(EVENT_CREATED)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -389,9 +415,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«fieldName».«id.buildMethodSet('id')»;
 			
 			«entity.generateSettersOnlyRequiredSlotsForDTO(#[id])»
-			
+			«IF entity.hasPublishEntityEvents»
+			«entity.generatePublishedEventDoAnswer(EVENT_UPDATED)»
+			«ENDIF»
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
+			
+			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -418,9 +448,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«fieldName».«id.buildMethodSet('id')»;
 			
 			«entity.generateSettersForDTO(#[id])»
-			
+			«IF entity.hasPublishEntityEvents»
+			«entity.generatePublishedEventDoAnswer(EVENT_UPDATED)»
+			«ENDIF»
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
+			
+			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -429,7 +463,36 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		'''
 	}
 	
+	def CharSequence generateListFilterAutoCompleteTests(Entity entity) {
+		
+		'''
+		«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteTest].join»
+		'''
+	}
 	
+	def CharSequence generateAutoCompleteTests(Entity entity) {
+		val firstAutocompleteKeySlot = entity.slots.filter[it.isAutoCompleteKey].head
+		val size = 33;
+		val resultSize = 1;
+		
+		'''
+		@Test
+		public void testAutoComplete() {
+			«generateCallResetNextDate»
+						
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateGetRandomItemsOf(resultSize)»
+			
+			«firstAutocompleteKeySlot.generateListFilterToSlot»
+			
+			«firstAutocompleteKeySlot.generateCallAutoComplete»
+			
+			«firstAutocompleteKeySlot.generateAssertThatAutoComplete(resultSize)»
+		}
+		
+		'''
+	}
 	
 	def CharSequence generateFields(Entity entity) {
 		entity.addImport('import javax.inject.Inject;')
@@ -437,16 +500,18 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		'''
 		@Inject
-		private TestEntityManager em;
+		protected TestEntityManager em;
 		
 		@Inject
-		private «entity.toServiceName» «entity.toServiceName.toFirstLower»;
+		protected «entity.toServiceName» «entity.toServiceName.toFirstLower»;
 		
 		@Inject
-		private «entity.toDTOConverterName» «entity.toDTOConverterName.toFirstLower»;
+		protected «entity.toDTOConverterName» «entity.toDTOConverterName.toFirstLower»;
 		
 		@Inject
-		private «entity.toRepositoryName» «entity.toRepositoryName.toFirstLower»;
+		protected «entity.toRepositoryName» «entity.toRepositoryName.toFirstLower»;
+		
+		«entity.generateMockEventPublisherField»
 		'''
 	}
 	

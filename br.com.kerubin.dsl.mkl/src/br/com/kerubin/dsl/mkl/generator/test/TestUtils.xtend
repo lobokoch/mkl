@@ -34,6 +34,10 @@ class TestUtils {
 	public static val COUNT_VAR = 'count'
 	public static val TEST_DATA = 'testData'
 	
+	public static val EVENT_CREATED = 'created'
+	public static val EVENT_UPDATED = 'updated'
+	public static val EVENT_DELETED = 'deleted'
+	
 	def static buildEntityManagerFlush() {
 		'''
 		em.flush();
@@ -540,26 +544,41 @@ class TestUtils {
 		
 	}
 	
+	def static CharSequence generateListFilterToSlot(Slot slot) {
+		slot.generateAndSetListFilterToSlot(false);
+	}
+	
 	def static CharSequence generateAndSetListFilterToSlot(Slot slot) {
+		slot.generateAndSetListFilterToSlot(true);
+	}
+	
+	def static CharSequence generateAndSetListFilterToSlot(Slot slot, boolean withSet) {
 		
 		val entity = slot.ownerEntity
 		val fieldName = slot.fieldName
 		val fieldUpper = fieldName.toFirstUpper
 		val entityName = entity.toEntityName
+		
+		entity.addImport('import java.util.stream.Collectors;')
+		entity.addImport('import java.util.List;')
 		
 		'''
 		// Extracts a list with only «entityName».«fieldName» field and configure this list as a filter.
 		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		«IF withSet»
 		listFilter.set«fieldUpper»(«fieldName»ListFilter);
+		«ENDIF»
 		'''
 	}
 	
 	def static CharSequence generateAndSetListFilterToSlotWithFakeData(Slot slot) {
-		
 		val entity = slot.ownerEntity
 		val fieldName = slot.fieldName
 		val fieldUpper = fieldName.toFirstUpper
 		val entityName = entity.toEntityName
+		
+		entity.addImport('import java.util.List;')
+		entity.addImport('import java.util.Arrays;')
 		
 		'''
 		// Generates a list with only «entityName».«fieldName» field with 1 not found data in the database and configure this list as a filter.
@@ -574,6 +593,9 @@ class TestUtils {
 		val fieldUpper = fieldName.toFirstUpper
 		val entityName = entity.toEntityName
 		
+		entity.addImport('import java.util.List;')
+		entity.addImport('import java.util.stream.Collectors;')
+		
 		'''
 		// Extracts a list with only «entityName».«fieldName» fields.
 		List<«slot.toJavaType»> «slot.generateCollectedSlotTestDataVar» = «dataSource».stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
@@ -585,6 +607,10 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateSortAscCollectedSlotTestData(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		entity.addImport('import java.util.Collections;')
+		
 		'''
 		// Sort «slot.fieldName» in ascending order.
 		Collections.sort(«slot.generateCollectedSlotTestDataVar»);
@@ -638,6 +664,9 @@ class TestUtils {
 	def static CharSequence generatePageContentMapToPageResult(Entity entity) {
 		val name = entity.toEntityDTOName
 		val entityFieldName = entity.fieldName
+		
+		entity.addImport('import java.util.stream.Collectors;')
+		entity.addImport('import java.util.List;')
 		
 		'''
 		// Converts found entities to DTOs and mount the result page.
@@ -787,6 +816,9 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateInicializeCreateDataForEntity(Entity entity, int firstRecord, int lastRecord) {
+		entity.addImport('import java.util.List;')
+		entity.addImport('import java.util.ArrayList;')
+		
 		val entityName = entity.toEntityName
 		
 		'''
@@ -801,6 +833,185 @@ class TestUtils {
 		// Check if «lastRecord» records of «entityName» was generated.
 		long «COUNT_VAR» = «entity.toRepositoryName.toFirstLower».count();
 		«COUNT_VAR.buildAssertThatIsEqualTo(LAST_RECORD_VAR)»
+		'''
+	}
+	
+	def static CharSequence generateMockEventPublisherField(Entity entity) {
+		entity.addImport('import org.springframework.boot.test.mock.mockito.MockBean;')
+		entity.addImport('import br.com.kerubin.api.messaging.core.DomainEntityEventsPublisher;')
+		
+		'''
+		@MockBean
+		protected DomainEntityEventsPublisher publisher;
+		'''
+	}
+	
+	def static CharSequence generatePublishedEventDoAnswer(Entity entity, String event) {
+		entity.addImport('import static org.mockito.Mockito.doAnswer;')
+		entity.addImport('import br.com.kerubin.api.messaging.core.DomainEventEnvelope;')
+		entity.addImport('import static org.mockito.ArgumentMatchers.any;')
+		entity.addImport('import br.com.kerubin.api.messaging.core.DomainEvent;')
+		entity.addImport(entity.getImportServiceConstants2)
+		
+		val fieldName = entity.fieldName
+		val dtoName = entity.toDtoName
+		
+		val domainAndService = entity.service.toServiceConstantsName2
+		val entityEventName = entity.toEntityEventName
+		val publishedSlots = entity.slots.filter[it.isPublish]
+		
+		'''
+		
+		// BEGIN check event «event».
+		doAnswer(invocation -> {
+			DomainEventEnvelope<DomainEvent> envelope = invocation.getArgument(0);
+			
+			assertThat(envelope).isNotNull();
+			assertThat(envelope.getPayload()).isNotNull();
+			
+			«entityEventName» event = («entityEventName») envelope.getPayload();
+			«publishedSlots.map[it.assertThatPublishedFieldIsEqual(event, 'event', fieldName)].join»
+			
+			assertThat(«domainAndService».DOMAIN).isEqualTo(envelope.getDomain());
+			assertThat(«domainAndService».SERVICE).isEqualTo(envelope.getService());
+			
+			assertThat("«fieldName»«event.toFirstUpper»").isEqualTo(envelope.getPrimitive());
+			assertThat("kerubin").isEqualTo(envelope.getTenant());
+			assertThat("kerubin").isEqualTo(envelope.getUser());
+			assertThat("kerubin").isEqualTo(envelope.getApplication());
+			assertThat("entity.«dtoName»").isEqualTo(envelope.getKey());
+			
+			return null;
+		}).when(publisher).publish(any());
+		// END check event «event».
+		
+		'''
+	}
+	
+	def static CharSequence assertThatPublishedFieldIsEqual(Slot slot, String event, String actualVar, String expectedVar) {
+		var actualGetMethod = slot.buildMethodGet
+		var expectedGetMethod = actualGetMethod
+		val isEntity = slot.isEntity
+		if (isEntity) {
+			val entity = slot.ownerEntity
+			expectedGetMethod = actualGetMethod + '.' + entity.idGetMethod
+		}
+		
+		
+		'''
+		«IF isEntity»
+		
+		if («expectedVar».«actualGetMethod» == null) {
+			assertThat(«actualVar».«actualGetMethod»).isNull();
+		}
+		else {
+			assertThat(«actualVar».«actualGetMethod»).isEqualTo(«expectedVar».«expectedGetMethod»);
+		}
+		
+		«ELSE»
+		«IF EVENT_CREATED == event && slot.isId»
+		assertThat(«actualVar».«actualGetMethod»).isNotNull();
+		«ELSE»
+		assertThat(«actualVar».«actualGetMethod»).isEqualTo(«expectedVar».«expectedGetMethod»);
+		«ENDIF»
+		«ENDIF»
+		'''
+	}
+	
+	def static CharSequence generatePublishedEventVerify(Entity entity, String event) {
+		entity.addImport('import static org.mockito.Mockito.verify;')
+		entity.addImport('import static org.mockito.Mockito.times;')
+		entity.addImport('import static org.mockito.ArgumentMatchers.any;')
+		
+		var times = 0;
+		if (event == EVENT_CREATED && entity.hasPublishCreated) {
+			times = 1
+		} else if (event == EVENT_UPDATED && entity.hasPublishUpdated) {
+			times = 1
+		} else if (event == EVENT_DELETED && entity.hasPublishDeleted) {
+			times = 1
+		}  
+		
+		'''
+		verify(publisher, times(«times»)).publish(any());
+		'''
+	}
+	
+	def static CharSequence generateAssertThatAutoComplete(Slot slot, int resultSize) {
+		val autoCompleteClassName = slot.ownerEntity.toAutoCompleteName
+		slot.generateAssertThatAutoComplete(resultSize, autoCompleteClassName)
+	}
+	
+	def static CharSequence generateAssertThatAutoComplete(Slot slot, int resultSize, String autoCompleteClassName) {
+		val fieldName = slot.fieldName
+		
+		'''
+		// Assert «autoCompleteClassName» results.
+		assertThat(result).isNotNull().hasSize(«resultSize»)
+		.extracting(«autoCompleteClassName.toFirstUpper.toLambdaGetMethod(slot)»)
+		.containsExactlyInAnyOrderElementsOf(«fieldName»ListFilter);
+		'''
+	}
+	
+	def static CharSequence generateCallAutoComplete(Slot slot) {
+		val autoCompleteClassName = slot.ownerEntity.toAutoCompleteName
+		val autoCompleteMethodName = 'autoComplete'
+		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName)
+	}
+	
+	def static CharSequence generateCallAutoComplete(Slot slot, String autoCompleteClassName, String autoCompleteMethodName) {
+		val entity = slot.ownerEntity
+		val fieldName = slot.fieldName
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		
+		entity.addImport('import java.util.Collection;')
+		
+		'''
+		// Mount the autocomplete query expression and call it.
+		String query = «fieldName»ListFilter.get(0);
+		Collection<«autoCompleteClassName»> result = «entityServiceVar».«autoCompleteMethodName»(query);
+		'''
+	}
+	
+	def static CharSequence generateAssertThatAutoCompleteListFilter(Slot slot, int resultSize) {
+		val autoComplateName = slot.toAutoCompleteName
+		
+		val autoCompleteClassName = autoComplateName.toFirstUpper
+		slot.generateAssertThatAutoComplete(resultSize, autoCompleteClassName)
+	}
+	
+	def static CharSequence generateCallAutoCompleteListFilter(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		val autoCompleteClassName = autoComplateName.toFirstUpper
+		val autoCompleteMethodName = autoComplateName
+		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName)
+	}
+	
+	def static CharSequence generateListFilterAutoCompleteTest(Slot slot) {
+		val entity = slot.ownerEntity
+		val autoComplateName = slot.toAutoCompleteName
+		
+		val size = 33;
+		val resultSize = 1;
+		
+		
+		'''
+		
+		@Test
+		public void test«autoComplateName.toFirstUpper»() {
+			«generateCallResetNextDate»
+						
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateGetRandomItemsOf(resultSize)»
+			
+			«slot.generateListFilterToSlot»
+			
+			«slot.generateCallAutoCompleteListFilter»
+			
+			«slot.generateAssertThatAutoCompleteListFilter(resultSize)»
+		}
+		
 		'''
 	}
 	

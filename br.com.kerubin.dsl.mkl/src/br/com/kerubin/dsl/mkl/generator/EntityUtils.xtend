@@ -837,7 +837,7 @@ class EntityUtils {
 			val result = (rule.target as RuleTargetEnum).target
 			return result
 		}
-		null
+		return null
 	}
 	
 	def static Entity getRuleOwnerEntity(Rule rule) {
@@ -1122,7 +1122,14 @@ class EntityUtils {
 	def static toLambdaGetMethod(Slot slot) {
 		val entity = slot.ownerEntity
 		
-		val result = entity.toDtoName + '::get' + slot.name.toFirstUpper
+		//val result = entity.toDtoName + '::get' + slot.name.toFirstUpper
+		
+		val result = entity.toDtoName.toLambdaGetMethod(slot)
+		result
+	}
+	
+	def static toLambdaGetMethod(String objectClassName, Slot slot) {
+		val result = objectClassName + '::get' + slot.name.toFirstUpper
 		result
 	}
 	
@@ -1783,4 +1790,17 @@ class EntityUtils {
 		
 	
 	// END For tests
+	
+	def static String toServiceConstantsName2(Service service) {
+		service.domain.toCamelCase + service.name.toCamelCase + "Constants"
+	}
+	
+	def static String getImportServiceConstants2(Service service) {
+		'import ' + service.servicePackage + '.' + service.toServiceConstantsName2 + ';'
+	}
+	
+	def static String getImportServiceConstants2(Entity entity) {
+		val service = entity.service
+		'import ' + service.servicePackage + '.' + service.toServiceConstantsName2 + ';'
+	}
 }

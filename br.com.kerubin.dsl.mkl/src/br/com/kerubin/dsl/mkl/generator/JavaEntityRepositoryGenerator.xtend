@@ -141,7 +141,8 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	
 	def String generateAutoCompleteSQL(Entity entity, Iterable<Slot> slotResultFields, Iterable<Slot> slotKeyFields) {
 		
-		val sortSlots = entity.slots.filter[it.hasAutoComplete && it.autoComplete.hasSort]
+		//val sortSlots = entity.slots.filter[it.hasAutoComplete && it.autoComplete.hasSort]
+		val sortSlots = slotResultFields.filter[it.hasAutoComplete && it.autoComplete.hasSort]
 		
 		val alias = "ac"
 		val sql = new StringBuilder("select distinct ")
