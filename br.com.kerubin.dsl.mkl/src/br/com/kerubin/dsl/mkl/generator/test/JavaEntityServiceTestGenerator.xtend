@@ -11,6 +11,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.test.TestUtils.*
+import br.com.kerubin.dsl.mkl.model.Slot
 
 class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -35,7 +36,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateEntityTest(Entity entity) {
 		
 		entity.imports.clear
-		//entity.addImport('import static br.com.kerubin.api.servicecore.util.CoreUtils.generateRandomString;')
+		
+		val fkSlots = entity.getEntitySlots
+		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
 		
 		entity.resolveEntityImports
 		
@@ -57,7 +60,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«entity.generateTestConfiguration»
 			
-			«entity.generateFields»
+			«entity.generateFields(fkSlotsDistinct)»
 			
 			// BEGIN CREATE TESTS
 			«entity.generateCreateTests»
@@ -89,6 +92,12 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			// BEGIN ListFilter Autocomplete TESTS
 			«entity.generateListFilterAutoCompleteTests»
 			// END ListFilter Autocomplete TESTS
+			«ENDIF»
+			
+			«IF !fkSlots.empty»
+			// BEGIN Relationships Autocomplete TESTS
+			«fkSlots.generateFKAutoCompleteTests»
+			// END Relationships Autocomplete TESTS
 			«ENDIF»
 			
 			// BEGIN TESTS DEPENDENCIES
@@ -470,6 +479,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		'''
 	}
 	
+	def CharSequence generateFKAutoCompleteTests(Iterable<Slot> slots) {
+		
+		'''
+		«slots.map[generateFKAutoCompleteTest].join»
+		'''
+	}
+	
 	def CharSequence generateAutoCompleteTests(Entity entity) {
 		val firstAutocompleteKeySlot = entity.slots.filter[it.isAutoCompleteKey].head
 		val size = 33;
@@ -494,7 +510,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		'''
 	}
 	
-	def CharSequence generateFields(Entity entity) {
+	def CharSequence generateFields(Entity entity, List<Slot> fkSlotsDistinct) {
 		entity.addImport('import javax.inject.Inject;')
 		entity.addImport('import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;')
 		
@@ -510,8 +526,26 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		@Inject
 		protected «entity.toRepositoryName» «entity.toRepositoryName.toFirstLower»;
+		«IF !fkSlotsDistinct.isEmpty»
+		«fkSlotsDistinct.map[generateExtraFieldToInject].join»
+		«ENDIF»
 		
 		«entity.generateMockEventPublisherField»
+		'''
+	}
+	
+	def CharSequence generateExtraFieldToInject(Slot slot) {
+		val ownerEntity = slot.ownerEntity
+		val entity = slot.asEntity
+		
+		ownerEntity.addImport(slot.resolveSlotRepositoryImport)
+		
+		val repsitoryName = entity.toRepositoryName
+		
+		'''
+		
+		@Inject
+		protected «repsitoryName» «repsitoryName.toFirstLower»;
 		'''
 	}
 	

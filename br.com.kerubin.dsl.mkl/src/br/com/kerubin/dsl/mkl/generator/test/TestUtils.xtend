@@ -956,20 +956,26 @@ class TestUtils {
 	def static CharSequence generateCallAutoComplete(Slot slot) {
 		val autoCompleteClassName = slot.ownerEntity.toAutoCompleteName
 		val autoCompleteMethodName = 'autoComplete'
-		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName)
+		val hasAutoCompleteWithOwnerParams = false
+		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName, hasAutoCompleteWithOwnerParams)
 	}
 	
-	def static CharSequence generateCallAutoComplete(Slot slot, String autoCompleteClassName, String autoCompleteMethodName) {
+	def static CharSequence generateCallAutoComplete(Slot slot, 
+		String autoCompleteClassName, 
+		String autoCompleteMethodName,
+		boolean hasAutoCompleteWithOwnerParams
+	) {
 		val entity = slot.ownerEntity
 		val fieldName = slot.fieldName
 		val entityServiceVar = entity.toServiceName.toFirstLower
+		val entityDTOVar = entity.toEntityDTOName.toFirstLower
 		
 		entity.addImport('import java.util.Collection;')
 		
 		'''
 		// Mount the autocomplete query expression and call it.
 		String query = «fieldName»ListFilter.get(0);
-		Collection<«autoCompleteClassName»> result = «entityServiceVar».«autoCompleteMethodName»(query);
+		Collection<«autoCompleteClassName»> result = «entityServiceVar».«autoCompleteMethodName»(query«IF hasAutoCompleteWithOwnerParams», «entityDTOVar»«ENDIF»);
 		'''
 	}
 	
@@ -984,7 +990,8 @@ class TestUtils {
 		val autoComplateName = slot.toAutoCompleteName
 		val autoCompleteClassName = autoComplateName.toFirstUpper
 		val autoCompleteMethodName = autoComplateName
-		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName)
+		val hasAutoCompleteWithOwnerParams = false
+		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName, hasAutoCompleteWithOwnerParams)
 	}
 	
 	def static CharSequence generateListFilterAutoCompleteTest(Slot slot) {
@@ -1010,6 +1017,63 @@ class TestUtils {
 			«slot.generateCallAutoCompleteListFilter»
 			
 			«slot.generateAssertThatAutoCompleteListFilter(resultSize)»
+		}
+		
+		'''
+	}
+	
+	def static CharSequence generateCallAutoCompleteFK(Slot slot) {
+		val autoComplateName = slot.toAutoCompleteName
+		val autoCompleteClassName = autoComplateName.toFirstUpper
+		val autoCompleteMethodName = autoComplateName
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		slot.generateCallAutoComplete(autoCompleteClassName, autoCompleteMethodName, hasAutoCompleteWithOwnerParams)
+	}
+	
+	def static CharSequence generateFKAutoCompleteTest(Slot slot) {
+		val entity = slot.asEntity
+		val ownerEntity = slot.ownerEntity
+		
+		ownerEntity.addImport(slot.resolveSlotAutocompleteImport)
+		
+		val entityDTOName = ownerEntity.toEntityDTOName
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
+		
+		val autoComplateName = slot.toAutoCompleteName
+		
+		val slotAutoCompleteName = slot.toSlotAutoCompleteName
+		val entityServiceVar = slot.ownerEntity.toServiceName.toFirstLower
+		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
+		
+		val firstAutocompleteKeySlot = entity.slots.filter[it.isAutoCompleteKey].head
+		
+		val size = 33;
+		val resultSize = 1;
+		
+		
+		'''
+		
+		@Test
+		public void test«autoComplateName.toFirstUpper»() {
+			«generateCallResetNextDate»
+						
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateGetRandomItemsOf(resultSize)»
+			
+			«firstAutocompleteKeySlot.generateListFilterToSlot»
+			String query = «firstAutocompleteKeySlot.fieldName»ListFilter.get(0);
+			
+			«IF hasAutoCompleteWithOwnerParams»
+			
+			«entityDTOName» «entityDTOVar» = null;
+			
+			«ENDIF»
+			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query«IF hasAutoCompleteWithOwnerParams», «entityDTOVar»«ENDIF»);
+			
+			assertThat(result).isNotNull().hasSize(«resultSize»)
+			.extracting(«entity.toAutoCompleteName»::get«firstAutocompleteKeySlot.name.toFirstUpper»)
+			.containsExactlyInAnyOrderElementsOf(«firstAutocompleteKeySlot.fieldName»ListFilter);
 		}
 		
 		'''
