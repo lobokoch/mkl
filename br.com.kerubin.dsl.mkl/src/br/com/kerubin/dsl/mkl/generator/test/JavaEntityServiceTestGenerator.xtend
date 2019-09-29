@@ -11,7 +11,9 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.test.TestUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.Rule
 
 class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -45,6 +47,8 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val dependenciesSource = new StringBuilder() 
 		
 		entity.generateTestDependencies(dependenciesSource, new ArrayList())
+		
+		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		val package = '''
 		package «entity.package»;
@@ -99,6 +103,18 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«fkSlots.generateFKAutoCompleteTests»
 			// END Relationships Autocomplete TESTS
 			«ENDIF»
+			
+			// BEGIN tests for Sum Fields
+			«IF entity.hasSumFields»
+			«entity.generateSumFieldTests»
+			«ENDIF»
+			// END tests for Sum Fields
+			
+			// BEGIN tests for Sum Fields
+			«IF !ruleMakeCopies.isEmpty»
+			«ruleMakeCopies.generateRuleMakeCopiesTests»
+			«ENDIF»
+			// END tests for Sum Fields
 			
 			// BEGIN TESTS DEPENDENCIES
 			«dependenciesSource»
@@ -233,6 +249,110 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«generateAssertThatPageResult(1, resultSize, resultSize)»
 			
+		}
+		'''
+	}
+	
+	def CharSequence generateSumFieldTests(Entity entity) {
+		
+		val sb = new StringBuilder
+		
+		sb.append(entity.generateSumFieldTest1)
+		
+		'''
+		«sb.toString»
+		'''
+	}
+	
+	def CharSequence generateRuleMakeCopiesTests(Iterable<Rule> ruleMakeCopies) {
+		
+		'''
+		«ruleMakeCopies.map[generateRuleMakeCopiesTest].join»
+		'''
+	}
+	
+	def CharSequence generateRuleMakeCopiesTest(Rule rule) {
+		
+		val actionName = rule.getRuleActionMakeCopiesName.toString
+		val entity = (rule.owner as Entity)
+		
+		val entityName = entity.toEntityName
+		
+		val referenceField = rule.getRuleMakeCopiesReferenceField
+		val repositoryVar = entity.toRepositoryName.toFirstLower
+		
+		val numberOfCopies1 = 1;
+		val numberOfCopies11 = 11;
+		
+		'''
+		
+		@Test
+		public void test«actionName.toFirstUpper»_«numberOfCopies1»Copy() {
+			«entityName» baseEntity = «entity.generateNewEntityRecord»;
+			
+			«rule.generateAndSetEntityMakeCopies(/*numberOfCopies=*/numberOfCopies1, /*referenceFieldInterval=*/30)»
+			
+			«rule.generateCallActionEntityMakeCopies»
+			
+			«rule.generateEntityMakeCopiesExpected(numberOfCopies1)»
+			
+			List<«entityName»> actual = «repositoryVar».findAll();
+			
+			«referenceField.generateEntityListByField('actual')»
+			«referenceField.generateEntityListByField('copies')»
+			
+			«generateAssertThatListIsEqual('actual', 'copies', /*size=*/numberOfCopies1 + 1)»
+			
+		}
+		
+		@Test
+		public void test«actionName.toFirstUpper»_«numberOfCopies11»Copies() {
+			«entityName» baseEntity = «entity.generateNewEntityRecord»;
+						
+			«rule.generateAndSetEntityMakeCopies(/*numberOfCopies=*/numberOfCopies11, /*referenceFieldInterval=*/30)»
+			
+			«rule.generateCallActionEntityMakeCopies»
+			
+			«rule.generateEntityMakeCopiesExpected(numberOfCopies11)»
+			
+			List<«entityName»> actual = «repositoryVar».findAll();
+			
+			«referenceField.generateEntityListByField('actual')»
+			«referenceField.generateEntityListByField('copies')»
+			
+			«generateAssertThatListIsEqual('actual', 'copies', /*size=*/numberOfCopies11 + 1)»
+		}
+		'''
+		
+	}
+	
+	def CharSequence generateSumFieldTest1(Entity entity) {
+		
+		val sumFieldsName = entity.toEntitySumFieldsName
+		val getEntitySumFields = 'get' + sumFieldsName
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		
+		val size = 2;
+		val resultSize = 2;
+		
+		'''
+		
+		@Test
+		public void test«getEntitySumFields.toFirstUpper»() {
+			«generateCallResetNextDate»
+			
+			«entity.generateInicializeCreateDataForEntity(size)»
+			
+			«entity.generateNewEntityListFilterVar»
+			
+			«entity.generateGetRandomItemsOf(resultSize)»
+			
+			«sumFieldsName» expected = new «sumFieldsName»();
+			«entity.sumFieldSlots.map[generateSumFieldForTest].join»
+			
+			«sumFieldsName» actual = «entityServiceVar».«getEntitySumFields»(listFilter);
+			
+			«buildAssertThatIsEqualToComparingFieldByField»
 		}
 		'''
 	}

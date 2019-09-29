@@ -20,6 +20,8 @@ import java.util.Random
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.model.Rule
 
 class TestUtils {
 	
@@ -46,6 +48,22 @@ class TestUtils {
 	
 	def static CharSequence buildAssertThatActualIsNotNull() {
 		ACTUAL.buildAssertThatIsNotNull
+	}
+	
+	def static CharSequence buildAssertThatActualIsEqualToExpected() {
+		'''
+		assertThat(actual).isEqualTo(expected);
+		'''
+	}
+	
+	def static CharSequence buildAssertThatIsEqualToComparingFieldByField() {
+		'actual'.buildAssertThatIsEqualToComparingFieldByField('expected')
+	}
+	
+	def static CharSequence buildAssertThatIsEqualToComparingFieldByField(String actual, String expected) {
+		'''
+		assertThat(«actual»).isEqualToComparingFieldByField(«expected»);
+		'''
 	}
 	
 	def static CharSequence buildAssertThatIsEqualTo(String actual, String expected) {
@@ -827,13 +845,20 @@ class TestUtils {
 		final int «LAST_RECORD_VAR» = «lastRecord»;
 		List<«entityName»> «TEST_DATA» = new ArrayList<>();
 		for (int i = «FIRST_RECORD_VAR»; i <= «LAST_RECORD_VAR»; i++) {
-			«TEST_DATA».add(new«entityName»());
+			«TEST_DATA».add(«entity.generateNewEntityRecord»);
 		}
 		
 		// Check if «lastRecord» records of «entityName» was generated.
 		long «COUNT_VAR» = «entity.toRepositoryName.toFirstLower».count();
 		«COUNT_VAR.buildAssertThatIsEqualTo(LAST_RECORD_VAR)»
 		'''
+	}
+	
+	def static String generateNewEntityRecord(Entity entity) {
+		val entityName = entity.toEntityName
+		
+		val result = 'new' + entityName + '()'
+		result
 	}
 	
 	def static CharSequence generateMockEventPublisherField(Entity entity) {
@@ -1076,6 +1101,104 @@ class TestUtils {
 			.containsExactlyInAnyOrderElementsOf(«firstAutocompleteKeySlot.fieldName»ListFilter);
 		}
 		
+		'''
+	}
+	
+	def static generateSumFieldForTest(Slot slot) {
+		val sumName = slot.sumFieldName
+		val sumNameUp = sumName.toFirstUpper
+		val entity = slot.ownerEntity
+		entity.addImport('import java.math.BigDecimal;')
+		
+		'''
+		
+		BigDecimal «sumName» = filterTestData.stream().map(it -> it.«slot.buildMethodGet»).reduce(BigDecimal.ZERO, BigDecimal::add);
+		expected.set«sumNameUp»(«sumName»);
+		'''
+	}
+	
+	def static CharSequence generateAndSetEntityMakeCopies(Rule rule, int numberOfCopies, int referenceFieldInterval) {
+		val entity = (rule.owner as Entity)
+		
+		val makeCopiesClassName = entity.toEntityMakeCopiesName
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		val grouperField = rule.ruleMakeCopiesGrouperSlot
+		
+		'''
+		«makeCopiesClassName» «makeCopiesNameVar» = new «makeCopiesClassName»();
+		«makeCopiesNameVar».setId(baseEntity.«entity.id.buildMethodGet»);
+		«makeCopiesNameVar».setAgrupador(baseEntity.«grouperField.buildMethodGet»);
+		«makeCopiesNameVar».setNumberOfCopies(«numberOfCopies»L);
+		«makeCopiesNameVar».setReferenceFieldInterval(«referenceFieldInterval»L);
+		'''
+	}
+	
+	def static CharSequence generateEntityMakeCopiesExpected(Rule rule, int size) {
+		val entityVar = 'baseEntity'
+		val entity = (rule.owner as Entity)
+		val referenceField = rule.getRuleMakeCopiesReferenceField
+		val entityName = entity.toEntityName
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		
+		entity.addImport('import java.time.LocalDate;')
+		entity.addImport('import java.time.temporal.ChronoUnit;')
+		
+		'''
+		// Mount expected
+		LocalDate lastDate = «entityVar».«referenceField.buildMethodGet»;
+		List<«entityName»> copies = new ArrayList<>(«size + 1»);
+		long interval = «makeCopiesNameVar».getReferenceFieldInterval();
+		int fixedDay = lastDate.getDayOfMonth();
+		int fixedDayCopy = fixedDay;
+		for (int i = 0; i < «makeCopiesNameVar».getNumberOfCopies(); i++) {
+			«entityName» copiedEntity = «entityVar».clone();
+			copies.add(copiedEntity);
+			copiedEntity.«entity.id.buildMethodSet('null')»;
+			lastDate = lastDate.plus(interval, ChronoUnit.DAYS);
+			if (interval == 30) {
+				int length = lastDate.lengthOfMonth();
+				while (fixedDay > length) {
+				    fixedDay--;
+				}
+				lastDate = lastDate.withDayOfMonth(fixedDay);
+				fixedDay = fixedDayCopy;
+			}
+			copiedEntity.«referenceField.buildMethodSet('lastDate')»;
+		}
+		
+		copies.add(«entityVar»);
+		'''
+	}
+	
+	def static generateEntityListByField(Slot slot, String listToSortVar) {
+		val entity = slot.ownerEntity
+		entity.addImport('import java.util.Comparator;')
+		
+		'''
+		«listToSortVar».sort(Comparator.comparing(«slot.buildLambdaGetMethodForEntity»));
+		'''
+	}
+	
+	def static CharSequence generateCallActionEntityMakeCopies(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val entityServiceVar = entity.toServiceName.toFirstLower
+		val actionName = rule.getRuleActionMakeCopiesName.toString
+		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
+		
+		'''
+		«entityServiceVar».«actionName»(«makeCopiesNameVar»);
+		'''
+		
+	}
+	
+	def static CharSequence generateAssertThatListIsEqual(String actualVar, String expectedVar, int size) {
+		'''
+		assertThat(«actualVar»).hasSize(«size»);
+		assertThat(«expectedVar»).hasSize(«size»);
+		
+		for (int i = 0; i < «actualVar».size(); i++) {
+			assertThat(«actualVar».get(i)).isEqualToIgnoringGivenFields(«expectedVar».get(i), IGNORED_FIELDS);
+		}
 		'''
 	}
 	

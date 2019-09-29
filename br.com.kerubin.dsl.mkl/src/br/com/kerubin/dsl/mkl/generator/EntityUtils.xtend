@@ -1119,6 +1119,12 @@ class EntityUtils {
 		slot.name.toFirstLower
 	}
 	
+	def static buildLambdaGetMethodForEntity(Slot slot) {
+		val entity = slot.ownerEntity
+		val result = entity.toEntityName.toLambdaGetMethod(slot)
+		result
+	}
+	
 	def static toLambdaGetMethod(Slot slot) {
 		val entity = slot.ownerEntity
 		
