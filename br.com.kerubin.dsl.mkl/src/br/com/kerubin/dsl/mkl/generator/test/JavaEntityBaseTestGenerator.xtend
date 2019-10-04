@@ -39,6 +39,9 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		imports.add('import java.util.Random;')
 		imports.add('import org.apache.commons.lang3.RandomStringUtils;')
 		
+		imports.add('import javax.inject.Inject;')
+		imports.add('import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;')
+		
 		val package = '''
 		package «service.servicePackage»;
 		
@@ -54,6 +57,9 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 			«ENDIF»
 			«generateFieldLastDate»
 			
+			@Inject
+			protected TestEntityManager em;
+			
 			«imports.generateTestConfiguration»
 			«service.generateTestVisitorInjectAndSet»
 			«generateMethodGetNextDate»
@@ -64,6 +70,12 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 			
 			«generateMethodGetRandomItemsOf»
 			
+			«IF service.isEnableCustomTestConfig»
+						
+			public TestEntityManager getEm() {
+				return em;
+			}
+			«ENDIF»
 		
 		}
 		'''

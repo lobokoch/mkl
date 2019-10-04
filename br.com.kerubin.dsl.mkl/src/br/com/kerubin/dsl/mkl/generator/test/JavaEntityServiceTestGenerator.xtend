@@ -120,7 +120,6 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			// BEGIN TESTS DEPENDENCIES
 			«dependenciesSource»
 			// END TESTS DEPENDENCIES
-			
 		
 		}
 		'''
@@ -525,7 +524,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush()»
 			«entity.generatePublishedEventVerify(EVENT_CREATED)»
-			«entity.generateTestVisitorEvent(testMethodName, false)»
+			«entity.generateTestVisitorEvent(testMethodName, entity.getEntityFieldName, false)»
 			«entity.buildEntityToDTOAsActual»
 			
 			«IF !rulesFormOnCreate.empty»
@@ -561,7 +560,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush»
 			«entity.generatePublishedEventVerify(EVENT_CREATED)»
-			«entity.generateTestVisitorEvent(testMethodName, false)»
+			«entity.generateTestVisitorEvent(testMethodName, entity.getEntityFieldName, false)»
 			«entity.buildEntityToDTOAsActual»
 			
 			«IF !rulesFormOnCreate.empty»
@@ -602,7 +601,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
 			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
-			«entity.generateTestVisitorEvent(testMethodName, false)»
+			«entity.generateTestVisitorEvent(testMethodName, entity.getEntityFieldName, false)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -638,7 +637,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
 			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
-			«entity.generateTestVisitorEvent(testMethodName, false)»
+			«entity.generateTestVisitorEvent(testMethodName, entity.getEntityFieldName, false)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -692,11 +691,8 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	
 	def CharSequence generateFields(Entity entity, List<Slot> fkSlotsDistinct) {
 		entity.addImport('import javax.inject.Inject;')
-		entity.addImport('import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;')
 		
 		'''
-		@Inject
-		protected TestEntityManager em;
 		
 		@Inject
 		protected «entity.toServiceName» «entity.toServiceName.toFirstLower»;
