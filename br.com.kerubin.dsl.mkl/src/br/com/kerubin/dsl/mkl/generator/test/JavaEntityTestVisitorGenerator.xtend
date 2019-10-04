@@ -17,7 +17,9 @@ class JavaEntityTestVisitorGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	override generate() {
-		generateFiles
+		if (service.isEnableCustomTestConfig) {
+			generateFiles
+		}
 	}
 	
 	def generateFiles() {
