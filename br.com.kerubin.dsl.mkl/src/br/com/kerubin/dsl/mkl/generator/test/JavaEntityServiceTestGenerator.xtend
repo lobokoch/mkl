@@ -12,6 +12,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.test.TestUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.JavaEntityServiceGenerator.*
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.Rule
 
@@ -225,10 +226,14 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val size = 33;
 		val resultSize = 7;
 		
+		val testMethodName = '''testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»'''
+		
+		val subject = firstListFilterSlot.fieldName + 'ListFilter'
+		
 		'''
 		
 		@Test
-		public void testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 			
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -240,8 +245,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«firstListFilterSlot.generateAndSetListFilterToSlot»
 			
 			«generatePageableWithoutSort(0, size)»
-			
+			«entity.generateTestVisitorEvent(testMethodName, subject, true)»
 			«entity.generateCallServiceList»
+			«entity.generateTestVisitorEvent(testMethodName, 'page', false)»
 			
 			«entity.generatePageContentMapToPageResult»
 			
@@ -284,15 +290,18 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val numberOfCopies1 = 1;
 		val numberOfCopies11 = 11;
 		
+		val testMethodName = '''test«actionName.toFirstUpper»_«numberOfCopies1»Copy'''
+		
 		'''
 		
 		@Test
-		public void test«actionName.toFirstUpper»_«numberOfCopies1»Copy() {
+		public void «testMethodName»() {
 			«entityName» baseEntity = «entity.generateNewEntityRecord»;
 			
 			«rule.generateAndSetEntityMakeCopies(/*numberOfCopies=*/numberOfCopies1, /*referenceFieldInterval=*/30)»
-			
+			«entity.generateTestVisitorEvent(testMethodName, true)»
 			«rule.generateCallActionEntityMakeCopies»
+			«entity.generateTestVisitorEvent(testMethodName, false)»
 			
 			«rule.generateEntityMakeCopiesExpected(numberOfCopies1)»
 			
@@ -335,10 +344,12 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val size = 2;
 		val resultSize = 2;
 		
+		val testMethodName = '''test«getEntitySumFields.toFirstUpper»'''
+		
 		'''
 		
 		@Test
-		public void test«getEntitySumFields.toFirstUpper»() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 			
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -349,8 +360,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«sumFieldsName» expected = new «sumFieldsName»();
 			«entity.sumFieldSlots.map[generateSumFieldForTest].join»
-			
+			«entity.generateTestVisitorEvent(testMethodName, 'listFilter', true)»
 			«sumFieldsName» actual = «entityServiceVar».«getEntitySumFields»(listFilter);
+			«entity.generateTestVisitorEvent(testMethodName, 'actual', false)»
 			
 			«buildAssertThatIsEqualToComparingFieldByField»
 		}
@@ -364,10 +376,14 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val firstListFilterSlot = entity.slots.filter[it.isListFilterMany].head
 		val size = 33;
 		
+		val testMethodName = '''testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»WithoutResults'''
+		
+		val subject = firstListFilterSlot.fieldName + 'ListFilter'
+		
 		'''
 		
 		@Test
-		public void testList_FilteringBy«firstListFilterSlot.fieldName.toFirstUpper»WithoutResults() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 						
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -377,8 +393,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«firstListFilterSlot.generateAndSetListFilterToSlotWithFakeData»
 			
 			«generatePageableWithoutSort(0, size)»
-			
+			«entity.generateTestVisitorEvent(testMethodName, subject, true)»
 			«entity.generateCallServiceList»
+			«entity.generateTestVisitorEvent(testMethodName, 'page', false)»
 			
 			«entity.generatePageContentMapToPageResult»
 			
@@ -392,10 +409,14 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val size = 10;
 		val sortSlot = entity.slots.filter[it.hasSort].head
 		
+		val testMethodName = '''testList_SortingBy«sortSlot.fieldName.toFirstUpper»'''
+		
+		val subject = 'pageable'
+		
 		'''
 		
 		@Test
-		public void testList_SortingBy«sortSlot.fieldName.toFirstUpper»() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 			
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -404,7 +425,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			
 			«generatePageableAsc(0, size, sortSlot)»
 			
+			«entity.generateTestVisitorEvent(testMethodName, subject, true)»
 			«entity.generateCallServiceList»
+			«entity.generateTestVisitorEvent(testMethodName, 'page', false)»
 			
 			«entity.generatePageContentMapToPageResult»
 			
@@ -425,17 +448,20 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val varName = entity.fieldName
 		val entityName = entity.toEntityName
 		
+		val testMethodName = 'testRead1'
+		
 		'''
 		
 		@Test
-		public void testRead1() {
+		public void «testMethodName»() {
 			«entityName» expected«entityName» = new«entityName»();
 			«entity.id.toJavaType» id = expected«entityName».«entity.id.getMethod2»;
 			«name» expected = «varName»DTOConverter.convertEntityToDto(expected«entityName»);
-			
 			«entityName» read«entityName» = «varName»Service.read(id);
 			«name» actual = «varName»DTOConverter.convertEntityToDto(read«entityName»);
 			
+			«entity.generateTestVisitorEvent(testMethodName, 'expected', true)»
+			«entity.generateTestVisitorEvent(testMethodName, 'actual', false)»
 			assertThat(actual).isEqualToComparingFieldByField(expected);
 			
 		}
@@ -448,10 +474,12 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val expected = 'expected'
 		val idVar = 'id'
 		
+		val testMethodName = 'testDelete1'
+		
 		'''
 		
 		@Test
-		public void testDelete1() {
+		public void «testMethodName»() {
 			«entityName» «expected» = new«entityName»();
 			«entity.id.toJavaType» «idVar» = «expected».«entity.id.getMethod2»;
 			
@@ -460,15 +488,16 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«ENDIF»
 			
 			«entity.generateEntityManagerFind»
+			«entity.generateTestVisitorEvent(testMethodName, 'expected', true)»
 			«expected.buildAssertThatIsNotNull»
 			«IF entity.hasPublishEntityEvents»
 			«entity.generatePublishedEventDoAnswer(EVENT_DELETED)»
 			«ENDIF»
 			«entity.generateServiceDelete»
-			
 			«entity.generatePublishedEventVerify(EVENT_DELETED)»
 			
 			«entity.generateEntityManagerFind»
+			«entity.generateTestVisitorEvent(testMethodName, 'expected', false)»
 			«expected.buildAssertThatIsNull»
 		}
 		'''
@@ -477,23 +506,33 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateCreateTest1(Entity entity) {
 		
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
+		val rulesFormOnCreate = entity.rulesFormOnCreate
+		val imports = entity.imports
+		
+		val testMethodName = 'testCreateWithAllFields' 
 		
 		'''
 		
 		@Test
-		public void testCreateWithAllFields() throws Exception {
+		public void «testMethodName»() throws Exception {
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersForDTO»
 			«IF entity.hasPublishEntityEvents»
 			«entity.generatePublishedEventDoAnswer(EVENT_CREATED)»
 			«ENDIF»
+			«entity.generateTestVisitorEvent(testMethodName, true)»
 			«entity.buildServiceCreateFromDTO»
-			«buildEntityManagerFlush»
-			
+			«buildEntityManagerFlush()»
 			«entity.generatePublishedEventVerify(EVENT_CREATED)»
-			
+			«entity.generateTestVisitorEvent(testMethodName, false)»
 			«entity.buildEntityToDTOAsActual»
+			
+			«IF !rulesFormOnCreate.empty»
+			// Begin applying RuleFormOnCreate 
+			«rulesFormOnCreate.map[generateRuleFormOnCreate(imports, 'caixa')].join»
+			// End applying RuleFormOnCreate 
+			«ENDIF»
 			
 			«entity.buildEntityCheckActualWithDTO»
 		}
@@ -503,23 +542,33 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	def CharSequence generateCreateTest2(Entity entity) {
 		
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
+		val rulesFormOnCreate = entity.rulesFormOnCreate
+		val imports = entity.imports
+		
+		val testMethodName = 'testCreateWithOnlyRecairedFields'
 		
 		'''
 		
 		@Test
-		public void testCreateWithOnlyRecairedFields() throws Exception {
+		public void «testMethodName»() throws Exception {
 			«entity.buildNewEntityDTOVar»
 			
 			«entity.generateSettersOnlyRequiredSlotsForDTO»
 			«IF entity.hasPublishEntityEvents»
 			«entity.generatePublishedEventDoAnswer(EVENT_CREATED)»
 			«ENDIF»
+			«entity.generateTestVisitorEvent(testMethodName, true)»
 			«entity.buildServiceCreateFromDTO»
 			«buildEntityManagerFlush»
-			
 			«entity.generatePublishedEventVerify(EVENT_CREATED)»
-			
+			«entity.generateTestVisitorEvent(testMethodName, false)»
 			«entity.buildEntityToDTOAsActual»
+			
+			«IF !rulesFormOnCreate.empty»
+			// Begin applying RuleFormOnCreate 
+			«rulesFormOnCreate.map[generateRuleFormOnCreate(imports, 'caixa')].join»
+			// End applying RuleFormOnCreate 
+			«ENDIF»
 			
 			«entity.buildEntityCheckActualWithDTOOnlyRequiredSlots»
 		}
@@ -533,10 +582,12 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
 		
+		val testMethodName = 'testUpdateWithOnlyRecairedFields'
+		
 		'''
 		
 		@Test
-		public void testUpdateWithOnlyRecairedFields() throws Exception {
+		public void «testMethodName»() throws Exception {
 			«entity.buildNewOldEntityVar»
 			«entity.buildGetEntityIdVarFromOldVar»
 					
@@ -547,10 +598,11 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«IF entity.hasPublishEntityEvents»
 			«entity.generatePublishedEventDoAnswer(EVENT_UPDATED)»
 			«ENDIF»
+			«entity.generateTestVisitorEvent(testMethodName, true)»
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
-			
 			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
+			«entity.generateTestVisitorEvent(testMethodName, false)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -566,10 +618,12 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		entity.slots.filter[it.isEntity].forEach[it.asEntity.resolveEntityImports(entity)]
 		
+		val testMethodName = 'testUpdateWithAllFields'
+		
 		'''
 		
 		@Test
-		public void testUpdateWithAllFields() throws Exception {
+		public void «testMethodName»() throws Exception {
 			«entity.buildNewOldEntityVar»
 			«entity.buildGetEntityIdVarFromOldVar»
 					
@@ -580,10 +634,11 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«IF entity.hasPublishEntityEvents»
 			«entity.generatePublishedEventDoAnswer(EVENT_UPDATED)»
 			«ENDIF»
+			«entity.generateTestVisitorEvent(testMethodName, true)»
 			«entity.buildServiceUpdateFromDTO»
 			«buildEntityManagerFlush»
-			
 			«entity.generatePublishedEventVerify(EVENT_UPDATED)»
+			«entity.generateTestVisitorEvent(testMethodName, false)»
 			
 			«entity.buildEntityToDTOAsActual»
 			
@@ -611,9 +666,13 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val size = 33;
 		val resultSize = 1;
 		
+		val testMethodName = 'testAutoComplete'
+		val fieldName = firstAutocompleteKeySlot.fieldName
+		val subject = fieldName + 'ListFilter'
+		
 		'''
 		@Test
-		public void testAutoComplete() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 						
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -621,8 +680,9 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«entity.generateGetRandomItemsOf(resultSize)»
 			
 			«firstAutocompleteKeySlot.generateListFilterToSlot»
-			
+			«entity.generateTestVisitorEvent(testMethodName, subject, true)»
 			«firstAutocompleteKeySlot.generateCallAutoComplete»
+			«entity.generateTestVisitorEvent(testMethodName, 'result', false)»
 			
 			«firstAutocompleteKeySlot.generateAssertThatAutoComplete(resultSize)»
 		}

@@ -8,6 +8,7 @@ import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestResourcesGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestApplicationGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestRepositoryGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityBaseTestGenerator
+import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestVisitorGenerator
 
 class JavaGenerator extends BaseGenerator {
 	
@@ -60,6 +61,7 @@ class JavaGenerator extends BaseGenerator {
 			generators.add(new JavaEntityServiceTestGenerator(this))
 			generators.add(new JavaEntityTestRepositoryGenerator(this))
 			generators.add(new JavaEntityTestResourcesGenerator(this))
+			generators.add(new JavaEntityTestVisitorGenerator(this))
 		}
 		
 		generators.forEach[it.generate]	 

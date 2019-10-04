@@ -487,6 +487,7 @@ abstract class Element extends Named {
 
 class Service extends Element {
 	String label
+	boolean enableCustomTestConfig
 	
 	container DomainModel domainModel opposite service
 	op String domain() {
@@ -1160,7 +1161,7 @@ class Enumeration extends ServiceObject {
 			}
 		}
 		
-		return -1
+		return 1
 	}
 }
 

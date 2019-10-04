@@ -16,6 +16,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 	
 	public static val ENTITY_AUDITING_FIELDS = #[createdBy, createdDate, lastModifiedBy, lastModifiedDate];
 	
+	
 	Service service
 	
 	override void augmentService(Service service) {
@@ -109,7 +110,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 	
 	def void boostVersion(Entity entity) {
 		val slot = ModelFactory.eINSTANCE.createSlot
-		slot.name = 'version'
+		slot.name = VERSION_SLOT
 		slot._alias = entity.entityVersion.columnName
 		slot.label = 'Versão'
 		slot.implicit = true

@@ -48,11 +48,14 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		
 		«imports.generateTestAnnotations»
 		public class «service.toServiceEntityBaseTestClassName» {
+			«IF service.isEnableCustomTestConfig»
 			
+			private static TestVisitor customTestVisitor;
+			«ENDIF»
 			«generateFieldLastDate»
 			
 			«imports.generateTestConfiguration»
-			
+			«service.generateTestVisitorInjectAndSet»
 			«generateMethodGetNextDate»
 			
 			«generateMethodResetNextDate»
@@ -84,6 +87,10 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		@TestPropertySource(locations = "classpath:default-test.properties")
 		@DataJpaTest
 		@EnableJpaAuditing(auditorAwareRef="auditorAware")
+		«IF service.isEnableCustomTestConfig»
+		// A class with name CustomTestConfig must be manually created by the user.
+		@Import(CustomTestConfig.class)
+		«ENDIF»
 		'''
 		
 	}
@@ -93,6 +100,11 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 		imports.add('import org.springframework.data.domain.AuditorAware;')
 		imports.add('import br.com.kerubin.api.database.entity.AuditorAwareImpl;')
 		imports.add('import org.springframework.context.annotation.Bean;')
+		
+		if (service.isEnableCustomTestConfig) {
+			imports.add('import org.springframework.context.annotation.Import;')
+			imports.add('import javax.inject.Inject;')
+		}
 		
 		'''
 		// BEGIN base configurations
@@ -108,7 +120,17 @@ class JavaEntityBaseTestGenerator extends GeneratorExecutor implements IGenerato
 			public br.com.kerubin.api.servicecore.mapper.ObjectMapper objectMapper() {
 				return new br.com.kerubin.api.servicecore.mapper.ObjectMapper();
 			}
+			«IF service.isEnableCustomTestConfig»
 			
+			@Bean
+			public «service.toServiceTestVisitorInterfaceClassName» testVisitor() {
+				if (customTestVisitor != null) {
+					return customTestVisitor;
+				}
+				
+				return new «service.toServiceTestVisitorInterfaceDafaultImplClassName»();
+			}
+			«ENDIF»
 		}
 		// END base configurations
 		

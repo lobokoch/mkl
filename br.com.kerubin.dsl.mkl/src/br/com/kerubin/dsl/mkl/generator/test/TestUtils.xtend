@@ -40,6 +40,8 @@ class TestUtils {
 	public static val EVENT_UPDATED = 'updated'
 	public static val EVENT_DELETED = 'deleted'
 	
+	public static val TEST_VISITOR_INTERFACE_NAME = 'TestVisitor'
+	
 	def static buildEntityManagerFlush() {
 		'''
 		em.flush();
@@ -122,7 +124,7 @@ class TestUtils {
 	def static CharSequence getIgnoredFields(Entity entity) {
 		val auditinFields = ServiceBoosterImpl.ENTITY_AUDITING_FIELDS.map['"' + it + '"'].join(', ')
 		
-		'''«entity.getIdAsString»«IF entity.isAuditing», «auditinFields»«ENDIF»'''
+		'''«entity.getIdAsString»«IF entity.isAuditing», «auditinFields»«ENDIF»«IF entity.hasEntityVersion», "version"«ENDIF»'''
 	}
 	
 	def static CharSequence buildAssertThatEntityAsVarIsEqualToIgnoringGivenFields(Entity entity, String varName) {
@@ -210,6 +212,26 @@ class TestUtils {
 		'''
 	}
 	
+	def static CharSequence generateTestVisitorEvent(Entity entity, String testMethodName, boolean isBefore) {
+		val subject = entity.fieldName
+		entity.generateTestVisitorEvent(testMethodName, subject, isBefore)
+	}
+	
+	def static CharSequence generateTestVisitorEvent(Entity entity, String testMethodName, String subject, boolean isBefore) {
+		val service = entity.service
+		
+		if (!service.isEnableCustomTestConfig) {
+			return ''
+		}
+		
+		val operation = if (isBefore) 'BEFORE' else 'AFTER'
+		
+		'''
+		
+		testVisitor.visit(this, "«testMethodName»", «subject», «service.toServiceTestVisitorOperationEnumName».«operation»);
+		'''
+	}
+	
 	def static CharSequence buildServiceUpdateFromDTO(Entity entity) {
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
@@ -293,7 +315,7 @@ class TestUtils {
 		protected «name» new«name»() {
 			«entity.buildNewEntityWithVar»
 			
-			«slots.filter[!it.isAuditingSlot].map[generateSetterForTest].join»
+			«slots.filter[!it.isAuditingSlot && !it.isVersionSlot].map[generateSetterForTest].join»
 			
 			«fieldName» = em.persistAndFlush(«fieldName»);
 			
@@ -324,8 +346,14 @@ class TestUtils {
 		val entity = slot.ownerEntity
 		val slotName = slot.name.toFirstUpper
 		
+		var setParam = '''«entity.entityFieldName».get«slotName»()'''
+		if (slot.isEntity) {
+			val slotAsEntity = slot.asEntity
+			setParam = '''new«slotAsEntity.toDtoName»LookupResult(«setParam»)'''
+		}
+		
 		'''
-		«entity.fieldName».set«slotName»(«entity.entityFieldName».get«slotName»());
+		«entity.fieldName».set«slotName»(«setParam»);
 		'''
 	}
 	
@@ -356,7 +384,7 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateSettersForDTO(Entity entity, List<Slot> excludedSlots) {
-		var slots = entity.slots.filter[!it.isAuditingSlot]
+		var slots = entity.slots.filter[!it.isAuditingSlot && !it.isVersionSlot]
 		
 		if (excludedSlots !== null) {
 			slots = slots.filter[ slot | !excludedSlots.exists[it === slot]]
@@ -430,7 +458,7 @@ class TestUtils {
 			if (slot.isEnum) {
 				val asEnum = slot.asEnum
 				if (asEnum.hasDefault) {
-					val result = asEnum.items.get(asEnum.defaultIndex).name
+					val result = asEnum.items.get(asEnum.defaultIndex - 1).name
 					return asEnum.name + '.' + result.toString
 				} else {
 					val ran = new Random();
@@ -481,6 +509,11 @@ class TestUtils {
 		entity.resolveEntityDTOLookupResultImports
 		entity.resolveEntityEnumImports
 		
+		val service = entity.service
+		if (service.isEnableCustomTestConfig) {
+			entity.addImport('''import «service.servicePackage».«service.toServiceTestVisitorOperationEnumName»;''')
+		}
+		
 	}
 	
 	def static void resolveSlotsEntityImports(Entity entity) {
@@ -512,6 +545,18 @@ class TestUtils {
 	
 	def static String toServiceEntityBaseTestClassName(Service service) {
 		service.domain.toCamelCase + service.name.toCamelCase + "BaseEntityTest"
+	}
+	
+	def static String toServiceTestVisitorInterfaceClassName(Service service) {
+		'TestVisitor'
+	}
+	
+	def static String toServiceTestVisitorInterfaceDafaultImplClassName(Service service) {
+		'TestVisitorDefaultImpl'
+	}
+	
+	def static String toServiceTestVisitorOperationEnumName(Service service) {
+		'TestOperation'
 	}
 	
 	def static String toServiceEntityBaseTestConfigClassName(Service service) {
@@ -580,9 +625,19 @@ class TestUtils {
 		entity.addImport('import java.util.stream.Collectors;')
 		entity.addImport('import java.util.List;')
 		
+		var slotType = slot.toJavaType
+		var mapExpression = entityName + '::get' + fieldUpper
+		if (slot.isEntity) {
+			val slotAsEntity = slot.asEntity
+			val firstAutocompleteKeySlot = slotAsEntity.slots.filter[it.isAutoCompleteKey].head
+			slotType = firstAutocompleteKeySlot.toJavaType
+			
+			mapExpression = '''it -> it.«slot.buildMethodGet».«firstAutocompleteKeySlot.buildMethodGet»'''
+		}
+		
 		'''
 		// Extracts a list with only «entityName».«fieldName» field and configure this list as a filter.
-		List<«slot.toJavaType»> «fieldName»ListFilter = filterTestData.stream().map(«entityName»::get«fieldUpper»).collect(Collectors.toList());
+		List<«slotType»> «fieldName»ListFilter = filterTestData.stream().map(«mapExpression»).collect(Collectors.toList());
 		«IF withSet»
 		listFilter.set«fieldUpper»(«fieldName»ListFilter);
 		«ENDIF»
@@ -970,10 +1025,24 @@ class TestUtils {
 	def static CharSequence generateAssertThatAutoComplete(Slot slot, int resultSize, String autoCompleteClassName) {
 		val fieldName = slot.fieldName
 		
+		//val entity = slot.ownerEntity
+		//val fieldUpper = fieldName.toFirstUpper
+		//val entityName = entity.toEntityName
+		
+		var slotType = slot.toJavaType
+		var mapExpression = autoCompleteClassName + '::get' + fieldName.toFirstUpper
+		if (slot.isEntity) {
+			val slotAsEntity = slot.asEntity
+			val firstAutocompleteKeySlot = slotAsEntity.slots.filter[it.isAutoCompleteKey].head
+			slotType = firstAutocompleteKeySlot.toJavaType
+			
+			mapExpression = '''it -> it.«slot.buildMethodGet».«firstAutocompleteKeySlot.buildMethodGet»'''
+		}
+		
 		'''
 		// Assert «autoCompleteClassName» results.
 		assertThat(result).isNotNull().hasSize(«resultSize»)
-		.extracting(«autoCompleteClassName.toFirstUpper.toLambdaGetMethod(slot)»)
+		.extracting(«mapExpression»)
 		.containsExactlyInAnyOrderElementsOf(«fieldName»ListFilter);
 		'''
 	}
@@ -1026,11 +1095,14 @@ class TestUtils {
 		val size = 33;
 		val resultSize = 1;
 		
+		val testMethodName = '''test«autoComplateName.toFirstUpper»'''
+		
+		val subject = slot.fieldName + 'ListFilter'
 		
 		'''
 		
 		@Test
-		public void test«autoComplateName.toFirstUpper»() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 						
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -1038,9 +1110,9 @@ class TestUtils {
 			«entity.generateGetRandomItemsOf(resultSize)»
 			
 			«slot.generateListFilterToSlot»
-			
+			«entity.generateTestVisitorEvent(testMethodName, subject, true)»
 			«slot.generateCallAutoCompleteListFilter»
-			
+			«entity.generateTestVisitorEvent(testMethodName, 'result', false)»
 			«slot.generateAssertThatAutoCompleteListFilter(resultSize)»
 		}
 		
@@ -1076,10 +1148,20 @@ class TestUtils {
 		val resultSize = 1;
 		
 		
+		var extractingExpression = '''«entity.toAutoCompleteName»::get«firstAutocompleteKeySlot.name.toFirstUpper»'''
+		if (firstAutocompleteKeySlot.isEntity) {
+			val slotAsEntity = firstAutocompleteKeySlot.asEntity
+			val firstAutocompleteKeySlot2 = slotAsEntity.slots.filter[it.isAutoCompleteKey].head
+			
+			extractingExpression = '''it -> it.«firstAutocompleteKeySlot.buildMethodGet».«firstAutocompleteKeySlot2.buildMethodGet»'''
+		}
+		
+		val testMethodName = '''test«autoComplateName.toFirstUpper»'''
+		
 		'''
 		
 		@Test
-		public void test«autoComplateName.toFirstUpper»() {
+		public void «testMethodName»() {
 			«generateCallResetNextDate»
 						
 			«entity.generateInicializeCreateDataForEntity(size)»
@@ -1094,10 +1176,12 @@ class TestUtils {
 			«entityDTOName» «entityDTOVar» = null;
 			
 			«ENDIF»
+			«entity.generateTestVisitorEvent(testMethodName, 'query', true)»
 			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query«IF hasAutoCompleteWithOwnerParams», «entityDTOVar»«ENDIF»);
+			«entity.generateTestVisitorEvent(testMethodName, 'result', false)»
 			
 			assertThat(result).isNotNull().hasSize(«resultSize»)
-			.extracting(«entity.toAutoCompleteName»::get«firstAutocompleteKeySlot.name.toFirstUpper»)
+			.extracting(«extractingExpression»)
 			.containsExactlyInAnyOrderElementsOf(«firstAutocompleteKeySlot.fieldName»ListFilter);
 		}
 		
@@ -1199,6 +1283,24 @@ class TestUtils {
 		for (int i = 0; i < «actualVar».size(); i++) {
 			assertThat(«actualVar».get(i)).isEqualToIgnoringGivenFields(«expectedVar».get(i), IGNORED_FIELDS);
 		}
+		'''
+	}
+	
+	def static CharSequence generateTestVisitorInjectAndSet(Service service) {
+		
+		if (!service.isEnableCustomTestConfig) {
+			return ''
+		}
+		
+		'''
+		
+		@Inject
+		protected TestVisitor testVisitor;
+		
+		public static void setCustomTestVisitor(TestVisitor customTestVisitorImpl) {
+			customTestVisitor = customTestVisitorImpl;
+		}
+		
 		'''
 	}
 	

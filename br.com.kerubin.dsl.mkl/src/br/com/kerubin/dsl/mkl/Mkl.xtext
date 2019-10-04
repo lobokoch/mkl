@@ -11,9 +11,11 @@ DomainModel:
  ; 
 
 Service:
-	(disableGeneration=DisableServiceGeneration)?
-	
-	('@label' '(' label=STRING ')')?
+	(
+		(disableGeneration=DisableServiceGeneration)? &
+		('@label' '(' label=STRING ')')? & 
+		(enableCustomTestConfig ?= '@enableCustomTestConfig')?
+	)
 	'service' Name '{'
 		( 
 			(configuration=Configuration)? &
@@ -50,7 +52,7 @@ Configuration:
 		('flywayCore' '{' 'version' ':' flywayCoreVersion=STRING '}')? &
 		('buildHelperMavenPlugin' '{' 'version' ':' buildHelperMavenPluginVersion=STRING '}')? &
 		('aptMavenPlugin' '{' 'version' ':' aptMavenPluginVersion=STRING '}')? &
-		('templatingMavenPlugin' '{' 'version' ':' templatingMavenPluginVersion=STRING '}')?
+		('templatingMavenPlugin' '{' 'version' ':' templatingMavenPluginVersion=STRING '}')? 
 	)
 		
 	'}'

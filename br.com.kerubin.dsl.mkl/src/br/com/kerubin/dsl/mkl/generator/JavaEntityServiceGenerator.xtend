@@ -519,10 +519,14 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		'''
 	}
 	
-	def CharSequence generateRuleFormOnCreate(Rule rule, Set<String> imports) {
+	def static CharSequence generateRuleFormOnCreate(Rule rule, Set<String> imports) {
 		val entity = (rule.owner as Entity)
 		val entityVar = entity.toEntityName.toFirstLower
 		
+		rule.generateRuleFormOnCreate(imports, entityVar)
+	}
+	
+	def static CharSequence generateRuleFormOnCreate(Rule rule, Set<String> imports, String entityVar) {
 		var fieldValues = rule.apply.actionExpression.fieldValues
 		
 		'''

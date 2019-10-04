@@ -55,6 +55,7 @@ class EntityUtils {
 	public static val NAVBAR_SELECTOR_NAME = 'app-' + NAVBAR
 	public static val DELETED_FIELD_NAME = 'deleted'
 	public static val DELETED_FIELD_LABEL = 'inativo'
+	public static val VERSION_SLOT = 'version'
 	
 	public static val VALIDATION_MAP_IMPORTS = #{
 		'CpfOrCnpj' -> 'br.com.kerubin.api.servicecore.validator.constraint.CpfOrCnpj',
@@ -89,6 +90,11 @@ class EntityUtils {
 		} else {
 			false
 		}
+	}
+	
+	def static boolean isVersionSlot(Slot slot) {
+		val result = VERSION_SLOT == slot.name && slot.ownerEntity.hasEntityVersion
+		result
 	}
 	
 	def static generateEntityImports(Entity entity) {
