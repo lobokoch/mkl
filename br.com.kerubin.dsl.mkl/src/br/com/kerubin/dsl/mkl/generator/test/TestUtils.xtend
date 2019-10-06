@@ -245,7 +245,7 @@ class TestUtils {
 	}
 	
 	def static CharSequence buildNewEntityDTOVar(Entity entity) {
-		val name = entity.name
+		val name = entity.name.toFirstUpper
 		val fieldName = entity.fieldName
 		'''«name» «fieldName» = new «name»();'''
 	}
@@ -412,14 +412,48 @@ class TestUtils {
 		'''
 	}
 	
+	def static String generateRandomString(Slot slot) {
+		val cpfOrCnpj = #['CpfOrCnpj', 'CPF', 'CNPJ']
+		if (slot.hasValidations) {
+			if (slot.validations.exists[some | cpfOrCnpj.exists[it == some.name]]) {
+				return '''"92020472007"'''
+			} else if (slot.validations.exists[it.name == 'Email']) {
+				return '''"fortest@gmail.com"'''
+			} else if (slot.validations.exists[it.name == 'URL']) {
+				return '''"http://www.fortest.com"'''
+			}
+		}
+		
+		if (slot.isPassword) {
+			return '''"*******"'''
+		}
+		
+		'''«GENERATE_RANDOM_STRING»(«slot.length»)'''
+	}
+	
+	def static String generateRandomDate(Slot slot) {
+		val pastOrPresent = #['PastOrPresent', 'Past']
+		val futureOrPresent = #['FutureOrPresent', 'Future']
+		
+		if (slot.hasValidations) {
+			if (slot.validations.exists[some | pastOrPresent.exists[it == some.name]]) {
+				return '''java.time.LocalDate.now().minusDays(1)'''
+			} else if (slot.validations.exists[some | futureOrPresent.exists[it == some.name]]) {
+				return '''java.time.LocalDate.now().plusDays(1)'''
+			}
+		}
+		
+		'''«GET_NEXT_DATE»'''
+	}
+	
 	def static CharSequence generateRandomTestValueForDTO(Slot slot) {
 		val basicType = slot.basicType
 		if (basicType instanceof StringType) {
-			'''«GENERATE_RANDOM_STRING»(«slot.length»)'''
+			slot.generateRandomString
 		}
 		else if (basicType instanceof IntegerType) {
 			val ran = new Random();
-			ran.nextInt + ''
+			ran.nextLong + 'L'
 		}
 		else if (basicType instanceof SmallintType) {
 			val ran = new Random();
@@ -440,7 +474,7 @@ class TestUtils {
 			if (slot.hasDefaultValue) slot.defaultValue else ran.nextBoolean + ''
 		}
 		else if (basicType instanceof DateType) {
-			'''«GET_NEXT_DATE»'''
+			slot.generateRandomDate
 		}
 		else if (basicType instanceof TimeType) {
 			'''java.time.LocalTime.now()'''

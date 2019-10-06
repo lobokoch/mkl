@@ -11,6 +11,7 @@ import org.eclipse.xtend2.lib.StringConcatenation
 
 abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGeneratorExecutor {
 	
+	public boolean isTest = false;
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -310,7 +311,7 @@ abstract class JavaSQLGenerator  extends GeneratorExecutor implements IGenerator
 		val tableName = slot.ownerEntity.databaseName
 		val columnName = slot.databaseName
 		val expression = index.expression
-		val hasExpression = expression !== null && !expression.trim.isEmpty
+		val hasExpression = !isTest && (expression !== null && !expression.trim.isEmpty)
 		val isUnique = index.unique
 		
 		'''

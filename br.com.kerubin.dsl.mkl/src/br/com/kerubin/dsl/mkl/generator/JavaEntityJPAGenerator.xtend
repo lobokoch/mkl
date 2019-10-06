@@ -19,6 +19,8 @@ import br.com.kerubin.dsl.mkl.model.HibFilterDef
 import br.com.kerubin.dsl.mkl.model.HibParamDef
 import br.com.kerubin.dsl.mkl.model.HibFilters
 import br.com.kerubin.dsl.mkl.model.HibFilter
+import java.util.List
+import java.util.Collections
 
 class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -116,9 +118,11 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
-		// Bean Validations imports
-		slot.resolveBeanValidationImports
-		val validationAnnotations = slot.resolveBeanValidationAnnotations
+		var List<String> validationAnnotations = Collections.emptyList
+		if (!slot.isTransient) { // No apply bean validations on @Entity, only in DTO for validate inputs.
+			slot.resolveBeanValidationImports
+			validationAnnotations = slot.resolveBeanValidationAnnotations
+		}
 		
 		val isOneToManyWithMapsId = slot.isOneToOne && slot.isRelationRefers
 		if (slot.isEntity) {

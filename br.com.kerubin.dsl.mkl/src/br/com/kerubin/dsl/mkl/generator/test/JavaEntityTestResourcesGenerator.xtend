@@ -24,6 +24,8 @@ class JavaEntityTestResourcesGenerator extends GeneratorExecutor implements IGen
 	
 	def generateTestResourcesSQL() {
 		val javaPostgreSQLGenerator = new JavaPostgreSQLGenerator(baseGenerator)
+		javaPostgreSQLGenerator.isTest = true
+		
 		val basePakage = getServerTestResourceGenSourceFolder
 		val fileName = basePakage + 'db/migration/test/V1__Creation_Tables_' + javaPostgreSQLGenerator.databaseName + '.sql'
 		val sql = javaPostgreSQLGenerator.generateSQL
