@@ -364,11 +364,41 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		    </dependencies>
 		    <build>
 		        <plugins>
+		        	«IF service.canGenerateBackendTest»
+		        	«generateMavenCleanPlugin»
+		        	«ENDIF»
 		        	«getSourceFolderPlugin»
 		        	«getMySemaMavenPlugin»
 		        </plugins>
 		      </build>
 		</project>
+		'''
+	}
+	
+	def static generateMavenCleanPlugin() {
+		'''
+		
+		<!-- Preserves some necessary resources for tests -->
+		<plugin>
+			<artifactId>maven-clean-plugin</artifactId>
+			<version>3.1.0</version>
+			<configuration>
+				<excludeDefaultDirectories>true</excludeDefaultDirectories>
+				<filesets>
+					<fileset>
+						<directory>target</directory>
+						<includes>
+							<include>**</include>
+						</includes>
+						<excludes>
+							<exclude>**/*.properties</exclude>
+							<exclude>**/*.sql</exclude>
+						</excludes>
+					</fileset>
+				</filesets>
+			</configuration>
+		</plugin>
+		
 		'''
 	}
 	
