@@ -14,7 +14,8 @@ Service:
 	(
 		(disableGeneration=DisableServiceGeneration)? &
 		('@label' '(' label=STRING ')')? & 
-		(enableCustomTestConfig ?= '@enableCustomTestConfig')?
+		(enableCustomTestConfig ?= '@enableCustomTestConfig')? &
+		(enableDoc ?= '@enableDoc')?
 	)
 	'service' Name '{'
 		( 
@@ -52,10 +53,20 @@ Configuration:
 		('flywayCore' '{' 'version' ':' flywayCoreVersion=STRING '}')? &
 		('buildHelperMavenPlugin' '{' 'version' ':' buildHelperMavenPluginVersion=STRING '}')? &
 		('aptMavenPlugin' '{' 'version' ':' aptMavenPluginVersion=STRING '}')? &
-		('templatingMavenPlugin' '{' 'version' ':' templatingMavenPluginVersion=STRING '}')? 
+		('templatingMavenPlugin' '{' 'version' ':' templatingMavenPluginVersion=STRING '}')? &
+		('springfoxSwagger' '{' springfoxSwagger=SpringfoxSwagger '}')? 
 	)
 		
 	'}'
+;
+
+SpringfoxSwagger:
+{SpringfoxSwagger}
+	(
+		('version' ':' mavenDependencyVersion=STRING)? &
+		('title' ':' title=STRING) ? &
+		('description' ':' description=STRING) ? 
+	)
 ;
 
 Enumeration:

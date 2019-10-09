@@ -488,6 +488,7 @@ abstract class Element extends Named {
 class Service extends Element {
 	String label
 	boolean enableCustomTestConfig
+	boolean enableDoc
 	
 	container DomainModel domainModel opposite service
 	op String domain() {
@@ -564,6 +565,27 @@ class Configuration {
 	String buildHelperMavenPluginVersion = '3.0.0'
 	String aptMavenPluginVersion = '1.1.1'
 	String templatingMavenPluginVersion = '1.0.0'
+	contains SpringfoxSwagger springfoxSwagger
+	
+	op boolean hasDoc() {
+		return springfoxSwagger !== null
+	}
+	
+	op String getSpringfoxSwaggerVersion() {
+		if (hasDoc) {
+			springfoxSwagger.mavenDependencyVersion
+		}
+		else {
+			'2.9.2'
+		}
+	}
+}
+
+class SpringfoxSwagger {
+	String version
+	String mavenDependencyVersion = '2.9.2'
+	String title
+	String description
 }
 
 abstract class ServiceElement extends Element {

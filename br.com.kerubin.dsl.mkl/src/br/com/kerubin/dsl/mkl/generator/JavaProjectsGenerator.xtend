@@ -1,8 +1,10 @@
 package br.com.kerubin.dsl.mkl.generator
 
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import br.com.kerubin.dsl.mkl.model.MavenDependency
+import br.com.kerubin.dsl.mkl.model.Service
+
+import static br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -247,6 +249,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<scope>test</scope>
 				</dependency>
 				«buildMessagingDependency»
+				
+				«IF service.isEnableDoc»
+				«service.generateSpringfoxSwaggerDependencies(false)»
+				«ENDIF»
 			</dependencies>
 			
 			<!-- Spring Boot package plug-in for service deploy -->
@@ -348,6 +354,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<!-- Begin Entity Dependencies -->
 				«service?.dependencies.map[buildEntityMavenDependency]?.join»
 				<!-- End Entity Dependencies -->
+				
+				«IF service.isEnableDoc»
+				«service.generateSpringfoxSwaggerDependencies(false)»
+				«ENDIF»
 				
 				<dependency>
 					<groupId>org.springframework.boot</groupId>
@@ -506,6 +516,11 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				    <artifactId>service-core</artifactId>
 				</dependency>
 		    	«buildMessagingDependency»
+		    	<!-- End Entity Dependencies -->
+		    					
+				«IF service.isEnableDoc»
+				«service.generateSpringfoxSwaggerDependencies(false)»
+				«ENDIF»
 		    </dependencies>
 		    <build>
 		        <defaultGoal>install</defaultGoal>
@@ -599,6 +614,9 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 				<apt.maven.plugin.version>«configuration.aptMavenPluginVersion»</apt.maven.plugin.version>
 				<templating.maven.plugin.version>«configuration.templatingMavenPluginVersion»</templating.maven.plugin.version>
 				«service?.dependencies.map[buildEntityMavenDependencyVersion]?.join»
+				«IF service.isEnableDoc»
+				<springfox.swagger2.version>«service.configuration.springfoxSwaggerVersion»</springfox.swagger2.version>
+				«ENDIF»
 			</properties>
 			<modules>
 				<module>«projectClientName»</module>
@@ -684,6 +702,10 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 					<!-- Begin Entity Dependencies -->
 					«service?.dependencies.map[buildEntityMavenDependency(true)]?.join»
 					<!-- End Entity Dependencies -->
+					
+					«IF service.isEnableDoc»
+					«service.generateSpringfoxSwaggerDependencies(true)»
+					«ENDIF»
 				</dependencies>
 			</dependencyManagement>
 			<build>
@@ -714,6 +736,33 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			</repositories>
 			
 		</project>
+		'''
+	}
+	
+	private def CharSequence generateSpringfoxSwaggerDependencies(Service service, boolean withVersion) {
+		'''
+		<!-- Begin Springfox Swagger2 dependencies -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-data-rest</artifactId>
+			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-bean-validators</artifactId>
+			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
+		</dependency>
+		<!-- End Springfox Swagger2 dependencies -->
 		'''
 	}
 	
