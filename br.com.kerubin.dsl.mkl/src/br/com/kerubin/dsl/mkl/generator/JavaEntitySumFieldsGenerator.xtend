@@ -33,13 +33,26 @@ class JavaEntitySumFieldsGenerator extends GeneratorExecutor implements IGenerat
 	def CharSequence doGenerateContaPagarSumFields(Entity entity, Iterable<Slot> slots) {	
 		entity.imports.clear
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		if (isEnableDoc) {
+			entity.addImport('import io.swagger.annotations.ApiModel;')
+			
+			if (!slots.empty) {
+				entity.addImport('import io.swagger.annotations.ApiModelProperty;')
+			}
+		}
+		val title = entity.title
+		
 		val package = '''
 		package «entity.package»;
 		
 		'''
 		
 		val body = '''
-		
+		«IF isEnableDoc»
+				
+		@ApiModel(description = "Details about sums of «title»")
+		«ENDIF»
 		public class «entity.toEntitySumFieldsName» {
 			
 			«entity.generateFields(slots)»
@@ -65,7 +78,13 @@ class JavaEntitySumFieldsGenerator extends GeneratorExecutor implements IGenerat
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = slot.title
+		
 		'''
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Sum of «title»")
+		«ENDIF»
 		private «slot.toJavaType» «slot.sumFieldName»;
 		'''
 	}

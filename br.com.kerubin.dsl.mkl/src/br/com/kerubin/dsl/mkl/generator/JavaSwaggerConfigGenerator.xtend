@@ -11,7 +11,9 @@ class JavaSwaggerConfigGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	override generate() {
-		generateFiles
+		if (service.enableDoc) {
+			generateFiles
+		}
 	}
 	
 	def generateFiles() {
@@ -24,9 +26,10 @@ class JavaSwaggerConfigGenerator extends GeneratorExecutor implements IGenerator
 		
 		val apiVersion = configuration.version ?: '0.0.1-SNAPSHOT'
 		val doc = configuration.springfoxSwagger
+		val basePackage = configuration.basePackage
 		
 		var title = '''API documentation for «service.domain»/«service.name»'''
-		var description = '''This API documentation describes all available operations over service /api/«service.domain»/«service.name»/*''' 
+		var description = '''This API documentation describes all available operations for service /api/«service.domain»/«service.name»/*''' 
 		if (doc !== null) {
 			if (doc.description !== null) {
 				description = doc.description
@@ -65,7 +68,7 @@ class JavaSwaggerConfigGenerator extends GeneratorExecutor implements IGenerator
 			public Docket api() {
 				return new Docket(DocumentationType.SWAGGER_2)
 					.select()
-					.apis(RequestHandlerSelectors.any())
+					.apis(RequestHandlerSelectors.basePackage("«basePackage»"))
 					.paths(PathSelectors.any())
 					.build()
 					.apiInfo(apiInfo());

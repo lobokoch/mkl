@@ -36,13 +36,23 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateEntityDTO(Entity entity) {
 		entity.initializeEntityImports
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		if (isEnableDoc) {
+			entity.addImport('import io.swagger.annotations.ApiModel;')
+			entity.addImport('import io.swagger.annotations.ApiModelProperty;')
+		}
+		val title = entity.title
+		
 		val package = '''
 		package «entity.package»;
 		
 		'''
 		
 		val body = '''
+		«IF isEnableDoc»
 		
+		@ApiModel(description = "Details about «title»")
+		«ENDIF»
 		public class «entity.toEntityDTOName» {
 		
 			«entity.generateFields»
@@ -58,6 +68,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		
 		val imports = '''
 		«entity.imports.map[it].join('\r\n')»
+		
 		'''
 		
 		package + imports + body 
@@ -84,6 +95,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		// Bean Validations imports
 		slot.resolveBeanValidationImports
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = slot.title
+		
 		if (slot.isDTOFull) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
 		}
@@ -99,6 +113,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 		«IF !validationAnnotations.isEmpty»
 		«validationAnnotations.map[it.toString].join('\r')»
+		«ENDIF»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title»")
 		«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;

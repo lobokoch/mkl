@@ -274,6 +274,16 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		entity.initializeEntityImports
 		val slots = entity.slots.filter[it.hasListFilter]
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		if (isEnableDoc) {
+			entity.addImport('import io.swagger.annotations.ApiModel;')
+			if (!slots.empty) {
+				entity.addImport('import io.swagger.annotations.ApiModelProperty;')
+			}
+		}
+		val title = entity.title
+		
+		
 		val package = '''
 		package «entity.package»;
 		
@@ -281,6 +291,10 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val body = '''
 		
+		«IF isEnableDoc»
+				
+		@ApiModel(description = "Details about list filter of «title»")
+		«ENDIF»
 		public class «entity.toEntityListFilterClassName» {
 		
 			«slots.generateFields»
@@ -325,31 +339,58 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val isEqualTo = slot.isEqualTo
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = slot.title
+		
 		'''
 		«IF isEqualTo»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title»")
+		«ENDIF»
 		private «slot.toJavaType» «slot.fieldName»;
 		«ENDIF»
 		«IF isMany»
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
 		«ENDIF»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title»")
+		«ENDIF»
 		private java.util.List<«slot.toJavaType»> «slot.name.toFirstLower»;
 		«ELSEIF isNotNull && isNull»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title» is not null")
+		«ENDIF»
 		private Boolean «slot.name.toFirstLower»«FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»;
 		
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title» is null")
+		«ENDIF»
 		private Boolean «slot.name.toFirstLower»«FilterOperatorEnum.IS_NULL.getName.toFirstUpper»;
 		«ELSEIF isNotNull»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title» is not null")
+		«ENDIF»
 		private Boolean «slot.name.toFirstLower»«FilterOperatorEnum.IS_NOT_NULL.getName.toFirstUpper»;
 		«ELSEIF isNull»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title» is null")
+		«ENDIF»
 		private Boolean «slot.name.toFirstLower»«FilterOperatorEnum.IS_NULL.getName.toFirstUpper»;
 		«ELSEIF isBetween»
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
 		«ENDIF»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Is between from «title»")
+		«ENDIF»
 		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_FROM»;
 		
 		«IF slot.isDate»
 		@DateTimeFormat(pattern = "yyyy-MM-dd")
+		«ENDIF»
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Is between to «title»")
 		«ENDIF»
 		private «slot.toJavaType» «slot.name.toFirstLower»«BETWEEN_TO»;
 		«ENDIF»

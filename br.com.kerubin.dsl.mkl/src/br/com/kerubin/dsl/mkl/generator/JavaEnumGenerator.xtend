@@ -31,11 +31,27 @@ class JavaEnumGenerator extends GeneratorExecutor implements IGeneratorExecutor 
 		enumeration.items
 		val enumName = enumeration.name.toFirstUpper
 		
+		val isEnableDoc = enumeration.service.isEnableDoc
+		
+		val title = enumeration.label
+		val joinStr = if (isEnableDoc) ',\r\n\r\n' else ',\r\n'
+		
 		'''
 		package «service.servicePackage»;
 		
+		«IF isEnableDoc»
+		
+		import io.swagger.annotations.ApiModel;
+		import io.swagger.annotations.ApiModelProperty;
+		
+		«ENDIF»
+		
+		«IF isEnableDoc»
+				
+		@ApiModel(description = "Details about «title»")
+		«ENDIF»
 		public enum «enumName» {
-			«enumeration.items.map[it.buildEnumItem].join(',\r\n')»;
+			«enumeration.items.map[it.buildEnumItem].join(joinStr)»;
 			«IF enumeration.hasSomeValueStr»
 			
 			private String value;
@@ -54,7 +70,10 @@ class JavaEnumGenerator extends GeneratorExecutor implements IGeneratorExecutor 
 	}
 	
 	def CharSequence buildEnumItem(EnumItem item) {
-		'''«item.name»«IF item.hasValueStr»("«item.valueStr»")«ENDIF»'''
+		val isEnableDoc = item.owner.service.isEnableDoc
+		val title = item.title
+		
+		'''«IF isEnableDoc»@ApiModelProperty(notes = "«title»")«'\r\n'»«ENDIF»«item.name»«IF item.hasValueStr»("«item.valueStr»")«ENDIF»'''
 	}
 	
 }

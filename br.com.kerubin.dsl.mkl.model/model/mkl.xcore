@@ -1,3 +1,4 @@
+
 package br.com.kerubin.dsl.mkl.model
 
 import java.util.Set
@@ -567,6 +568,14 @@ class Configuration {
 	String templatingMavenPluginVersion = '1.0.0'
 	contains SpringfoxSwagger springfoxSwagger
 	
+	op String getBasePackage() {
+		if (groupId !== null && !groupId.empty) {
+			groupId
+		}
+		
+		'br.com.kerubin.api'
+	}
+	
 	op boolean hasDoc() {
 		return springfoxSwagger !== null
 	}
@@ -822,6 +831,13 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op String getTitle() {
+		if (label !== null) {
+			return label
+		}
+		return name
+	}
 	
 	op boolean hasRepositoryFindBy() {
 		return repositoryFindBy !== null && !repositoryFindBy.isEmpty
@@ -1161,8 +1177,16 @@ class EnumTypeReference extends TypeReference {
 }
 
 class Enumeration extends ServiceObject {
-	contains EnumItem[] items
+	contains EnumItem[] items opposite owner
 	String label
+	
+	op String getTitle() {
+		if (label !== null) {
+			return label
+		}
+		
+		name
+	}
 	
 	op boolean hasSomeValueStr() {
 		items.exists[hasValueStr]
@@ -1188,6 +1212,7 @@ class Enumeration extends ServiceObject {
 }
 
 class EnumItem {
+	container Enumeration owner opposite items
 	String name
 	String valueStr
 	String label
@@ -1200,6 +1225,13 @@ class EnumItem {
 	
 	op boolean hasValueStr() {
 		valueStr !== null && !valueStr.trim.isEmpty
+	}
+	
+	op String getTitle() {
+		if (hasLabel) {
+			return label
+		}
+		return name
 	}
 }
 
@@ -1273,6 +1305,12 @@ class Entity extends PublicObject, Rulled {
 	contains HibFilters[] hibFiltersList
 	contains EntityVersion entityVersion
 	
+	op String getTitle() {
+		if (label !== null) {
+			return label
+		}
+		name
+	}
 	
 	op boolean hasEntityVersion () {
 		return entityVersion !== null

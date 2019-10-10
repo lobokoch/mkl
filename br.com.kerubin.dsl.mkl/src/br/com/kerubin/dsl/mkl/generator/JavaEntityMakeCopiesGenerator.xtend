@@ -38,6 +38,9 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		
 		entity.imports.clear
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = entity.title
+		
 		val package = '''
 		package «entity.package»;
 		
@@ -45,6 +48,9 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		
 		val body = '''
 		
+		«IF isEnableDoc»
+		@ApiModel(description = "Details about «title»")
+		«ENDIF»
 		public class «entity.toEntityMakeCopiesName» {
 			
 			«entity.generateFields(rule)»
@@ -60,6 +66,11 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		import javax.validation.constraints.Min;
 		import javax.validation.constraints.NotBlank;
 		import javax.validation.constraints.NotNull;
+		«IF isEnableDoc»
+		
+		import io.swagger.annotations.ApiModel;
+		import io.swagger.annotations.ApiModelProperty;
+		«ENDIF»
 		'''
 		
 		package + imports + body 
@@ -73,19 +84,33 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		val min = makeCopies.minCopies
 		val max = makeCopies.maxCopies
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		@NotNull(message="'«id.name.toFirstUpper»' é obrigatório.")
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«id.title»")
+		«ENDIF»
 		private «id.toJavaType» «id.fieldName»;
 		
 		@Min(value = «min», message = "A quantidade de cópias não pode ser menor que «min».")
 		@Max(value = «max», message = "A quantidade de cópias não pode ser maior que «max».")
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Número de cópias")
+		«ENDIF»
 		private Long numberOfCopies;
 		
 		@Min(value = 1, message = "O intervalo não pode ser menor que 1.")
 		@Max(value = 1000, message = "O intervalo não pode ser maior que 1000.")
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Campo de referência para intervalo")
+		«ENDIF»
 		private Long referenceFieldInterval;
 		
 		@NotBlank(message = "O campo '«rule.getRuleMakeCopiesGrouperSlotName»' deve ser informado.")
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«grouperField.title»")
+		«ENDIF»
 		«grouperField.buildField»;
 		'''
 		

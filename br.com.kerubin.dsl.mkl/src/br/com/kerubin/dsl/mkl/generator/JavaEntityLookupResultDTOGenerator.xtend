@@ -37,13 +37,23 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 		entity.initializeEntityImports
 		val slots = entity.getEntityLookupResultSlots
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		if (isEnableDoc) {
+			entity.addImport('import io.swagger.annotations.ApiModel;')
+			entity.addImport('import io.swagger.annotations.ApiModelProperty;')
+		}
+		val title = entity.title
+		
 		val package = '''
 		package «entity.package»;
 		
 		'''
 		
 		val body = '''
-		
+		«IF isEnableDoc»
+				
+		@ApiModel(description = "Details about lookup result of «title»")
+		«ENDIF»
 		public class «entity.toEntityLookupResultDTOName» {
 		
 			«slots.generateFields»
@@ -82,6 +92,9 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 	
 	def CharSequence generateField(Slot slot) {
 		val entity = slot.ownerEntity
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = slot.title
+		
 		if (slot.isDTOFull) {
 			entity.addImport('import ' + slot.asEntity.package + '.' + slot.asEntity.toEntityDTOName + ';')
 		}
@@ -92,6 +105,9 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 			entity.addImport('import ' + slot.asEnum.enumPackage + ';')
 		}
 		'''
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title»")
+		«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSE»

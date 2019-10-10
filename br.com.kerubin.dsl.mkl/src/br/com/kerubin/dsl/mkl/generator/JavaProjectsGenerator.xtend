@@ -745,7 +745,19 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
-			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
+			«IF withVersion»
+			<version>${springfox.swagger2.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.swagger</groupId>
+					<artifactId>swagger-annotations</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>io.swagger</groupId>
+					<artifactId>swagger-models</artifactId>
+				</exclusion>
+			</exclusions>
+			«ENDIF»
 		</dependency>
 		<dependency>
 			<groupId>io.springfox</groupId>
@@ -762,6 +774,20 @@ class JavaProjectsGenerator extends GeneratorExecutor implements IGeneratorExecu
 			<artifactId>springfox-bean-validators</artifactId>
 			«IF withVersion»<version>${springfox.swagger2.version}</version>«ENDIF»
 		</dependency>
+		
+		<!-- Begin fix issue: https://github.com/springfox/springfox/issues/2265 -->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			«IF withVersion»<version>1.5.21</version>«ENDIF»
+		</dependency>
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-models</artifactId>
+			«IF withVersion»<version>1.5.21</version>«ENDIF»
+		</dependency>
+		<!-- End fix issue: https://github.com/springfox/springfox/issues/2265 -->
+		
 		<!-- End Springfox Swagger2 dependencies -->
 		'''
 	}

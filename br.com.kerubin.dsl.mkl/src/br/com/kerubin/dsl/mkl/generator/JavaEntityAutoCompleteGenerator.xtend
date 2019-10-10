@@ -97,6 +97,13 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		
 		val classNameImpl = entity.toAutoCompleteImplName
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		if (isEnableDoc) {
+			imports.add('import io.swagger.annotations.ApiModel;')
+			imports.add('import io.swagger.annotations.ApiModelProperty;')
+		}
+		val title = entity.title
+		
 		val package = '''
 		package «entity.package»;
 		
@@ -104,6 +111,9 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		
 		val body = '''
 		
+		«IF isEnableDoc»
+		@ApiModel(description = "Details about «title»")
+		«ENDIF»
 		@Getter @Setter
 		public class «classNameImpl» implements «entity.toAutoCompleteName» {
 		
@@ -123,7 +133,14 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 	}
 	
 	def CharSequence generateSlotImpl(Slot slot, Set<String> imports) {
+		val entity = slot.ownerEntity
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = slot.title
+		
 		'''
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "«title»")
+		«ENDIF»
 		private «slot.resolveSlotAutocomplete(imports)» «slot.fieldName»«slot.resolveFieldInitializationValue»;
 		'''
 	}

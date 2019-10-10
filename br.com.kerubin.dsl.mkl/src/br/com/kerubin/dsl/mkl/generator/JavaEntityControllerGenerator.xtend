@@ -47,6 +47,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val fkSlots = entity.getEntitySlots
 		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = entity.title
+		
 		'''
 		package «entity.package»;
 		
@@ -84,11 +87,17 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				
 		«fkSlotsDistinct.map[it.resolveSlotAutocompleteImport].join('\r\n')»
 		
-		«ENDIF»	
-		
+		«ENDIF»
+		«IF isEnableDoc»
+		import io.swagger.annotations.Api;
+		import io.swagger.annotations.ApiOperation;
+		«ENDIF»		
 		
 		@RestController
 		@RequestMapping("entities/«entityDTOVar»")
+		«IF isEnableDoc»
+		@Api(value = "«entityDTOVar»", tags = {"«entityDTOVar»"}, description = "Operations for «title»")
+		«ENDIF»
 		public class «entity.toControllerName» {
 			
 			@Autowired
@@ -104,6 +113,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@Transactional
 			@PostMapping
+			«IF isEnableDoc»
+			@ApiOperation(value = "Creates a new «title»")
+			«ENDIF»
 			public ResponseEntity<«entityDTOName»> create(@Valid @RequestBody «entityDTOName» «entityDTOVar») {
 				«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
 				return ResponseEntity.status(HttpStatus.CREATED).body(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
@@ -111,6 +123,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@Transactional(readOnly=true)
 			@GetMapping("/{«idVar»}")
+			«IF isEnableDoc»
+			@ApiOperation(value = "Retrieves «title»")
+			«ENDIF»
 			public ResponseEntity<«entityDTOName»> read(@PathVariable «idType» «idVar») {
 				try {
 					«entityName» «entityVar» = «entityServiceVar».read(«idVar»);
@@ -123,6 +138,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@Transactional
 			@PutMapping("/{«idVar»}")
+			«IF isEnableDoc»
+			@ApiOperation(value = "Updates «title»")
+			«ENDIF»
 			public ResponseEntity<«entityDTOName»> update(@PathVariable «idType» «idVar», @Valid @RequestBody «entityDTOName» «entityDTOVar») {
 				try {
 					«entityName» «entityVar» = «entityServiceVar».update(«idVar», «entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
@@ -135,12 +153,18 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			
 			@ResponseStatus(HttpStatus.NO_CONTENT)
 			@DeleteMapping("/{«idVar»}")
+			«IF isEnableDoc»
+			@ApiOperation(value = "Deletes «title»")
+			«ENDIF»
 			public void delete(@PathVariable «idType» «idVar») {
 				«entityServiceVar».delete(«idVar»);
 			}
 			
 			@Transactional(readOnly=true)
 			@GetMapping
+			«IF isEnableDoc»
+			@ApiOperation(value = "Retrieves a list of «title»")
+			«ENDIF»
 			public PageResult<«entityDTOName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName.toFirstLower», Pageable pageable) {
 				Page<«entityName»> page = «entityServiceVar».list(«entity.toEntityListFilterName.toFirstLower», pageable);
 				List<«entityDTOName»> content = page.getContent().stream().map(pe -> «entityDTOVar»DTOConverter.«toDTO»(pe)).collect(Collectors.toList());
@@ -151,6 +175,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«IF entity.hasAutoComplete»
 			@Transactional(readOnly=true)
 			@GetMapping("/autoComplete")
+			«IF isEnableDoc»
+			@ApiOperation(value = "Retrieves a list of «title» with a query param")
+			«ENDIF»
 			public Collection<«entity.toAutoCompleteName»> autoComplete(@RequestParam("query") String query) {
 				Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».autoComplete(query);
 				return result;
@@ -190,6 +217,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val entityServiceVar = slot.ownerEntity.toServiceName.toFirstLower
 		val hasAutoCompleteWithOwnerParams = slot.isAutoCompleteWithOwnerParams
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		
 		@Transactional(readOnly=true)
@@ -197,6 +226,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		@PostMapping(value = "/«slotAutoCompleteName»", params = { "query" })
 		«ELSE»
 		@GetMapping("/«slotAutoCompleteName»")
+		«ENDIF»
+		«IF isEnableDoc»
+		@ApiOperation(value = "Retrieves a list of «entity.toAutoCompleteName» by query «slotAutoCompleteName» over «entityDTOName» with a query param")
 		«ENDIF»
 		public Collection<«entity.toAutoCompleteName»> «slotAutoCompleteName»(@RequestParam("query") String query«IF hasAutoCompleteWithOwnerParams», @RequestBody «entityDTOName» «entityDTOVar»«ENDIF») {
 			Collection<«entity.toAutoCompleteName»> result = «entityServiceVar».«slotAutoCompleteName»(query«IF hasAutoCompleteWithOwnerParams», «entityDTOVar»«ENDIF»);
@@ -224,9 +256,14 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val methodName = entity.toEntityRuleFormActionsFunctionName(function)
 		val ruleFuncServiceVar = entity.toRuleFormActionsWithFunctionName.toFirstLower
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		@Transactional
 		@PutMapping("/«methodName»/{«idVar»}")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Executes the action «methodName» over «entityDTOName»")
+		«ENDIF»
 		public ResponseEntity<«entityDTOName»> «methodName»(@PathVariable «idType» «idVar», @Valid @RequestBody «entityDTOName» «entityDTOVar») {
 			try {
 				«IF isFuncReturnThis && isFuncParamThis»
@@ -259,10 +296,15 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val makeCopiesClassName = entity.toEntityMakeCopiesName
 		val makeCopiesNameVar = entity.toEntityMakeCopiesName.toFirstLower
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		
 		@PostMapping("/«actionName»")
 		@ResponseStatus(HttpStatus.NO_CONTENT)
+		«IF isEnableDoc»
+		@ApiOperation(value = "Executes the action «actionName»")
+		«ENDIF»
 		public void «actionName»(@Valid @RequestBody «makeCopiesClassName» «makeCopiesNameVar») {
 			try {
 				«entityServiceVar».«actionName»(«makeCopiesNameVar»);
@@ -281,10 +323,15 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val entityServiceVar = entity.toServiceName.toFirstLower
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		
 		@PutMapping("/«actionName»/{«idVar»}")
 		@ResponseStatus(HttpStatus.NO_CONTENT)
+		«IF isEnableDoc»
+		@ApiOperation(value = "Executes the action «actionName»")
+		«ENDIF»
 		public void «actionName»(@PathVariable «idType» «idVar») {
 			try {
 				«entityServiceVar».«actionName»(«idVar»);
@@ -302,8 +349,13 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val entityServiceVar = entity.toServiceName.toFirstLower
 		val listFilterName = entity.toEntityListFilterName
 		
+		val isEnableDoc = entity.service.isEnableDoc
+		
 		'''
 		@GetMapping("/«sumFieldsName.toFirstLower»")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Retrieves a sum of «sumFieldsName.toFirstLower» filtering by «listFilterName»")
+		«ENDIF»
 		public «entity.toEntitySumFieldsName» «getEntitySumFields»(«entity.toEntityListFilterClassName» «listFilterName») {
 			«sumFieldsName» result = «entityServiceVar».«getEntitySumFields»(«listFilterName»);
 			return result;
@@ -313,9 +365,16 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateListFilterAutoComplete(Slot slot) {
 		val autoComplateName = slot.toAutoCompleteName
+		val entity = slot.ownerEntity
+		val isEnableDoc = entity.service.isEnableDoc
+		val title = entity.title
+		
 		'''
 		
 		@GetMapping("/«autoComplateName»")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Retrieves a list of «title» with a query param")
+		«ENDIF»
 		public Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(@RequestParam("query") String query) {
 			Collection<«autoComplateName.toFirstUpper»> result = «slot.ownerEntity.toServiceName.toFirstLower».«autoComplateName»(query);
 			return result;
