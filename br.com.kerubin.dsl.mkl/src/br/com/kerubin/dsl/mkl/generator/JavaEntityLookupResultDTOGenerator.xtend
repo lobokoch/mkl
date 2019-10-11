@@ -106,7 +106,7 @@ class JavaEntityLookupResultDTOGenerator extends GeneratorExecutor implements IG
 		}
 		'''
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«title»")
+		@ApiModelProperty(notes = "«title»"«IF slot.required», required = «slot.required»«ENDIF»)
 		«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;

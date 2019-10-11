@@ -89,27 +89,27 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		'''
 		@NotNull(message="'«id.name.toFirstUpper»' é obrigatório.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«id.title»")
+		@ApiModelProperty(notes = "«id.title»", required = true)
 		«ENDIF»
 		private «id.toJavaType» «id.fieldName»;
 		
 		@Min(value = «min», message = "A quantidade de cópias não pode ser menor que «min».")
 		@Max(value = «max», message = "A quantidade de cópias não pode ser maior que «max».")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "Número de cópias")
+		@ApiModelProperty(notes = "Número de cópias", required = true)
 		«ENDIF»
 		private Long numberOfCopies;
 		
 		@Min(value = 1, message = "O intervalo não pode ser menor que 1.")
 		@Max(value = 1000, message = "O intervalo não pode ser maior que 1000.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "Campo de referência para intervalo")
+		@ApiModelProperty(notes = "Campo de referência para intervalo", required = true)
 		«ENDIF»
 		private Long referenceFieldInterval;
 		
 		@NotBlank(message = "O campo '«rule.getRuleMakeCopiesGrouperSlotName»' deve ser informado.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«grouperField.title»")
+		@ApiModelProperty(notes = "«grouperField.title»", required = true)
 		«ENDIF»
 		«grouperField.buildField»;
 		'''

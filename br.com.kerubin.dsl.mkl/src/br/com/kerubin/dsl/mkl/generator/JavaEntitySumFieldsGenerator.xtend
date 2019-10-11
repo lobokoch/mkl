@@ -83,7 +83,7 @@ class JavaEntitySumFieldsGenerator extends GeneratorExecutor implements IGenerat
 		
 		'''
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "Sum of «title»")
+		@ApiModelProperty(notes = "Sum of «title»"«IF slot.required», required = «slot.required»«ENDIF»)
 		«ENDIF»
 		private «slot.toJavaType» «slot.sumFieldName»;
 		'''

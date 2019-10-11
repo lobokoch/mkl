@@ -139,7 +139,7 @@ class JavaEntityAutoCompleteGenerator extends GeneratorExecutor implements IGene
 		
 		'''
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«title»")
+		@ApiModelProperty(notes = "«title»"«IF slot.required», required = «slot.required»«ENDIF»)
 		«ENDIF»
 		private «slot.resolveSlotAutocomplete(imports)» «slot.fieldName»«slot.resolveFieldInitializationValue»;
 		'''
