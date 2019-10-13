@@ -85,31 +85,32 @@ class JavaEntityMakeCopiesGenerator extends GeneratorExecutor implements IGenera
 		val max = makeCopies.maxCopies
 		
 		val isEnableDoc = entity.service.isEnableDoc
+		var position = 0
 		
 		'''
 		@NotNull(message="'«id.name.toFirstUpper»' é obrigatório.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«id.title»", required = true)
+		@ApiModelProperty(notes = "«id.title»", required = true, position = «position++»)
 		«ENDIF»
 		private «id.toJavaType» «id.fieldName»;
 		
 		@Min(value = «min», message = "A quantidade de cópias não pode ser menor que «min».")
 		@Max(value = «max», message = "A quantidade de cópias não pode ser maior que «max».")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "Número de cópias", required = true)
+		@ApiModelProperty(notes = "Número de cópias", required = true, position = «position++»)
 		«ENDIF»
 		private Long numberOfCopies;
 		
 		@Min(value = 1, message = "O intervalo não pode ser menor que 1.")
 		@Max(value = 1000, message = "O intervalo não pode ser maior que 1000.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "Campo de referência para intervalo", required = true)
+		@ApiModelProperty(notes = "Campo de referência para intervalo", required = true, position = «position++»)
 		«ENDIF»
 		private Long referenceFieldInterval;
 		
 		@NotBlank(message = "O campo '«rule.getRuleMakeCopiesGrouperSlotName»' deve ser informado.")
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«grouperField.title»", required = true)
+		@ApiModelProperty(notes = "«grouperField.title»", required = true, position = «position++»)
 		«ENDIF»
 		«grouperField.buildField»;
 		'''

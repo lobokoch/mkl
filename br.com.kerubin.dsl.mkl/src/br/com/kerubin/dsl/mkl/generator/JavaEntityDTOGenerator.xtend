@@ -115,7 +115,7 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		«validationAnnotations.map[it.toString].join('\r')»
 		«ENDIF»
 		«IF isEnableDoc»
-		@ApiModelProperty(notes = "«title»"«IF slot.required», required = «slot.required»«ENDIF»)
+		@ApiModelProperty(notes = "«title»"«IF slot.mandatory», required = «slot.required»«ENDIF», position = «slot.position»)
 		«ENDIF»
 		«IF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;

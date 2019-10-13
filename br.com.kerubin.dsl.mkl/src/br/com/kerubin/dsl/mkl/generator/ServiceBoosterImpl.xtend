@@ -10,12 +10,20 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 class ServiceBoosterImpl implements ServiceBooster {
 	
 	public static val createdBy = 'createdBy'
+	public static val createdByLabel = 'Criado por'
+	
 	public static val createdDate = 'createdDate'
+	public static val createdDateLabel = 'Data de criação'
+	
 	public static val lastModifiedBy = 'lastModifiedBy'
+	public static val lastModifiedByLabel = 'Alterado por'
+	
 	public static val lastModifiedDate = 'lastModifiedDate'
+	public static val lastModifiedDateLabel = 'Data de alteração'
 	
 	public static val ENTITY_AUDITING_FIELDS = #[createdBy, createdDate, lastModifiedBy, lastModifiedDate];
 	
+	private static val ID_DEFAULT_LABEL = 'Identificador único'
 	
 	Service service
 	
@@ -52,7 +60,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 		}
 		
 		if (! entity.id.hasLabel) {
-			entity.id.label = "#id"
+			entity.id.label = ID_DEFAULT_LABEL
 		}
 		
 		// If an entity slot doesn't has a label, it takes the label from his entity definition.
@@ -141,7 +149,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 	def Slot createImplicitId() {
 		val slot = ModelFactory.eINSTANCE.createSlot
 		slot.name = 'id'
-		slot.label = '#id'
+		slot.label = ID_DEFAULT_LABEL
 		slot.implicit = true
 		slot.hidden = true
 		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
@@ -162,7 +170,20 @@ class ServiceBoosterImpl implements ServiceBooster {
 		val isDate = name == createdDate || name == lastModifiedDate
 		val slot = ModelFactory.eINSTANCE.createSlot
 		slot.name = name
-		slot.label = slot.name
+		
+		var label = name
+		if (name == createdBy) {
+			label = createdByLabel
+		} else if (name == createdDate) {
+			label = createdDateLabel
+		} else if (name == lastModifiedBy) {
+			label = lastModifiedByLabel
+		} else if (name == lastModifiedDate) {
+			label = lastModifiedDateLabel
+		}
+		
+		slot.label = label
+		
 		slot.implicit = true
 		slot.mapped = true
 		slot.hidden = true

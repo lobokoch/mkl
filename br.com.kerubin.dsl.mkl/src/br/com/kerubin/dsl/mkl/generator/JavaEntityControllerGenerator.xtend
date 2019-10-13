@@ -94,9 +94,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		«ENDIF»		
 		
 		@RestController
-		@RequestMapping("entities/«entityDTOVar»")
+		@RequestMapping("«service.domain»/«service.name»/entities/«entityDTOVar»")
 		«IF isEnableDoc»
-		@Api(value = "«entityDTOVar»", tags = {"«entityDTOVar»"}, description = "Operations for «title»")
+		@Api(value = "«entityDTOName»", tags = {"«entityDTOName»"}, description = "Operations for «title»")
 		«ENDIF»
 		public class «entity.toControllerName» {
 			

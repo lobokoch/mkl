@@ -832,6 +832,17 @@ class Slot extends Element {
 	String[] annotations
 	container Slotted ownerObject opposite slots
 	
+	op int getPosition() {
+		val slots = ownerEntity.slots
+		for (var i = 0; i < slots.size; i++) {
+			if (slots.get(i) === this) {
+				return i
+			}
+		}
+		
+		return -1
+	}
+	
 	op String getTitle() {
 		if (label !== null) {
 			return label
@@ -861,6 +872,10 @@ class Slot extends Element {
 	
 	op boolean isSortDESC() {
 		hasSort && sort.DESC
+	}
+	
+	op boolean isMandatory(){
+		required && !isId	
 	}
 	
 	op boolean isRequired() {

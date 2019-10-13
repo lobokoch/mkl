@@ -214,7 +214,8 @@ PublicObject:
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
 ID_KEYWORD:
-	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 'transient' | 'validation'
+	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 
+	'transient' | 'validation' | 'description' | 'version' | 'title'
 ;
 
  fragment Name returns Named:
