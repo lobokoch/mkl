@@ -265,6 +265,7 @@ RepositoryFindBy:
 		(
 			('custom' ':' custom = STRING)? &
 			('resultKind' ':' resultKind = RepositoryResultKind)? & 
+			(paged ?= 'paged')? & 
 			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')?
 			
 		)

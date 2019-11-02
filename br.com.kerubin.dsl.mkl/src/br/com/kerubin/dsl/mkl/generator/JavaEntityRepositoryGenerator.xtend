@@ -1,11 +1,11 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import br.com.kerubin.dsl.mkl.model.Slot
-import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
-import br.com.kerubin.dsl.mkl.model.RepositoryResultKind
+
+import static br.com.kerubin.dsl.mkl.generator.Utils.*
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 
 class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -34,7 +34,11 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val hasAutoComplete = !autoCompleteSlots.isEmpty
 		
 		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
-		findBySlots.forEach[it.generateRepositoryFindByForEntityImports]
+		val findBy = findBySlots.map[it.generateRepositoryFindByForEntity].join
+		
+		if (hasAutoComplete) {
+			entity.addImport('import java.util.Collection;')
+		}
 		
 		
 		'''
@@ -44,7 +48,6 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 		«entity.imports.map[it].join('\r\n')»
 		«IF hasAutoComplete»
-		import java.util.Collection;
 		import org.springframework.data.repository.query.Param;
 		import org.springframework.data.jpa.repository.Query;
 		«ENDIF»
@@ -68,63 +71,19 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			«IF !findBySlots.empty»
 			
 			// Begin generated findBy
-			«findBySlots.map[it.generateRepositoryFindByForEntity].join»
+			«findBy»
 			// End generated findBy
 			«ENDIF»
 		}
 		'''
 	}
 	
-	def void generateRepositoryFindByForEntityImports(Slot slot) {
-		val findByList = slot.repositoryFindBy;
-		findByList.forEach[it.generateSlotFindByImports]
-	}
-	
-	def void generateSlotFindByImports(RepositoryFindBy findByObj) {
-		val slot = findByObj?.ownerSlot
-		val entity = slot?.ownerEntity
-		val packages =  findByObj?.packages
-		
-		if (packages !== null && !packages.empty) {
-			packages.forEach[
-				entity.addImport('''import «it.toString»;''')
-			]
-		}
-		entity.addImport('import java.util.Optional;')
-	}
-	
 	def CharSequence generateRepositoryFindByForEntity(Slot slot) {
 		val findByList = slot.repositoryFindBy;
 		'''
+		
 		// findBy for field «slot.fieldName»
-		«findByList.map[it.generateSlotFindBy].join»
-		'''
-	}
-	
-	def CharSequence generateSlotFindBy(RepositoryFindBy findByObj) {
-		val slot = findByObj.ownerSlot
-		val entity = slot.ownerEntity
-		val custom = findByObj?.custom
-		
-		var resultKind = findByObj.resultKind.literal
-		if (resultKind == RepositoryResultKind.ENTITY.literal) {
-			resultKind = entity.toEntityName
-		}
-		else {
-			resultKind += '<' + entity.toEntityName + '>'
-		}
-		
-		var findBy = ''
-		
-		if (custom !== null) {
-			findBy = custom
-		}
-		else {
-			findBy = 'findBy' + slot.name.toFirstUpper + '('  + slot.toJavaType + ' ' + slot.fieldName + ')'
-		}
-		
-		'''
-		«resultKind» «findBy»;
+		«findByList.map[it.generateRepositoryFindByMethod(true, false) + ';'].join('\r\n')»
 		'''
 	}
 	
@@ -165,21 +124,5 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		}
 		sql.toString
 	}
-	
-	
-	/*def String generateAutoCompleteSQL_(Entity entity, Iterable<Slot> slots) {
-		val alias = "ac"
-		val sql = new StringBuilder("select distinct ")
-		val resultFields = slots.filter[it.isAutoCompleteResult].map[it | alias + "." + it.name.toFirstLower + " as " + it.name.toFirstLower].join(", ")
-		sql.append(resultFields)
-		sql.append(" from ").append(entity.toEntityName).append(" ").append(alias)
-		sql.append(" where ")
-		val keyFields = slots.filter[it.isAutoCompleteKey].map[it | 
-			"( upper(" + alias + "." + it.name.toFirstLower + ") like upper(concat('%', :query, '%')) )"
-		].join(" or ")
-		sql.append(keyFields)
-		sql.append(" order by 1 asc")
-		sql.toString
-	}*/
 	
 }

@@ -8,6 +8,7 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
 
 class JavaEntityControllerGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -50,11 +51,22 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val isEnableDoc = entity.service.isEnableDoc
 		val title = entity.title
 		
+		
+		if (entity.hasAutoComplete) {
+			entity.addImport('import java.util.Collection;')
+		}
+		
+		entity.addImport('import org.springframework.data.domain.Page;')
+		entity.addImport('import org.springframework.data.domain.Pageable;')
+		
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		val findBySlotsContent = findBySlots.map[it.generateFindByImplementations].join
+		
+		
 		'''
 		package «entity.package»;
 		
 		«IF entity.hasAutoComplete»
-		import java.util.Collection;
 		import org.springframework.web.bind.annotation.RequestParam;
 		«ENDIF»
 		«IF !ruleActions.empty || !ruleMakeCopies.isEmpty»
@@ -79,8 +91,6 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		import org.springframework.web.bind.annotation.PutMapping;
 		import org.springframework.web.bind.annotation.DeleteMapping;
 		
-		import org.springframework.data.domain.Page;
-		import org.springframework.data.domain.Pageable;
 		«service.importPageResult»
 		
 		«IF !fkSlotsDistinct.empty»
@@ -91,7 +101,8 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		«IF isEnableDoc»
 		import io.swagger.annotations.Api;
 		import io.swagger.annotations.ApiOperation;
-		«ENDIF»		
+		«ENDIF»
+		«entity.imports.map[it].join('\r\n')»
 		
 		@RestController
 		@RequestMapping("«service.domain»/«service.name»/entities/«entityDTOVar»")
@@ -121,7 +132,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				return ResponseEntity.status(HttpStatus.CREATED).body(«entityDTOVar»DTOConverter.«toDTO»(«entityVar»));
 			}
 			
-			@Transactional(readOnly=true)
+			@Transactional(readOnly = true)
 			@GetMapping("/{«idVar»}")
 			«IF isEnableDoc»
 			@ApiOperation(value = "Retrieves «title»")
@@ -160,7 +171,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				«entityServiceVar».delete(«idVar»);
 			}
 			
-			@Transactional(readOnly=true)
+			@Transactional(readOnly = true)
 			@GetMapping
 			«IF isEnableDoc»
 			@ApiOperation(value = "Retrieves a list of «title»")
@@ -173,7 +184,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			}
 			
 			«IF entity.hasAutoComplete»
-			@Transactional(readOnly=true)
+			@Transactional(readOnly = true)
 			@GetMapping("/autoComplete")
 			«IF isEnableDoc»
 			@ApiOperation(value = "Retrieves a list of «title» with a query param")
@@ -195,15 +206,76 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«ruleActions.map[generateRuleActions].join»
 			«ruleMakeCopies.map[generateRuleMakeCopies].join»
 			«ruleFormActionsWithFunction.map[generateRuleFormActionsWithFunction].join('\r\n')»
-			
 			«IF !fkSlots.empty»
-						
 			// Begin relationships autoComplete 
 			«fkSlots.map[it.generateSlotAutoCompleteMethod].join»
 			// End relationships autoComplete
 			
 			«ENDIF»
+			«IF !findBySlots.isEmpty»
+						
+			// findBy methods
+			«findBySlotsContent»
+			«ENDIF»
 		}
+		'''
+	}
+	
+	def CharSequence generateFindByImplementations(Slot slot) {
+		'''
+		«slot.repositoryFindBy.map[it.generateFindByImplementation].join»
+		'''
+	}
+	
+	def CharSequence generateFindByImplementation(RepositoryFindBy findByObj) {
+		
+		val findByMethod = findByObj.generateRepositoryFindByMethod(false, false)
+		val findByMethodCall = findByObj.generateRepositoryFindByMethod(false, true)
+		
+		val slot = findByObj.ownerSlot
+		val ownerEntity = slot.ownerEntity
+		
+		val isEnableDoc = ownerEntity.service.isEnableDoc
+		val title = ownerEntity.title
+		
+		val by = if (slot.isEntity) slot.asEntity.title else slot.name
+		val entityDTOName = ownerEntity.toEntityDTOName
+		val entityName = ownerEntity.toEntityName
+		
+		
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
+		val entityServiceVar = ownerEntity.toServiceName.toFirstLower
+		val toDTO = 'convertEntityToDto'
+		val isPaged = findByObj.isPaged
+		val collectionType = if (isPaged) 'Page' else 'Collection'
+		
+		val isEntity = slot.isEntity
+		val isManyTo = isEntity && (slot.isManyToOne || slot.isManyToMany)
+		
+		'''
+		
+		@Transactional(readOnly = true)
+		@GetMapping("/«findByMethodCall.substring(0, findByMethodCall.indexOf('('))»")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Retrieves «IF isManyTo»collection of «ENDIF»«title» by «by»")
+		«ENDIF»
+		«IF isManyTo»
+		public «findByMethod.replace('Page<', 'PageResult<').replace(entityName, entityDTOName)» {
+			«collectionType»<«entityName»> content = «entityServiceVar».«findByMethodCall»;
+			List<«entityDTOName»> result = content«IF isPaged».getContent()«ENDIF».stream().map(it -> «entityDTOVar»DTOConverter.«toDTO»(it)).collect(Collectors.toList());
+			«IF isPaged»
+			PageResult<«entityDTOName»> pageResult = new PageResult<>(result, content.getNumber(), content.getSize(), content.getTotalElements());
+			return pageResult;
+			«ELSE»
+			return result;
+			«ENDIF»
+		}
+		«ELSE»
+		public «findByMethod.replace(entityName, 'ResponseEntity<' + entityDTOName + '>')» {
+			«entityName» content = «entityServiceVar».«findByMethodCall»;
+			return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(content));
+		}
+		«ENDIF»
 		'''
 	}
 	
@@ -221,7 +293,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		
 		'''
 		
-		@Transactional(readOnly=true)
+		@Transactional(readOnly = true)
 		«IF hasAutoCompleteWithOwnerParams»
 		@PostMapping(value = "/«slotAutoCompleteName»", params = { "query" })
 		«ELSE»

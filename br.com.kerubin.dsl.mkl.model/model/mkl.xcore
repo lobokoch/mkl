@@ -785,6 +785,7 @@ class RepositoryFindBy {
 	String custom
 	RepositoryResultKind resultKind
 	String[] packages
+	boolean paged
 	refers Slot ownerSlot opposite repositoryFindBy
 }
 

@@ -39,6 +39,7 @@ import br.com.kerubin.dsl.mkl.model.AbstractRuleTarget
 import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
 import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
 
 class EntityUtils {
 	
@@ -1797,12 +1798,6 @@ class EntityUtils {
 		FilterOperatorEnum.IS_EQUAL_TO.equals(slot.listFilter.filterOperator.filterOperatorEnum)
 	} 
 	
-	// BEGIN For tests
-	
-		
-	
-	// END For tests
-	
 	def static String toServiceConstantsName2(Service service) {
 		service.domain.toCamelCase + service.name.toCamelCase + "Constants"
 	}
@@ -1815,4 +1810,99 @@ class EntityUtils {
 		val service = entity.service
 		'import ' + service.servicePackage + '.' + service.toServiceConstantsName2 + ';'
 	}
+	
+	def static String generateRepositoryFindByMethod(RepositoryFindBy findByObj, boolean isRepository, boolean isCall) {
+		val slot = findByObj.ownerSlot
+		val paged = findByObj.isPaged
+		val ownerEntity = slot.ownerEntity
+		val isEntity = slot.isEntity
+		
+		if (findByObj.custom !== null) {
+			
+			if (findByObj.packages !== null) {
+				findByObj.packages.forEach[
+					ownerEntity.addImport('''import «it»;''')
+				]
+			}
+			
+			val customResult = '''
+			«findByObj.custom»
+			'''
+			
+			return customResult
+			
+		}
+		
+		
+		var resultType = ownerEntity.toEntityName
+		val isManyTo = isEntity && (slot.isManyToOne || slot.isManyToMany) 
+		val findBy = new StringBuilder
+		
+		if (slot.isEnum) {
+			ownerEntity.addImport('import ' + slot.asEnum.enumPackage + ';')
+		}
+		
+		if (!isCall) {
+			if (isManyTo) {
+				if (paged) {
+					ownerEntity.addImport('import org.springframework.data.domain.Page;')
+					findBy.append('Page')				
+				}
+				else {
+					ownerEntity.addImport('import java.util.Collection;')
+					findBy.append('Collection')				
+				}
+				
+				findBy.append('<')
+				findBy.append(resultType)
+				findBy.append('>')
+			}
+			else {
+				findBy.append(resultType)
+			}
+		}
+		
+		val entity = slot.asEntity
+		val field = if (isEntity) entity.id else slot
+		
+		if (!isCall) {
+			findBy.append(' ')
+		}
+		
+		findBy.append('find')
+		if (!isRepository) {
+			findBy.append(ownerEntity.toDtoName)
+		}
+		findBy.append('By')
+		
+		findBy.append(slot.fieldName.toFirstUpper)
+		
+		if (isEntity && isRepository) { // field is slot.asEntity.id
+			findBy.append(field.fieldName.toFirstUpper)
+		}
+		
+		findBy.append('(')
+		
+		if (!isCall) {
+			findBy.append(field.toJavaType).append(' ')
+		}
+		
+		findBy.append(field.fieldName)
+		
+		if (paged) {
+			ownerEntity.addImport('import org.springframework.data.domain.Pageable;')
+			findBy.append(', ')
+			
+			if (!isCall) {
+				findBy.append('Pageable ')
+			}
+			
+			findBy.append('pageable')
+		}
+		
+		findBy.append(')')  
+		
+		val result = findBy.toString
+		result
+	} 
 }

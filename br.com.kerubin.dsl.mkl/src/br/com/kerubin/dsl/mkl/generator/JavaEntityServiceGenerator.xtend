@@ -8,6 +8,7 @@ import java.util.Set
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
 
 class JavaEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -51,15 +52,19 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val fkSlots = entity.getEntitySlots
 		
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		val findBy = findBySlots.map['public ' + it.repositoryFindBy.map[generateRepositoryFindByMethod(false, false) + ';'].join('\r\n')].join('\r\n')
+		
+		if (entity.hasAutoComplete) {
+			entity.addImport('import java.util.Collection;')
+		}
+		entity.addImport('import org.springframework.data.domain.Page;')
+		entity.addImport('import org.springframework.data.domain.Pageable;')
+		
 		'''
 		package «entity.package»;
 		
-		import org.springframework.data.domain.Page;
-		import org.springframework.data.domain.Pageable;
-		
-		«IF entity.hasAutoComplete»
-		import java.util.Collection;
-		«ENDIF»
+		«entity.imports.join('\r\n')»
 		
 		«fkSlots.getDistinctSlotsByEntityName.map[it.resolveSlotAutocompleteImport].join('\r\n')»
 		
@@ -94,9 +99,22 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			«ruleActions.map[generateRuleActionsInterfaceMethod].join»
 			«ruleMakeCopies.map[generateRuleMakeCopiesActionsInterfaceMethod].join»
+			«IF !findBy.isEmpty»
+			// findBy methods
+			«findBy»
+			«ENDIF»
 		}
 		'''
 	}
+	
+	/*def CharSequence generateInterfaceFindByForEntity(Slot slot) {
+		val findByList = slot.repositoryFindBy;
+		'''
+		// findBy for field «slot.fieldName»
+		«findByList.map[it.generateSlotFindBy].join»
+		'''
+	}*/
+	
 	
 	def Object generateSlotAutoCompleteInterfaceMethod(Slot slot) {
 		val entity = slot.asEntity
@@ -165,11 +183,21 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val rulesFormOnUpdate = entity.rulesFormOnUpdate
 		val fkSlots = entity.getEntitySlots
 		
-		val imports = newLinkedHashSet
+		//val imports = newLinkedHashSet
+		val imports = entity.imports
 		val fkSlotsDistinct = fkSlots.getDistinctSlotsByEntityName
 		
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
+		
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		
+		if (entity.hasAutoComplete) {
+			entity.addImport('import java.util.Collection;')
+		}
+		
+		entity.addImport('import org.springframework.data.domain.Page;')
+		entity.addImport('import org.springframework.data.domain.Pageable;')
 		
 		val pakage = '''
 		package «entity.package»;
@@ -179,8 +207,6 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
-		import org.springframework.data.domain.Page;
-		import org.springframework.data.domain.Pageable;
 		import org.springframework.stereotype.Service;
 		import org.springframework.transaction.annotation.Transactional;
 		
@@ -197,9 +223,6 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		«ENDIF»
 		
 		import java.util.Optional;
-		«IF entity.hasAutoComplete»
-		import java.util.Collection;
-		«ENDIF»
 		«IF entity.hasPublishEntityEvents»
 		import br.com.kerubin.api.messaging.core.DomainEntityEventsPublisher;
 		import br.com.kerubin.api.messaging.core.DomainEvent;
@@ -395,12 +418,44 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«IF !rulesFormWithDisableCUD.empty»
 			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD(imports)»
 			«ENDIF»
+			«IF !findBySlots.isEmpty»
+			
+			// findBy methods
+			«findBySlots.map[it.generateFindByImplementations].join»
+			«ENDIF»
 		}
 		'''
 		
 		val result = pakage + preImports + imports.join('\n\r') + '\n\r' + code;
 		
 		result
+	}
+	
+	def CharSequence generateFindByImplementations(Slot slot) {
+		'''
+		«slot.repositoryFindBy.map[it.generateFindByImplementation].join»
+		'''
+	}
+	
+	def CharSequence generateFindByImplementation(RepositoryFindBy findByObj) {
+		
+		val findByMethod = findByObj.generateRepositoryFindByMethod(false, false)
+		val findByMethodCall = findByObj.generateRepositoryFindByMethod(true, true)
+		
+		val slot = findByObj.ownerSlot
+		val ownerEntity = slot.ownerEntity
+		val repositoryVar = ownerEntity.toRepositoryName.toFirstLower
+		
+		'''
+		
+		@Transactional(readOnly = true)
+		@Override
+		public «findByMethod» {
+			
+			return «repositoryVar».«findByMethodCall»;
+			
+		}
+		'''
 	}
 	
 	def CharSequence generateRuleFormWithDisableCUD(Rule rule, Set<String> imports) {
