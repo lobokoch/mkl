@@ -420,9 +420,15 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		var fieldName = '<unknown>'
 		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndTypeForWeb
+		// val fieldType = pair.key
+		val fieldName2 = pair.value
+		// end isEqualTo
+		
 		'''
 		«IF isEqualTo»
-		// «fieldName = slot.fieldName»
+		// «fieldName = fieldName2»
 		if («VAR_FILTER».«fieldName») {
 			«IF slot.isNumber»
 			const value = «VAR_FILTER».«fieldName».toString();

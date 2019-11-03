@@ -481,7 +481,8 @@ RuleApply:
 		(hideCUDWebListActions = HideCUDWebListActions)? &
 		(hideWebListActions = HideWebListActions)? &
 		(webActionsColumn = WebActionsColumn)? &
-		(ruleFunction = RuleFunction)? 
+		(ruleFunction = RuleFunction)? & 
+		(rulePolling = RulePolling)? 
 	)
 ;
 
@@ -511,6 +512,16 @@ RuleFunction:
 		('params' ':' '[' funcParamThis ?= 'this' ']')? &
 		('return' ':' funcReturnThis ?= 'this')? 
 		
+	)
+	')'
+;
+
+RulePolling:
+{RulePolling}	
+	'polling' '(' 
+	(
+		('callback' ':' callbackName = ID_KEYWORD) &
+		('interval' ':' interval = INT)?		
 	)
 	')'
 ;
@@ -570,7 +581,8 @@ enum RuleTarget:
 	 GRID_ACTIONS = 'grid.actions' |
 	 FORM = 'form' |
 	 FORM_ACTIONS = 'form.actions' |
-	 SUBSCRIBE = 'subscribe' 
+	 SUBSCRIBE = 'subscribe' | 
+	 FORM_LIST = 'formList'
 ;
 
 //END Rule
@@ -630,10 +642,13 @@ Web:
 
 
 ListFilter:
+{ListFilter}	
 	'listFilter' '(' 
 		(
-			(filterOperator = FilterOperator) &
-			('styleClass' ':' styleClass = STRING)?
+			(filterOperator = FilterOperator) & 
+			('styleClass' ':' styleClass = STRING)? &
+			(readOnly ?= 'readOnly')? &
+			(^hidden ?= 'hidden')?
 		)
 	')'	
 ;

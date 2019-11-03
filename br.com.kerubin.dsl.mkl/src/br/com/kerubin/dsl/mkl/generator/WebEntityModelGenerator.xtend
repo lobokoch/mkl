@@ -250,9 +250,15 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		val isEqualTo = slot.isEqualTo
 		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndTypeForWeb
+		val fieldType = pair.key
+		val fieldName2 = pair.value
+		// end isEqualTo
+		
 		'''
 		«IF isEqualTo»
-		«slot.fieldName»: «slot.toWebType»;
+		«fieldName2»: «fieldType»;
 		«ENDIF»
 		«IF isMany»
 		«fieldName»: «slot.toAutoCompleteClassName»[];

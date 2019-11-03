@@ -58,6 +58,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val rememberedSlots = entity.slots.filter[it.isWebRememberValue]
 		
+		val rulesPolling = entity.ruleFormPolling
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
@@ -94,7 +96,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val body = '''
 		
 		@Component({
-		  selector: 'app-«component»',
+		  selector: '«entity.toEntityWebCRUDAppComponentName»',
 		  templateUrl: './«component».html',
 		  styleUrls: ['./«component».css']
 		})
@@ -116,6 +118,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«entity.slots.filter[isEntity].map[mountAutoCompleteSuggestionsVar].join('\n\r')»
 			«entity.slots.filter[isEnum].map[mountDropdownOptionsVar].join('\n\r')»
 			«IF entity.isEnableReplication»«entity.entityReplicationQuantity» = 1;«ENDIF»
+			«IF !rulesPolling.empty»
+			«rulesPolling.generatePollingVars»
+			«ENDIF»
 			
 			constructor(
 			    private «serviceVar»: «serviceName»,
@@ -325,6 +330,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 					«rememberedSlots.map[it.buildApplyRememberValue].join»
 				}
 			}
+			«ENDIF»
+			«IF !rulesPolling.empty»
+			«rulesPolling.generatePollingMethodsForm»
 			«ENDIF»
 		}
 		'''

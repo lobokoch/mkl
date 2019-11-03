@@ -34,6 +34,7 @@ import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
 import br.com.kerubin.dsl.mkl.model.StringObject
 import br.com.kerubin.dsl.mkl.model.FieldMathExpression
 import br.com.kerubin.dsl.mkl.model.TerminalFieldMathExpression
+import br.com.kerubin.dsl.mkl.model.RulePolling
 
 class RuleWebUtils {
 	
@@ -428,5 +429,102 @@ class RuleWebUtils {
 	def static String getMomentUTCZero() {
 		'moment({h: 0, m: 0, s: 0, ms: 0})'
 	}
+	
+	// *********** Begin polling *********** 
+	def static toRulePollingVarNameRef(RulePolling rulePolling) {
+		return 'polling' + rulePolling.callbackName.toFirstUpper + 'Ref'
+	}
+	
+	def static toRulePollingStartMethodName(RulePolling rulePolling) {
+		return 'startPolling' + rulePolling.callbackName.toFirstUpper
+	}
+	
+	def static toRulePollingStopMethodName(RulePolling rulePolling) {
+		return 'stopPolling' + rulePolling.callbackName.toFirstUpper
+	}
+	
+	def static toRulePollingRunMethodName(RulePolling rulePolling) {
+		return 'runPolling' + rulePolling.callbackName.toFirstUpper
+	}
+	
+	def static CharSequence generatePollingVars(Iterable<Rule> rules) {
+		'''
+		
+		// Begin polling reference variables
+		«rules.map[it.apply.rulePolling.generatePollingVar].join»
+		// End polling reference variables
+		'''
+	}
+	
+	def static CharSequence generatePollingVar(RulePolling polling) {
+		val varName = polling.toRulePollingVarNameRef
+		
+		'''
+		private «varName»: any;
+		'''
+	}
+	
+	def static CharSequence generatePollingMethodsFormList(Iterable<Rule> rules) {
+		
+		'''
+		«rules.map[it.apply.rulePolling.generatePollingMethodForFormList].join»
+		'''
+	}
+	
+	def static CharSequence generatePollingMethodsForm(Iterable<Rule> rules) {
+		
+		'''
+		«rules.map[it.apply.rulePolling.generatePollingMethodForForm].join»
+		'''
+	}
+	
+	def static CharSequence generatePollingMethodForFormList(RulePolling polling) {
+		polling.generatePollingMethod(false)
+	}
+	
+	def static CharSequence generatePollingMethodForForm(RulePolling polling) {
+		polling.generatePollingMethod(true)
+	}
+	
+	def static CharSequence generatePollingMethod(RulePolling polling, boolean isForm) {
+		val varName = polling.toRulePollingVarNameRef
+		val startMethodName = polling.toRulePollingStartMethodName
+		val stopMethodName = polling.toRulePollingStopMethodName
+		val runMethodName = polling.toRulePollingRunMethodName
+		val interval = polling.interval
+		
+		val entity = polling.entity
+		val dtoName = entity.toDtoName
+		
+		'''
+		
+		// Begin polling methods for: «polling.callbackName»
+		«startMethodName»() {
+		  this.«varName» = setInterval(() => {
+		    this.«runMethodName»();
+		  }, «interval»);
+		}
+		
+		«stopMethodName»() {
+		  clearInterval(this.«varName»);
+		}
+		
+		«runMethodName»() {
+		  // You can replace this code by your code.
+		  
+		  «IF isForm»
+		  const id = this.route.snapshot.params['id'];
+		  if (id) {
+		    this.get«dtoName»ById(id);
+		  }
+		  «ELSE»
+		  this.«entity.toWebEntityFilterSearchMethod»;
+		  «ENDIF»
+		}
+		// End polling methods for: «polling.callbackName»
+		
+		'''
+	}
+	// *********** End polling *********** 
 	
 }

@@ -7,6 +7,7 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension org.apache.commons.lang3.StringUtils.*
 
 class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -127,12 +128,22 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def CharSequence buildFieldPredicateIsEqualTo(Slot slot, String varFilter, String varQEntity) {
-		val fieldName = slot.fieldName
+		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndType
+		//val fieldType = pair.key
+		val fieldName = pair.value
+		// end isEqualTo
+		
 		val varName = fieldName + IS_EQUAL_TO
+		
+		//val qFieldName = fieldName.splitByCharacterTypeCamelCase.map[it.toFirstLower].join('.')
+		val qFieldName = slot.toFieldAndEntityId
+		
 		'''
 		// Begin field: «fieldName»
-		if («varFilter».«slot.buildMethodGet» != null) {
-			BooleanExpression «varName» = «varQEntity».«fieldName».eq(«varFilter».«slot.buildMethodGet»);
+		if («varFilter».«fieldName.buildMethodGet» != null) {
+			BooleanExpression «varName» = «varQEntity».«qFieldName».eq(«varFilter».«fieldName.buildMethodGet»);
 			where.and(«varName»);
 		}
 		// End field: «fieldName»
@@ -339,6 +350,12 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val isEqualTo = slot.isEqualTo
 		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndType
+		val fieldType = pair.key
+		var fieldName = pair.value
+		// end isEqualTo
+		
 		val isEnableDoc = entity.service.isEnableDoc
 		val title = slot.title
 		
@@ -349,7 +366,7 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		«IF isEnableDoc»
 		@ApiModelProperty(notes = "«title»", position = «position»)
 		«ENDIF»
-		private «slot.toJavaType» «slot.fieldName»;
+		private «fieldType» «fieldName»;
 		«ENDIF»
 		«IF isMany»
 		«IF slot.isDate»
@@ -411,11 +428,17 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		
 		val isEqualTo = slot.isEqualTo
 		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndType
+		val fieldType = pair.key
+		var fieldName = pair.value
+		// end isEqualTo
+		
 		'''
 		«IF isEqualTo»
-		«slot.getGetMethod»
+		«fieldName.genGetMethod(fieldType)»
 				
-		«slot.getSetMethod»
+		«fieldName.genSetMethod(fieldType)»
 		«ENDIF»
 		«IF isMany»
 		«slot.getListMethod»

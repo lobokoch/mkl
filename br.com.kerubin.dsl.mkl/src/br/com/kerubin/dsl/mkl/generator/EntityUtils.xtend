@@ -40,6 +40,7 @@ import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
+import org.eclipse.emf.ecore.EObject
 
 class EntityUtils {
 	
@@ -600,8 +601,17 @@ class EntityUtils {
 		'crud-' + entity.toEntityWebComponentName
 	}
 	
+	def static toEntityWebCRUDAppComponentName(Entity entity) {
+		'app-crud-' + entity.name.toLowerCase.removeUnderline
+	}
+	
 	def static toEntityWebListComponentName(Entity entity) {
 		'list-' + entity.toEntityWebComponentName
+	}
+	
+	def static toEntityWebListAppComponentName(Entity entity) {
+		val name = entity.name.toLowerCase.removeUnderline
+		'app-list-' + name
 	}
 	
 	def static toWebAppComponentName() {
@@ -819,6 +829,18 @@ class EntityUtils {
 	def static getRuleFormActionsActions(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
 			it.apply !== null && it.apply.hasRuleFunction]
+		rules
+	}
+	
+	def static getRuleFormListPolling(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_LIST && 
+			it.apply !== null && it.apply.hasRulePolling]
+		rules
+	}
+	
+	def static getRuleFormPolling(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM && 
+			it.apply !== null && it.apply.hasRulePolling]
 		rules
 	}
 	
@@ -1427,6 +1449,49 @@ class EntityUtils {
 		entity.name.toFirstLower + "Entity"
 	}
 	
+	def static Pair<String, String> getSlotNameAndType(Slot slot) {
+		// begin isEqualTo
+		val isEntity = slot.isEntity
+		val slotAsEntity = slot.asEntity
+		var fieldType = slot.toJavaType
+		var fieldName = slot.fieldName
+		if (isEntity) {
+			fieldType = slotAsEntity.id.toJavaType
+			fieldName += slotAsEntity.id.fieldName.toFirstUpper
+		}
+		
+		val result = Pair.of(fieldType, fieldName)
+		result
+		// end isEqualTo
+	}
+	
+	def static Pair<String, String> getSlotNameAndTypeForWeb(Slot slot) {
+		// begin isEqualTo
+		val isEntity = slot.isEntity
+		val slotAsEntity = slot.asEntity
+		var fieldType = slot.toWebType
+		var fieldName = slot.fieldName
+		if (isEntity) {
+			fieldType = slotAsEntity.id.toWebType
+			fieldName += slotAsEntity.id.fieldName.toFirstUpper
+		}
+		
+		val result = Pair.of(fieldType, fieldName)
+		result
+		// end isEqualTo
+	}
+	
+	def static String toFieldAndEntityId(Slot slot) {
+		val fieldName = slot.fieldName
+		if (!slot.isEntity) {
+			return fieldName
+		}
+		
+		val entity = slot.asEntity
+		val result = fieldName + '.' + entity.id.fieldName
+		result
+	}
+	
 	def static buildMethodGet(Slot slot) {
 		slot.name.buildMethodGet
 	}
@@ -1469,6 +1534,22 @@ class EntityUtils {
 		'''
 		public «slot.toJavaType» get«name»() {
 			return «name.toFirstLower»;
+		}
+		''' 
+	}
+	
+	def static CharSequence genGetMethod(String fieldName, String fieldType) {
+		'''
+		public «fieldType» get«fieldName.toFirstUpper»() {
+			return «fieldName»;
+		}
+		''' 
+	}
+	
+	def static CharSequence genSetMethod(String fieldName, String fieldType) {
+		'''
+		public void set«fieldName.toFirstUpper»(«fieldType» «fieldName») {
+			this.«fieldName» = «fieldName»;
 		}
 		''' 
 	}
@@ -1904,5 +1985,22 @@ class EntityUtils {
 		
 		val result = findBy.toString
 		result
-	} 
+	}
+	
+	def static Entity getEntity(EObject eObject) {
+		if (eObject === null) {
+			return null
+		}
+		//EObject EObject.eContainer()
+		var parent = eObject.eContainer
+		while (parent !== null && !(parent instanceof Entity)) {
+			parent = parent.eContainer
+		}
+		
+		if (parent !== null) {
+			return parent as Entity
+		}
+		
+		return null
+	}
 }

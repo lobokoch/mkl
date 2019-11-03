@@ -1,29 +1,29 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.FieldObject
+import br.com.kerubin.dsl.mkl.model.NumberObject
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotNull
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
 import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
 import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
 import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.TemporalFunction
+import br.com.kerubin.dsl.mkl.model.TemporalFunctionNextDays
 import br.com.kerubin.dsl.mkl.model.TemporalObject
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
-import br.com.kerubin.dsl.mkl.model.NumberObject
-import br.com.kerubin.dsl.mkl.model.FieldObject
-import br.com.kerubin.dsl.mkl.model.TemporalFunction
-import br.com.kerubin.dsl.mkl.model.TemporalFunctionNextDays
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -63,7 +63,10 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val getMethodEntitySumFields = 'get' + entitySumFieldsClassName
 		
 		val filterSlots = entity.slots.filter[it.hasListFilter]
+		
 		val ruleActions = entity.ruleActions
+		val rulesPolling = entity.ruleFormListPolling
+		
 		val idVar = entity.id.name.toFirstLower
 		
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
@@ -109,7 +112,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val body = '''
 		
 		@Component({
-		  selector: 'app-«component»',
+		  selector: '«entity.toEntityWebListAppComponentName»',
 		  templateUrl: './«component».html',
 		  styleUrls: ['./«component».css']
 		})
@@ -128,6 +131,9 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«IF entity.hasSumFields»
 			«entitySumFieldsClassName.toFirstLower» = new «entitySumFieldsClassName»();
+			«ENDIF»
+			«IF !rulesPolling.empty»
+			«rulesPolling.generatePollingVars»
 			«ENDIF»
 			
 			constructor(
@@ -252,6 +258,9 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«IF !rulesFormWithDisableCUD.empty»
 			«rulesFormWithDisableCUD.head.generateRuleFormWithDisableCUD»
+			«ENDIF»
+			«IF !rulesPolling.empty»
+			«rulesPolling.generatePollingMethodsFormList»
 			«ENDIF»
 		}
 		'''

@@ -314,6 +314,11 @@ class RuleFunction {
 	boolean funcReturnThis
 }
 
+class RulePolling {
+	String callbackName
+	int interval = '3000' // default
+}
+
 class RuleApply {
 	String styleClass
 	String styleCss
@@ -322,6 +327,7 @@ class RuleApply {
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
 	contains RuleFunction ruleFunction
+	contains RulePolling rulePolling
 	contains DisableCUD disableCUD
 	contains HideCUDWebListActions hideCUDWebListActions
 	contains HideWebListActions hideWebListActions
@@ -345,6 +351,10 @@ class RuleApply {
 	
 	op boolean hasRuleFunction() {
 		return ruleFunction !== null
+	}
+	
+	op boolean hasRulePolling() {
+		return rulePolling !== null
 	}
 	
 	op boolean hasLabel() {
@@ -450,6 +460,7 @@ enum RuleTarget {
 	FORM as 'form'
 	FORM_ACTIONS as 'form.actions'
 	SUBSCRIBE as 'subscribe'
+	FORM_LIST as 'formList'
 }
 
 // END Rule
@@ -719,6 +730,8 @@ class FilterOperator {
 class ListFilter {
 	contains FilterOperator filterOperator
 	String styleClass = 'ui-md-2'
+	boolean readOnly
+	boolean hidden
 }
 
 class SumField {

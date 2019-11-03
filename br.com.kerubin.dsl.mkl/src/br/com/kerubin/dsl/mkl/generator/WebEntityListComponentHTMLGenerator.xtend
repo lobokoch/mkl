@@ -461,7 +461,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val isBetween = slot.isBetween 
 		
 		val isEqualTo = slot.isEqualTo
-			
+		
 			'''
 			«IF isEqualTo»
 			«slot.generateHTMLFilterIsEqualToField»
@@ -493,10 +493,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	def CharSequence generateHTMLFilterIsBetweenIsDateField(Slot slot) {
 		val entity = slot.ownerEntity
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
+		val isHidden = slot.listFilter.hidden
 		
 		'''
 		
-		<div class="ui-g-12">
+		<div class="ui-g-12«IF isHidden» hidden«ENDIF»">
 		
 		    <div class="ui-g-12 «styleClass» ui-fluid">
 		        <label style="display: block">«slot.getFilterIsBetweenLabel(2)»</label>
@@ -527,9 +528,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val entity = slot.ownerEntity
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
+		val isHidden = slot.listFilter.hidden
+		
 		'''
 		
-		<div class="ui-g-12">
+		<div class="ui-g-12«IF isHidden» hidden«ENDIF»">
 		
 		    <div class="ui-g-12 «styleClass» ui-fluid">
 		      	<label class="label-r">«slot.getFilterIsBetweenLabel(0)»</label>
@@ -557,9 +560,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val entity = slot.ownerEntity
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
+		val isHidden = slot.listFilter.hidden
+		
 		'''
 		
-		<div class="ui-g-12 «styleClass» ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid«IF isHidden» hidden«ENDIF»">
 			<label style="display: block" class="label-l label-r">«slot.getIsNotNull_isNullLabel(0)»</label>
 			<p-inputSwitch [(ngModel)]="«entity.toEntityListFilterName».«slot.isNotNullFieldName»"></p-inputSwitch>
 		</div>
@@ -570,9 +575,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val entity = slot.ownerEntity
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
+		val isHidden = slot.listFilter.hidden
+		
 		'''
 		
-		<div class="ui-g-12 «styleClass» ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid«IF isHidden» hidden«ENDIF»">
 			<label style="display: block" class="label-l label-r">«slot.getIsNotNull_isNullLabel(1)»</label>
 			<p-inputSwitch [(ngModel)]="«entity.toEntityListFilterName».«slot.isNullFieldName»"></p-inputSwitch>
 		</div>
@@ -581,23 +588,36 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterIsEqualToField(Slot slot) {
 		val entity = slot.ownerEntity
-		val fieldName = slot.fieldName
-		val isInputText = slot.isNumber || slot.isString || slot.isUUID
+		
+		val isEntity = slot.isEntity
+		// val fieldName = slot.fieldName
+		
+		// begin isEqualTo
+		val pair = slot.getSlotNameAndTypeForWeb
+		// val fieldType = pair.key
+		val fieldName = pair.value
+		// end isEqualTo
+		
+		val isInputText = slot.isNumber || slot.isString || slot.isUUID || isEntity
 		
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
+		val isHidden = slot.listFilter.hidden
+		val isReadOnly = slot.listFilter.readOnly
+		val inputType = if (isHidden) 'hidden' else 'text'		
+		
 		'''
 		
-		<div class="ui-g-12 «styleClass» ui-fluid">
-			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: fieldName»</label>
+		<div class="ui-g-12 «styleClass» ui-fluid«IF isHidden» hidden«ENDIF»">
+			<label class="label-r«IF isHidden» hidden«ENDIF»">«slot?.listFilter?.filterOperator?.label ?: fieldName»</label>
 			«IF isInputText»
-			<input pInputText type="text"
+			<input pInputText type="«inputType»"«IF isReadOnly» [disabled]="true"«ENDIF»
 			«IF slot.isNumber»
 			currencyMask [options]="{prefix: '', thousands: '.', decimal: ',', allowNegative: false}" placeholder="0,00"
 			«ENDIF»
 			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»"/>
 			«ELSEIF slot.isEnum»
-			<p-dropdown [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."
+			<p-dropdown«IF isHidden» class="hidden"«ENDIF»«IF isReadOnly» [disabled]="true"«ENDIF» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."
 			[(ngModel)]="«entity.toEntityListFilterName».«fieldName»"></p-dropdown>
 			«ENDIF»
 		</div>
@@ -611,9 +631,14 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			styleClass = 'ui-md-12'
 		}
 		
+		
+		val isHidden = slot.listFilter.hidden
+		//val isReadOnly = slot.listFilter.readOnly
+		//val inputType = if (isHidden) 'hidden' else 'text'
+		
 		'''
 		
-		<div class="ui-g-12 «styleClass» ui-fluid">
+		<div class="ui-g-12 «styleClass» ui-fluid«IF isHidden» hidden«ENDIF»">
 			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
 			<p-autoComplete name="«slot.toAutoCompleteName»" 
 			placeholder="Digite para pesquisar..." [dropdown]="true" 
