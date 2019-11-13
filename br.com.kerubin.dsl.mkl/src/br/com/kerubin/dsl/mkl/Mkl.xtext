@@ -263,6 +263,7 @@ RepositoryFindBy:
 {RepositoryFindBy}
 	'findBy' ('('
 		(
+			('documentation' ':' documentation = STRING)? &
 			('custom' ':' custom = STRING)? &
 			('resultKind' ':' resultKind = RepositoryResultKind)? & 
 			(paged ?= 'paged')? & 
@@ -273,7 +274,7 @@ RepositoryFindBy:
 ;
 
 enum RepositoryResultKind:
-	OPTIONAL='Optional' | COLLECTION='Collection' | ENTITY='Entity'
+	ENTITY='Entity' | OPTIONAL='Optional' | COLLECTION='Collection' 
 ;
 
 Validation:
@@ -482,7 +483,8 @@ RuleApply:
 		(hideWebListActions = HideWebListActions)? &
 		(webActionsColumn = WebActionsColumn)? &
 		(ruleFunction = RuleFunction)? & 
-		(rulePolling = RulePolling)? 
+		(rulePolling = RulePolling)? &
+		(modifierFunction = ModifierFunction)?
 	)
 ;
 
@@ -538,6 +540,20 @@ MakeCopiesExpression:
 	')'
 ;
 
+
+ModifierFunction:
+{ModifierFunction}	
+	function = ModifierFunctionName '(' (funcParams += FunctionParam*) ')' 
+;
+
+FunctionParam:
+{FunctionParam}	
+	paramStr = STRING | (',' FunctionParam)
+;
+
+enum ModifierFunctionName:
+	TRIM = 'trim' | TRIM_LEFT = 'trimLeft' | TRIM_RIGTH = 'trimRight' 
+;
 
 FieldAssignExpression:
 	fieldValues += FieldAndValue (',' fieldValues += FieldAndValue)*

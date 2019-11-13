@@ -31,6 +31,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	def CharSequence generateEntityController(Entity entity) {
+		entity.imports.clear
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
 		val entityDTOName = entity.toEntityDTOName
@@ -59,7 +60,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		entity.addImport('import org.springframework.data.domain.Page;')
 		entity.addImport('import org.springframework.data.domain.Pageable;')
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
 		val findBySlotsContent = findBySlots.map[it.generateFindByImplementations].join
 		
 		

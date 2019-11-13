@@ -29,6 +29,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateEntityRepository(Entity entity) {
 		entity.imports.clear
+		
 		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
 		val autoCompleteSlots = entity.slots.filter[it.hasAutoComplete || (entity.hasEntityVersion && it.name.toLowerCase == 'version')]
 		val hasAutoComplete = !autoCompleteSlots.isEmpty
@@ -83,7 +84,13 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		'''
 		
 		// findBy for field «slot.fieldName»
-		«findByList.map[it.generateRepositoryFindByMethod(true, false) + ';'].join('\r\n')»
+		«findByList.map[
+			var code = it.generateRepositoryFindByMethod(true, false)
+			if (!it.hasCustom) {
+				code += ';'
+			}
+			code
+		].join('\r\n')»
 		'''
 	}
 	

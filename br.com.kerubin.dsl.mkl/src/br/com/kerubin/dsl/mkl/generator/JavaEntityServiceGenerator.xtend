@@ -9,6 +9,8 @@ import static br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
+import br.com.kerubin.dsl.mkl.model.ModifierFunctionName
 
 class JavaEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -44,6 +46,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	def CharSequence generateEntityServiceInterface(Entity entity) {
+		entity.imports.clear
+		
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
 		val idVar = entity.id.name.toFirstLower
@@ -52,7 +56,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val fkSlots = entity.getEntitySlots
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
 		val findBy = findBySlots.map['public ' + it.repositoryFindBy.map[generateRepositoryFindByMethod(false, false) + ';'].join('\r\n')].join('\r\n')
 		
 		if (entity.hasAutoComplete) {
@@ -167,6 +171,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	}
 	
 	def CharSequence generateEntityServiceInterfaceImpl(Entity entity) {
+		entity.imports.clear
+		
 		val entityName = entity.toEntityName
 		val entityVar = entity.toEntityName.toFirstLower
 		val entityDTOName = entity.toEntityDTOName
@@ -189,8 +195,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
+		val rulesWithSlotAppyModifierFunction = entity.getRulesWithSlotAppyModifierFunction
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
 		
 		if (entity.hasAutoComplete) {
 			entity.addImport('import java.util.Collection;')
@@ -222,7 +229,6 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		import org.apache.commons.lang3.StringUtils;
 		«ENDIF»
 		
-		import java.util.Optional;
 		«IF entity.hasPublishEntityEvents»
 		import br.com.kerubin.api.messaging.core.DomainEntityEventsPublisher;
 		import br.com.kerubin.api.messaging.core.DomainEvent;
@@ -279,6 +285,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				ruleOnCreate(«entityVar»);
 				
 				«ENDIF»
+				«IF !rulesWithSlotAppyModifierFunction.empty»
+				
+				// Begin Rules AppyModifierFunction
+				«rulesWithSlotAppyModifierFunction.map[it.applyRulesWithSlotAppyModifierFunction].join»
+				// End Rules AppyModifierFunction
+				
+				«ENDIF»
 				«IF !entity.hasPublishCreated»
 				return «repositoryVar».save(«entityVar»);
 				«ELSE»
@@ -310,6 +323,13 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«ENDIF»
 				«IF !rulesFormOnUpdate.empty»
 				ruleOnUpdate(«entityVar»);
+				
+				«ENDIF»
+				«IF !rulesWithSlotAppyModifierFunction.empty»
+								
+				// Begin Rules AppyModifierFunction
+				«rulesWithSlotAppyModifierFunction.map[it.applyRulesWithSlotAppyModifierFunction].join»
+				// End Rules AppyModifierFunction
 				
 				«ENDIF»
 				«entityName» entity = «getEntityMethod»(«idVar»);
@@ -383,6 +403,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			@Transactional(readOnly = true)
 			protected «entityName» «getEntityMethod»(«idType» «entity.id.name») {
+				«entity.addImport('import java.util.Optional;')»
 				Optional<«entityName»> «entityVar» = «repositoryVar».findById(«idVar»);
 				if (!«entityVar».isPresent()) {
 					throw new IllegalArgumentException("«entityDTOName» not found:" + «idVar».toString());
@@ -430,6 +451,49 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		result
 	}
+	
+	def CharSequence applyRulesWithSlotAppyModifierFunction(Rule rule) {
+		val slot = (rule.target as RuleTargetField).target.field
+		val entity = slot.ownerEntity
+		val entityVar = entity.toEntityName.toFirstLower
+		val modifierFunction = rule.apply.modifierFunction
+		val funcNameEnum = modifierFunction.function
+		val funcParams = modifierFunction.funcParams
+		val hasParams = modifierFunction.hasParams
+		
+		var params = ''
+		if (hasParams) {
+			params = funcParams.map['"' + it.paramStr + '"'].join(', ')
+		}
+		
+		val fileName = slot.fieldName.toFirstUpper
+		
+		val funcName = switch funcNameEnum {
+			case ModifierFunctionName.TRIM_LEFT: {
+				val result = 'stripStart'
+				entity.addImport('''import static org.apache.commons.lang3.StringUtils.«result»;''')
+				result
+			}
+			case ModifierFunctionName.TRIM_RIGTH: {
+				val result = 'stripEnd'
+				entity.addImport('''import static org.apache.commons.lang3.StringUtils.«result»;''')
+				result
+			}
+			default: {
+				val result = 'strip'
+				entity.addImport('''import static org.apache.commons.lang3.StringUtils.«result»;''')
+				result
+			}
+		}
+		
+		'''
+		if («entityVar».get«fileName»() != null) {
+			«entityVar».set«fileName»(«funcName»(«entityVar».get«fileName»()«IF hasParams», «params»«ENDIF»));
+		}
+		'''
+	}
+	
+	
 	
 	def CharSequence generateFindByImplementations(Slot slot) {
 		'''

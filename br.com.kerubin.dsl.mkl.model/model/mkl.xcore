@@ -295,9 +295,9 @@ class RuleWhenOperator {
 }
 
 enum RepositoryResultKind {
+	ENTITY as 'Entity'
 	OPTIONAL as 'Optional'
 	COLLECTION as 'Collection'
-	ENTITY as 'Entity'
 }
 
 enum RuleWhenTemporalConstants {
@@ -319,6 +319,25 @@ class RulePolling {
 	int interval = '3000' // default
 }
 
+class ModifierFunction {
+	ModifierFunctionName function
+	contains FunctionParam[] funcParams
+	
+	op boolean hasParams() {
+		funcParams !== null && !funcParams.empty
+	}
+}
+
+class FunctionParam {
+	String paramStr
+}
+
+enum ModifierFunctionName {
+	TRIM as 'trim' 
+	TRIM_LEFT as 'trimLeft' 
+	TRIM_RIGTH as 'trimRight'
+}
+
 class RuleApply {
 	String styleClass
 	String styleCss
@@ -332,6 +351,7 @@ class RuleApply {
 	contains HideCUDWebListActions hideCUDWebListActions
 	contains HideWebListActions hideWebListActions
 	contains WebActionsColumn webActionsColumn
+	contains ModifierFunction modifierFunction
 	
 	op boolean hasHideWebListActions() {
 		hideWebListActions !== null
@@ -367,6 +387,10 @@ class RuleApply {
 	
 	op boolean hasFieldMathExpression() {
 		fieldMathExpression !== null
+	}
+	
+	op boolean hasModifierFunction() {
+		modifierFunction !== null
 	}
 	
 	op boolean hasStyleClass() {
@@ -799,7 +823,20 @@ class RepositoryFindBy {
 	RepositoryResultKind resultKind
 	String[] packages
 	boolean paged
+	String documentation
 	refers Slot ownerSlot opposite repositoryFindBy
+	
+	op boolean hasDocumentation() {
+		documentation !== null && !documentation.empty
+	}
+	
+	op boolean hasCustom() {
+		custom !== null && !custom.empty
+	}
+	
+	op boolean hasPackages() {
+		packages !== null && !packages.empty
+	}
 }
 
 abstract class Slotted extends Element {

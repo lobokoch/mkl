@@ -2,7 +2,7 @@
 .project
 .settings/
 */target/*
-!*/target/repository/
+#!*/target/repository/
 bin/
 src-gen/
 xtend-gen/

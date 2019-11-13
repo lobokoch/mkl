@@ -41,6 +41,7 @@ import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
 import org.eclipse.emf.ecore.EObject
+import br.com.kerubin.dsl.mkl.model.RepositoryResultKind
 
 class EntityUtils {
 	
@@ -879,6 +880,10 @@ class EntityUtils {
 	
 	def static getRulesWithSlotAppyMathExpression(Entity entity) {
 		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasFieldMathExpression] 
+	}
+	
+	def static getRulesWithSlotAppyModifierFunction(Entity entity) {
+		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasModifierFunction] 
 	}
 	
 	def static getRuleWithSlotAppyStyleClassForSlot(Slot slot) {
@@ -1897,17 +1902,37 @@ class EntityUtils {
 		val paged = findByObj.isPaged
 		val ownerEntity = slot.ownerEntity
 		val isEntity = slot.isEntity
+		val hasDocumentation = findByObj.hasDocumentation
 		
-		if (findByObj.custom !== null) {
+		val resultKindEnum = findByObj?.resultKind ?: RepositoryResultKind.ENTITY
+		
+		if (findByObj.hasCustom) {
 			
-			if (findByObj.packages !== null) {
+			val resultKind = switch resultKindEnum {
+				case RepositoryResultKind.OPTIONAL: {
+					ownerEntity.addImport('import java.util.Optional;')
+					'''Optional<«ownerEntity.toEntityName»>'''
+				}
+				case RepositoryResultKind.COLLECTION: {
+					ownerEntity.addImport('import java.util.Collection;')
+					'''Collection<«ownerEntity.toEntityName»>'''
+				}
+				default: '''«ownerEntity.toEntityName»'''
+			}
+			
+			if (findByObj.hasPackages) {
 				findByObj.packages.forEach[
 					ownerEntity.addImport('''import «it»;''')
 				]
 			}
 			
 			val customResult = '''
-			«findByObj.custom»
+			«IF hasDocumentation»
+			/** 
+			 * «findByObj.documentation»
+			 **/
+			«ENDIF»
+			«resultKind» «findByObj.custom»;
 			'''
 			
 			return customResult
