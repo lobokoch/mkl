@@ -528,11 +528,16 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val entity = slot.ownerEntity
 		val styleClass = slot?.listFilter?.styleClass?.getStyleClass
 		
+		var containerStyleClass = slot.webClass		
 		val isHidden = slot.listFilter.hidden
+		
+		if (isHidden && !containerStyleClass.containsWord('hidden')) {
+			containerStyleClass += ' hidden'
+		}
 		
 		'''
 		
-		<div class="ui-g-12«IF isHidden» hidden«ENDIF»">
+		<div class="«slot.webClass»">
 		
 		    <div class="ui-g-12 «styleClass» ui-fluid">
 		      	<label class="label-r">«slot.getFilterIsBetweenLabel(0)»</label>
