@@ -24,10 +24,28 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import java.util.Map.Entry
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	StringConcatenationExt imports
+	
+	val periodItems = newLinkedHashMap(
+		'Minha competência' -> '12',
+		'Hoje' -> '0',
+		'Amanhã' -> '1',
+		'Esta semana' -> '2',
+		'Semana que vem' -> '3',
+		'Este mês' -> '4',
+		'Mês que vem' -> '5',
+		'Este ano' -> '6',
+		'Ano que vem' -> '7',
+		'Ontem' -> '8',
+		'Semana passada' -> '9',
+		'Mês passado' -> '10',
+		'Ano passado' -> '11',
+		'Personalizado' -> '99'
+	)
 	
 	
 	new(BaseGenerator baseGenerator) {
@@ -219,21 +237,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !filterSlots.filter[it.isBetween && it.isDate].empty»
 			private initializeDateFilterIntervalDropdownItems() {
 				this.dateFilterIntervalDropdownItems = [
-				    {label: 'Minha competência', value: '12'},
-				    {label: 'Hoje', value: '0'},
-				    {label: 'Amanhã', value: '1'},
-				    {label: 'Esta semana', value: '2'},
-				    {label: 'Semana que vem', value: '3'},
-				    {label: 'Este mês', value: '4'},
-				    {label: 'Mês que vem', value: '5'},
-				    {label: 'Este ano', value: '6'},
-				    {label: 'Ano que vem', value: '7'},
-				    // Passado
-				    {label: 'Ontem', value: '8'},
-				    {label: 'Semana passada', value: '9'},
-				    {label: 'Mês passado', value: '10'},
-				    {label: 'Ano passado', value: '11'},
-				    {label: 'Personalizado', value: '99'}
+				    «periodItems.entrySet.map[it.gerarPeriodo].join(',\r\n')»
 				  ];
 			}
 			
@@ -268,6 +272,12 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val source = imports.ln.toString + body
 		source
 	}
+	
+	def CharSequence gerarPeriodo(Entry<String, String> entry) {
+		'''{label: '«entry.key»', value: '«entry.value»'}'''
+	}
+	
+	
 	
 	def CharSequence generateEnumInitializationOptions(Slot slot) {
 		val enumerarion = slot.asEnum
@@ -697,6 +707,17 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val isBetween = slot.isBetween
 		
 		val isEqualTo = slot.isEqualTo
+		
+		var defVal = "{label: 'Minha competência', value: '12'}";
+		if (slot.hasListFilter) {
+			val key = slot.listFilter.filterOperator?.^default
+			if (key !== null) {
+				val entry = periodItems.entrySet.findFirst[it | it.key == key || it.value == key]
+				if (entry !== null) {
+					defVal = '''{label: '«entry.key»', value: '«entry.value»'}''';
+				}
+			}
+		}
 			
 		'''
 		«IF isEqualTo && slot.isEnum»
@@ -715,7 +736,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		«ELSEIF isBetween»
 		
 		«IF slot.isDate»
-		«slot.toIsBetweenOptionsSelected»: SelectItem = {label: 'Minha competência', value: '12'};
+		«slot.toIsBetweenOptionsSelected»: SelectItem = «defVal»;
 		«ELSE»
 		«ENDIF»
 		
