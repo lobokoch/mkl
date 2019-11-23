@@ -68,6 +68,11 @@ class ServiceBoosterImpl implements ServiceBooster {
 			if (!it.hasLabel) {
 				it.label = it.asEntity.label
 			}
+			
+			if (it.isToMany && !it.isMany) {
+				it.many = true
+			}
+			
 		]
 		
 		if (!entityHasAutoComplete) {
