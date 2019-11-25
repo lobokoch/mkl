@@ -212,7 +212,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		val preImports = ''' 
 		
-		import org.springframework.beans.BeanUtils;
+		// import org.springframework.beans.BeanUtils;
 		import org.springframework.beans.factory.annotation.Autowired;
 		import org.springframework.stereotype.Service;
 		import org.springframework.transaction.annotation.Transactional;
@@ -332,9 +332,11 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				// End Rules AppyModifierFunction
 				
 				«ENDIF»
-				«entityName» entity = «getEntityMethod»(«idVar»);
-				BeanUtils.copyProperties(«entityVar», entity, "«entity.id.name»");
-				entity = «repositoryVar».save(entity);
+				// «entityName» entity = «getEntityMethod»(«idVar»);
+				// BeanUtils.copyProperties(«entityVar», entity, "«entity.id.name»");
+				// entity = «repositoryVar».save(entity);
+				
+				«entityName» entity = «repositoryVar».save(«entityVar»);
 				
 				«IF entity.hasPublishUpdated»
 				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('updated')»);

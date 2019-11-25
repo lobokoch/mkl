@@ -53,7 +53,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaServiceWebMvcConfigurerAdapterGenerator(this),
 			new JavaMessagingAfterReceivePostProcessorsGenerator(this),
 			new JavaEntityRuleFunctionsGenerator(this),		
-			new JavaSwaggerConfigGenerator(this)				
+			new JavaSwaggerConfigGenerator(this),
+			new JavaMapConverterGenerator(this)
 		)
 		
 		if (canGenerateServiceBackendTest) {

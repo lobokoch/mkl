@@ -310,12 +310,16 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		«ENDIF»
 		public class «entity.toEntityListFilterClassName» {
 		
-			«slots.generateFields»
-		
+			«slots.generateFields(entity)»
+			
 		}
 		'''
 		
 		val imports = '''
+		
+		import java.util.HashMap;
+		import java.util.Map;
+		
 		«entity.imports.map[it].join('\r\n')»
 		'''
 		
@@ -323,13 +327,41 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 	}
 	
 	
-	def CharSequence generateFields(Iterable<Slot> slots) {
+	def CharSequence generateFields(Iterable<Slot> slots, Entity entity) {
 		'''
 		«slots.map[generateField].join('\r\n')»
 		
+		«entity.generateCustomParamsField»
+		
 		«slots.map[generateGetterAndSetter].join('\r\n')»
+		
+		«generateCustomParamsGetterAndSetter»
 		'''
 		
+	}
+	
+	def CharSequence generateCustomParamsField(Entity entity) {
+		val isEnableDoc = entity.service.isEnableDoc
+		
+		'''
+		// Map field for developer customizing parameters.
+		«IF isEnableDoc»
+		@ApiModelProperty(notes = "Campo tipo mapa (chave = valor) onde o desenvolvedor pode passar seus parâmetros personalizados no formato objeto JSON.", position = 9999)
+		«ENDIF»
+		private Map<Object, Object> customParams = new HashMap<>();
+		'''
+	}
+	
+	def CharSequence generateCustomParamsGetterAndSetter() {
+		'''
+		public Map<Object, Object> getCustomParams() {
+			return customParams;
+		}
+		
+		public void setCustomParams(Map<Object, Object> customParams) {
+			this.customParams = customParams;
+		}
+		'''
 	}
 	
 	def CharSequence generateField(Slot slot) {

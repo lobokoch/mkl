@@ -283,8 +283,11 @@ class GeneratorExecutor {
 	}
 	
 	def String toServiceWebMvcConfigurerAdapterName(Service service) {
-		//service.domainName + service.serviceName + "Constants"
 		'ServiceWebMvcConfigurerAdapter'
+	}
+	
+	def String toServiceMapConverterName(Service service) {
+		'MapConverter'
 	}
 	
 	def String getImportServiceContext(Service service) {

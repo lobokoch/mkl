@@ -234,6 +234,15 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		'''
 		
 		«slots.map[generateListFilterField].join('\r\n')»
+		
+		«generateCustomParamsField»
+		'''
+	}
+	
+	def CharSequence generateCustomParamsField() {
+		'''
+		// Map key=value for developer custom fields parameters. The final parameters map must be a JSON object.
+		customParams = new Map<any, any>();
 		'''
 	}
 	

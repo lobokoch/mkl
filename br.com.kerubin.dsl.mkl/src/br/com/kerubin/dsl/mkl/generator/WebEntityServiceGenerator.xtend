@@ -249,6 +249,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			    }
 				
 				«entity.slots.filter[it.hasListFilter].generateSlotsFilters»
+				
+				«mountCustomParamsListFilter»
 			
 			    // Sort
 			    if («VAR_FILTER».sortField) {
@@ -259,7 +261,19 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			    }
 			
 			    return params;
-			  }
+			}
+			
+		 	mapToJson(someMap: Map<string, any>) {
+		      return JSON.stringify(this.mapToObj(someMap));
+		    }
+		
+		    mapToObj(someMap: Map<string, any>) {
+		      const obj = Object.create(null);
+		      someMap.forEach((value, key) => {
+		        obj[key] = value;
+		      });
+		      return obj;
+		    }
 			
 			dateToStr(data: Date): string {
 			    return moment(data).format('YYYY-MM-DD');
@@ -295,6 +309,16 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		val source = imports.ln.toString + body
 		source
+	}
+	
+	def CharSequence getMountCustomParamsListFilter() {
+		'''
+		// customParams
+		if (filter.customParams && filter.customParams.size > 0) {
+			const value = this.mapToJson(filter.customParams);
+			params = params.set('customParams', value);
+		}
+		'''
 	}
 	
 	def CharSequence generateSlotAutoCompleteMethod(Slot slot) {
