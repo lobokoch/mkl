@@ -261,10 +261,11 @@ Slot:
 
 RepositoryFindBy:
 {RepositoryFindBy}
-	'findBy' ('('
+	methodName = ('findBy' | 'deleteBy') ('('
 		(
 			('documentation' ':' documentation = STRING)? &
 			('custom' ':' custom = STRING)? &
+			('query' ':' (query = STRING | 'auto' | 'none'))? & // default is auto
 			('resultKind' ':' resultKind = RepositoryResultKind)? & 
 			(paged ?= 'paged')? & 
 			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')?
@@ -274,7 +275,7 @@ RepositoryFindBy:
 ;
 
 enum RepositoryResultKind:
-	ENTITY='Entity' | OPTIONAL='Optional' | COLLECTION='Collection' 
+	ENTITY='Entity' | OPTIONAL='Optional' | COLLECTION='Collection' | VOID='void'
 ;
 
 Validation:

@@ -39,8 +39,13 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		
 		if (hasAutoComplete) {
 			entity.addImport('import java.util.Collection;')
+			entity.addImport('import org.springframework.data.jpa.repository.Query;')
 		}
 		
+		val isBaseRepository = entity.isBaseRepository
+		if (!isBaseRepository) {
+			entity.addImport('import org.springframework.transaction.annotation.Transactional;')
+		}
 		
 		'''
 		package «entity.package»;
@@ -50,14 +55,14 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		«entity.imports.map[it].join('\r\n')»
 		«IF hasAutoComplete»
 		import org.springframework.data.repository.query.Param;
-		import org.springframework.data.jpa.repository.Query;
 		«ENDIF»
-		«IF entity.isBaseRepository»
+		«IF isBaseRepository»
 		import org.springframework.data.repository.NoRepositoryBean;
 		
 		@NoRepositoryBean
 		«ELSE»
 		
+		@Transactional(readOnly = true)
 		«ENDIF»
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
 			«IF hasAutoComplete»
@@ -83,16 +88,72 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val findByList = slot.repositoryFindBy;
 		'''
 		
-		// findBy for field «slot.fieldName»
 		«findByList.map[
 			var code = it.generateRepositoryFindByMethod(true, false)
 			if (!it.hasCustom) {
 				code += ';'
 			}
+			
+			// Gera o comando delete
+			if (it.isDeleteBy) {
+				var query = it.query
+				
+				val isNone = 'none' == query
+				val isAuto = 'auto' == query
+				
+				val ownerEntity = slot.ownerEntity
+				
+				if (!isNone) {
+					ownerEntity.addImport('import org.springframework.data.jpa.repository.Query;')
+					ownerEntity.addImport('import org.springframework.data.jpa.repository.Modifying;')
+				}
+				
+				if (isAuto) {
+					val entityName = ownerEntity.toEntityName
+					val alias = entityName.substring(0, 1).toLowerCase
+					var field = slot.fieldName
+					if (slot.isEntity) {
+						field += '.' + slot.asEntity.id.fieldName
+					}
+					
+					query = '''delete from «entityName» «alias» where «alias».«field» = ?1'''
+				} // auto
+				
+				if ('none' != query) {
+					code = '@Modifying' + '\r\n' +
+					'@Query("' + query + '")' + '\r\n' + 
+					code + '\r\n'
+				}
+				
+				code = '\r\n' + '@Transactional' + '\r\n' + code
+			} // if (it.isDeleteBy)
+			
 			code
 		].join('\r\n')»
 		'''
 	}
+	
+	/*def CharSequence generateRepositoryFindByForEntity(Slot slot) {
+		val findByList = slot.repositoryFindBy;
+		'''
+		
+		«findByList.map[
+			var code = it.generateRepositoryFindByMethod(true, false)
+			if (!it.hasCustom) {
+				code += ';'
+			}
+			
+			if (it.isDeleteBy) {
+				var query = it.query
+				if ('auto' == query) {
+					query = 'delete from '
+				}
+			}
+			
+			code
+		].join('\r\n')»
+		'''
+	}*/
 	
 	def CharSequence generateListFilterAutoComplete(Slot slot) {
 		val autoComplateName = slot.toAutoCompleteName

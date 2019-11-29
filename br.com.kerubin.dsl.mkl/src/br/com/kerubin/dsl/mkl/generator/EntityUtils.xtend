@@ -1903,8 +1903,10 @@ class EntityUtils {
 		val ownerEntity = slot.ownerEntity
 		val isEntity = slot.isEntity
 		val hasDocumentation = findByObj.hasDocumentation
+		val methodName = findByObj.methodName
+		val isFindBy = findByObj.isFindBy
 		
-		val resultKindEnum = findByObj?.resultKind ?: RepositoryResultKind.ENTITY
+		val resultKindEnum = findByObj?.resultKind ?: if (isFindBy) RepositoryResultKind.ENTITY else RepositoryResultKind.VOID 
 		
 		if (findByObj.hasCustom) {
 			
@@ -1917,7 +1919,10 @@ class EntityUtils {
 					ownerEntity.addImport('import java.util.Collection;')
 					'''Collection<«ownerEntity.toEntityName»>'''
 				}
-				default: '''«ownerEntity.toEntityName»'''
+				case RepositoryResultKind.VOID: {
+					'''void'''
+				}
+				default: '''«IF isFindBy»«ownerEntity.toEntityName»«ELSE»void«ENDIF»'''
 			}
 			
 			if (findByObj.hasPackages) {
@@ -1939,8 +1944,7 @@ class EntityUtils {
 			
 		}
 		
-		
-		var resultType = ownerEntity.toEntityName
+		var resultType = if (isFindBy) ownerEntity.toEntityName else 'void'
 		val isManyTo = isEntity && (slot.isManyToOne || slot.isManyToMany) 
 		val findBy = new StringBuilder
 		
@@ -1955,13 +1959,21 @@ class EntityUtils {
 					findBy.append('Page')				
 				}
 				else {
-					ownerEntity.addImport('import java.util.Collection;')
-					findBy.append('Collection')				
+					if (isFindBy) {
+						ownerEntity.addImport('import java.util.Collection;')
+						findBy.append('Collection')				
+					}
 				}
 				
-				findBy.append('<')
+				if (isFindBy) {
+					findBy.append('<')
+				}
+				
 				findBy.append(resultType)
-				findBy.append('>')
+				
+				if (isFindBy) {
+					findBy.append('>')
+				}
 			}
 			else {
 				findBy.append(resultType)
@@ -1975,7 +1987,9 @@ class EntityUtils {
 			findBy.append(' ')
 		}
 		
-		findBy.append('find')
+		val method = methodName.replace('By', '')
+		
+		findBy.append(method)
 		if (!isRepository) {
 			findBy.append(ownerEntity.toDtoName)
 		}
@@ -2028,4 +2042,18 @@ class EntityUtils {
 		
 		return null
 	}
+	
+	def static getWebComponentType(Slot slot) {
+		var type = 'input'
+		if (slot.isEntity) 
+			type = 'autocomplete'
+		else if (slot.isEnum)
+			type = 'dropdown'
+		else if (slot.isDate)
+			type = "calendar"
+			
+		type
+	}
+	
+	
 }

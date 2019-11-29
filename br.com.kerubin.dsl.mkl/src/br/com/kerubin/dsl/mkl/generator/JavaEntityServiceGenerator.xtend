@@ -511,14 +511,15 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val slot = findByObj.ownerSlot
 		val ownerEntity = slot.ownerEntity
 		val repositoryVar = ownerEntity.toRepositoryName.toFirstLower
+		val isFindBy = findByObj.isFindBy
 		
 		'''
 		
-		@Transactional(readOnly = true)
+		@Transactional«IF isFindBy»(readOnly = true)«ENDIF»
 		@Override
 		public «findByMethod» {
 			
-			return «repositoryVar».«findByMethodCall»;
+			«IF isFindBy»return «ENDIF»«repositoryVar».«findByMethodCall»;
 			
 		}
 		'''

@@ -298,6 +298,7 @@ enum RepositoryResultKind {
 	ENTITY as 'Entity'
 	OPTIONAL as 'Optional'
 	COLLECTION as 'Collection'
+	VOID as 'void'
 }
 
 enum RuleWhenTemporalConstants {
@@ -818,6 +819,8 @@ class Validation {
 }
 
 class RepositoryFindBy {
+	String methodName
+	String query = 'auto' // default, can be 'none' or a custom SQL command.
 	String name
 	String custom
 	RepositoryResultKind resultKind
@@ -825,6 +828,14 @@ class RepositoryFindBy {
 	boolean paged
 	String documentation
 	refers Slot ownerSlot opposite repositoryFindBy
+	
+	op boolean isDeleteBy() {
+		return 'deleteBy' == methodName
+	}
+	
+	op boolean isFindBy() {
+		return 'findBy' == methodName
+	}
 	
 	op boolean hasDocumentation() {
 		documentation !== null && !documentation.empty

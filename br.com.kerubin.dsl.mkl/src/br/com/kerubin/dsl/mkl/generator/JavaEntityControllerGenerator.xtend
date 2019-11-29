@@ -253,8 +253,11 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 		val isEntity = slot.isEntity
 		val isManyTo = isEntity && (slot.isManyToOne || slot.isManyToMany)
 		
+		val isFindBy = findByObj.isFindBy
+		
 		'''
 		
+		«IF isFindBy»
 		@Transactional(readOnly = true)
 		@GetMapping("/«findByMethodCall.substring(0, findByMethodCall.indexOf('('))»")
 		«IF isEnableDoc»
@@ -277,6 +280,23 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			return ResponseEntity.ok(«entityDTOVar»DTOConverter.«toDTO»(content));
 		}
 		«ENDIF»
+		«ELSE»
+		@ResponseStatus(HttpStatus.NO_CONTENT)
+		@DeleteMapping("/«findByMethodCall.substring(0, findByMethodCall.indexOf('('))»/{id}")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Deletes «title» by «by»")
+		«ENDIF»
+		«IF isManyTo»
+		public «findByMethod.replace('Page<', 'PageResult<').replace(entityName, entityDTOName)» {
+			«entityServiceVar».«findByMethodCall»;
+		}
+		«ELSE»
+		public «findByMethod.replace(entityName, 'ResponseEntity<' + entityDTOName + '>')» {
+			«entityServiceVar».«findByMethodCall»;
+		}
+		«ENDIF»
+		«ENDIF»
+		
 		'''
 	}
 	

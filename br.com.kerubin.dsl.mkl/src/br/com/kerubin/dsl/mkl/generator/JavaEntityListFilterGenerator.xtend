@@ -290,9 +290,9 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 		val isEnableDoc = entity.service.isEnableDoc
 		if (isEnableDoc) {
 			entity.addImport('import io.swagger.annotations.ApiModel;')
-			if (!slots.empty) {
+			//if (!slots.empty) {
 				entity.addImport('import io.swagger.annotations.ApiModelProperty;')
-			}
+			//}
 		}
 		val title = entity.title
 		

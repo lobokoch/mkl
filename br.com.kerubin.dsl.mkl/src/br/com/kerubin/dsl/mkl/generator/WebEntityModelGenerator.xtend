@@ -123,7 +123,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		
 		'''
 		«IF slot.isEntity»
-		«slot.fieldName»: «className»;
+		«slot.fieldName»: «className»«IF slot.isMany»[]«ENDIF»;
 		«ELSE»
 		«slot.fieldName»: «slot.toWebType»«IF slot.hasDefaultValue» = «slot.defaultValue»«ENDIF»;
 		«ENDIF»

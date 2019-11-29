@@ -21,6 +21,34 @@ class StringConcatenationExt extends StringConcatenation {
 		this
 	}
 	
+	def StringConcatenationExt add(String text, int index) {
+		text.append(index)
+		
+		return this
+	}
+	
+	def StringConcatenationExt add(CharSequence text, int index) {
+		text.append(index)
+		
+		return this
+	}
+	
+	def StringConcatenationExt addIndentAfter(CharSequence text, int index) {
+		TAB.append(index)
+		
+		text.add(index)
+		this
+	}
+	
+	def StringConcatenationExt addIndent(CharSequence str, int index) {
+		val text = new StringConcatenation()
+		text.append(TAB)
+		text.append(str, TAB)
+		newLine
+		add(text, index)
+		this
+	}
+	
 	def StringConcatenationExt addIndent(CharSequence str) {
 		val text = new StringConcatenation()
 		text.append(TAB)

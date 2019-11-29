@@ -200,6 +200,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		
 		
+		
 		'''
 		«IF slot.isToMany»
 		slot.isToMany
@@ -211,6 +212,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		«ENDIF»
 		'''
 	}
+	
 	
 	def CharSequence generateWebComponent(Slot slot) {
 		webComponentType = '';
@@ -225,6 +227,24 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		// It must close the HTML tag?
 		if (closedHTMLTags.exists[webComponentType.startsWith(it)]) {
 			builder.concat('</').concat(webComponentType).concat('>')			
+		}
+		
+		// Treats the read only
+		if (slot.isUUID || slot.isWebReadOnly) {
+			var type = webComponentType.replace('p-', '')
+			type = type.toLowerCase			
+			
+			val openReadOnly = '''
+			<div class="«type»-readonly">
+			'''
+			builder.addIndentAfter(openReadOnly, 0)
+			
+			
+			val closeReadOnly = 
+			'''
+			</div>
+			'''
+			builder.add(closeReadOnly)
 		}
 		
 		slot.generateComponentMessages(builder)
@@ -326,10 +346,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		if (!slot.UUID && !slot.optional) {
 			builder.concat(' required')
 		}
-		
-		if (slot.UUID) {
-			builder.concat(' readonly class="read-only"')
-		}
 	}
 	
 	
@@ -364,7 +380,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			webComponentType = 'p-autoComplete'
 			builder
 			.concat('''«webComponentType» ''')
-			.concat('''«IF slot.isWebReadOnly»[disabled]="true"«ENDIF»''').concat('\r\n')
+			.concat('''«IF slot.isWebReadOnly»[readonly]="true"«ENDIF»''').concat('\r\n')
 			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''').concat('\r\n')
 			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''').concat('\r\n')
 			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''').concat('\r\n')
@@ -375,7 +391,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (slot.isEnum){
 			webComponentType = 'p-dropdown'
-			builder.concat('''«webComponentType»«IF slot.isWebReadOnly» [disabled]="true"«ENDIF» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."''')
+			builder.concat('''«webComponentType»«IF slot.isWebReadOnly» [readonly]="true"«ENDIF» [options]="«slot.webDropdownOptions»" placeholder="Selecione um item..."''')
 			return
 		}
 		
@@ -423,15 +439,15 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (basicType instanceof DateType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy"«IF slot.isWebReadOnly» [disabledDays]="[0,1,2,3,4,5,6]" [readonlyInput]="true"«ENDIF»''')
 		}
 		else if (basicType instanceof TimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="hh:MM:ss"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="hh:MM:ss"«IF slot.isWebReadOnly» [disabledDays]="[0,1,2,3,4,5,6]" [readonlyInput]="true"«ENDIF»''')
 		}
 		else if (basicType instanceof DateTimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy" [showTime]="true"''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="dd/mm/yy" [showTime]="true"«IF slot.isWebReadOnly» [disabledDays]="[0,1,2,3,4,5,6]" [readonlyInput]="true"«ENDIF»''')
 		}
 		else if (basicType instanceof UUIDType) {
 			webComponentType = 'input'
@@ -442,13 +458,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			builder.concat('''«webComponentType» type="«inputType»" pInputText''')
 		}
 		
-		if (slot.isWebReadOnly) {
-			builder.concat(''' [disabled]="true"''')
-			/*if (webComponentType == 'p-calendar') {
-			}
-			else {
-				builder.concat(''' readonly class="read-only" ''')
-			}*/
+		if (slot.isUUID || (slot.isWebReadOnly && webComponentType == 'input')) {
+			builder.concat(''' readonly''')
 		}
 		
 	}
