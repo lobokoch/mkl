@@ -187,19 +187,23 @@ class JavaEntityListFilterGenerator extends GeneratorExecutor implements IGenera
 			}
 			
 		}
-		«ELSEIF isNull»		
-		if («varFilter».«isNullStr») {
-			where.and(«varQEntity».«slot.fieldName».isNull()«IF isBoolean».or(«varQEntity».«slot.fieldName».isFalse())«ENDIF»);
+		«ELSEIF isNull»
+		if («varFilter».«getNullStr» != null) {
+			if («varFilter».«isNullStr») {
+				where.and(«varQEntity».«slot.fieldName».isNull()«IF isBoolean».or(«varQEntity».«slot.fieldName».isFalse())«ENDIF»);
+			}
+			else {
+				where.and(«varQEntity».«slot.fieldName».isNotNull()«IF isBoolean».and(«varQEntity».«slot.fieldName».isTrue())«ENDIF»);
+			}
 		}
-		else {
-			where.and(«varQEntity».«slot.fieldName».isNotNull()«IF isBoolean».and(«varQEntity».«slot.fieldName».isTrue())«ENDIF»);
-		}
-		«ELSEIF isNotNull»		
-		if («varFilter».«isNotNullStr») {
-			where.and(«varQEntity».«slot.fieldName».isNotNull()«IF isBoolean».and(«varQEntity».«slot.fieldName».isTrue())«ENDIF»);
-		}
-		else {
-			where.and(«varQEntity».«slot.fieldName».isNull()«IF isBoolean».or(«varQEntity».«slot.fieldName».isFalse())«ENDIF»);
+		«ELSEIF isNotNull»
+		if («varFilter».«getNotNullStr» != null) {		
+			if («varFilter».«isNotNullStr») {
+				where.and(«varQEntity».«slot.fieldName».isNotNull()«IF isBoolean».and(«varQEntity».«slot.fieldName».isTrue())«ENDIF»);
+			}
+			else {
+				where.and(«varQEntity».«slot.fieldName».isNull()«IF isBoolean».or(«varQEntity».«slot.fieldName».isFalse())«ENDIF»);
+			}
 		}
 		«ENDIF»
 		// End field: «fieldName»

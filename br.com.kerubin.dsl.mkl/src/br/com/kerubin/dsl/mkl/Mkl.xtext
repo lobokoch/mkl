@@ -275,7 +275,7 @@ RepositoryFindBy:
 ;
 
 enum RepositoryResultKind:
-	ENTITY='Entity' | OPTIONAL='Optional' | COLLECTION='Collection' | VOID='void'
+	ENTITY='Entity' | OPTIONAL='Optional' | LIST='List' | COLLECTION='Collection' | VOID='void'
 ;
 
 Validation:

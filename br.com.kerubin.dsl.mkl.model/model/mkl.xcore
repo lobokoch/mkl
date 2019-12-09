@@ -297,6 +297,7 @@ class RuleWhenOperator {
 enum RepositoryResultKind {
 	ENTITY as 'Entity'
 	OPTIONAL as 'Optional'
+	LIST as 'List'
 	COLLECTION as 'Collection'
 	VOID as 'void'
 }

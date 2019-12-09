@@ -1919,6 +1919,10 @@ class EntityUtils {
 					ownerEntity.addImport('import java.util.Collection;')
 					'''Collection<«ownerEntity.toEntityName»>'''
 				}
+				case RepositoryResultKind.LIST: {
+					ownerEntity.addImport('import java.util.List;')
+					'''List<«ownerEntity.toEntityName»>'''
+				}
 				case RepositoryResultKind.VOID: {
 					'''void'''
 				}
