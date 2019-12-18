@@ -482,7 +482,17 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		'''
 		
 		public «entity.toEntityName» clone() {
+			return clone(new java.util.HashMap<>());
+		}
+		
+		public «entity.toEntityName» clone(java.util.Map<Object, Object> visited) {
+			if (visited.containsKey(this)) {
+				return («entity.toEntityName») visited.get(this);
+			}
+					
 			«entity.toEntityName» theClone = new «entity.toEntityName»();
+			visited.put(this, theClone);
+			
 			«entity.slots.map[generateCloneSlot].join»
 			
 			return theClone;
@@ -492,7 +502,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def CharSequence generateCloneSlot(Slot slot) {
 		'''
-		«slot.buildMethodSet('theClone', slot.buildMethodGet('this'))»;
+		«slot.buildMethodSet('theClone', slot.buildMethodGetWithClone('this'))»;
 		'''
 	}
 	

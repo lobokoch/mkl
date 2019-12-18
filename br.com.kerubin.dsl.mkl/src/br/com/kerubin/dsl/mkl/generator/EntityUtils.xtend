@@ -1509,6 +1509,24 @@ class EntityUtils {
 		obj + '.' + slot.name.buildMethodGet
 	}
 	
+	def static buildMethodGetWithClone(Slot slot, String obj) {
+		val get = obj + '.' + slot.name.buildMethodGet
+		val sb = new StringBuilder(get)
+		if (slot.isEntity) {
+			sb.append(' != null ? ')
+			sb.append(get)
+			if (slot.isMany) {
+				sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toList())')
+			}
+			else {
+				sb.append('.clone(visited)')
+			}
+			sb.append(' : null')			
+		}
+		
+		sb.toString
+	}
+	
 	def static String buildMethodGetEntityId(String obj, Slot slot) {
 		'''«obj.buildMethodGet(slot)» != null ? «obj.buildMethodGet(slot)».«slot.asEntity.id.buildMethodGet» : null'''
 	}
