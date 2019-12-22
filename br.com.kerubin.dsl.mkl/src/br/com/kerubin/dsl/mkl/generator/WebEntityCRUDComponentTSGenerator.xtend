@@ -83,7 +83,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		]
 		
 		if (!ruleMakeCopies.empty) {
-			imports.add('''import {SelectItem} from 'primeng/api';''')
+			imports.add('''import {SelectItem, ConfirmationService} from 'primeng/api';''')
 		}
 
 		imports.add('''import { MessageHandlerService } from 'src/app/core/message-handler.service';''')
@@ -127,6 +127,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    «entity.slots.filter[isEntity && it.asEntity.isNotSameName(entity)].map[mountServiceConstructorInject].join('\n\r')»
 			    private route: ActivatedRoute,
+			    «IF !ruleMakeCopies.empty»
+			    private confirmation: ConfirmationService,
+			    «ENDIF»
 			    private messageHandler: MessageHandlerService
 			) { 
 				«entity.slots.filter[isEnum].map['''this.«it.webDropdownOptionsInitializationMethod»();'''].join('\n\r')»
@@ -566,29 +569,62 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val grouperField = rule.ruleMakeCopiesGrouperSlot
 		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
+		val referenceField = rule.getRuleMakeCopiesReferenceField
+		val refField = '''this.«entityVar».«referenceField.fieldName»'''
+		val refFieldName = referenceField.fieldName
 		
 		'''
 		
 		«actionName»(form: FormControl) {
 		      if (!this.«entityVar».«grouperField.fieldName») {
-		        // this.copiesMustHaveGroup = true;
 		        this.messageHandler.showError('Campo \'«grouperField.fieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
 		        return;
 		      }
-		      // this.copiesMustHaveGroup = false;
+		      
+		      if (!«refField») {
+		        this.messageHandler.showError('Campo \'«refFieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
+		        return;
+		      }
+		      
+		      // Begin validation for past dates
+		      const «refFieldName»FirstCopy = moment(«refField»).add(1, 'month');
+		      const today = moment();
+		      if («refFieldName»FirstCopy.isBefore(today)) {
+				const «refFieldName»FirstCopyStr = «refFieldName»FirstCopy.format('DD/MM/YYYY');
+				const «refFieldName»Str = moment(«refField»).format('DD/MM/YYYY');
+				this.confirmation.confirm({
+				  message: `Baseado na data de «referenceField.label.toFirstLower» da conta atual (<strong>${«refFieldName»Str}</strong>),
+				  a primeira cópia da conta terá data de «referenceField.label.toFirstLower» no passado (<strong>${«refFieldName»FirstCopyStr}</strong>).
+				  <br>Deseja continuar mesmo assim?`,
+				  accept: () => {
+				    ///
+				    this.«serviceVar».«actionName»(this.«entityVar».«entity.id.fieldName», this.numberOfCopies,
+						this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
+				    .then(() => {
+				    this.messageHandler.showSuccess('Operação realizada com sucesso!');
+				    }).
+				    catch(error => {
+				    const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
+				    console.log(error);
+				      this.messageHandler.showError(message);
+				  	});
+				  }
+				});
+		      
+		      	return;
+		      }
+		      // End validation
 		
 		      this.«serviceVar».«actionName»(this.«entityVar».«entity.id.fieldName», this.numberOfCopies,
 		        this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
 			    .then(() => {
-		        // this.copiesMustHaveGroup = false;
 		        this.messageHandler.showSuccess('Operação realizada com sucesso!');
 			    }).
 			    catch(error => {
-		        // this.copiesMustHaveGroup = false;
 		        const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
 		        console.log(error);
 			      this.messageHandler.showError(message);
-			    });
+			  });
 		}
 		'''
 	}
