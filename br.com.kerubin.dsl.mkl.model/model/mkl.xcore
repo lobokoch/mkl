@@ -756,6 +756,7 @@ class FilterOperator {
 class ListFilter {
 	contains FilterOperator filterOperator
 	String styleClass = 'ui-md-2'
+	String containerStyleClass = 'ui-md-12'
 	boolean readOnly
 	boolean hidden
 }

@@ -500,6 +500,24 @@ class EntityUtils {
 		class
 	}
 	
+	def static String getWebClassForContainerFilter(Slot slot) {
+		val styleClass = new StringBuilder 
+		
+		styleClass.append('ui-g-12')
+		if (slot.hasListFilter) 
+			styleClass.append(' ').append(slot.listFilter.containerStyleClass)
+		
+		if (slot.isHiddenSlot && !styleClass.toString.containsWord('hidden')) {
+			styleClass.append(' hidden')
+		}
+		
+		styleClass.append(' ui-fluid')
+		
+		val result = styleClass.toString
+		
+		result
+	}
+	
 	def static String getUserWebClassesArray(Slot slot) {
 		if (slot.hasWebClass) {
 			var styleClass = slot.web.getStyleClass

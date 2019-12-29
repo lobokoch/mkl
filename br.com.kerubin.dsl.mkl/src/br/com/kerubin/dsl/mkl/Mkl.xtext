@@ -663,6 +663,7 @@ ListFilter:
 	'listFilter' '(' 
 		(
 			(filterOperator = FilterOperator) & 
+			('containerStyleClass' ':' containerStyleClass = STRING)? &
 			('styleClass' ':' styleClass = STRING)? &
 			(readOnly ?= 'readOnly')? &
 			(^hidden ?= 'hidden')?
