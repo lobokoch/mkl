@@ -528,7 +528,6 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def void initializeImports(Entity entity) {
 		imports.add('''
-		import { Headers } from '@angular/http';
 		import { Injectable } from '@angular/core';
 		import { HttpParams } from '@angular/common/http';
 		import * as moment from 'moment';
