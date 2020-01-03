@@ -693,7 +693,16 @@ AutoComplete:
 ;
 
 Sort:
-	'sort' ':' order = ('asc' |'desc')
+{Sort}	
+	'sort' 
+	(
+	'(' 
+		(
+			('order' ':' order = ('asc' |'desc'))? &
+			('position' ':' position = INT)?
+		)
+	')'
+	)?
 ;
 
 Relationship:

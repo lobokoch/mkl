@@ -209,7 +209,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		export class PaginationFilter {
 		  pageNumber: number;
 		  pageSize: number;
-		  sortField: SortField;
+		  sortFields: SortField[];
 		
 		  constructor() {
 		    this.pageNumber = 0;

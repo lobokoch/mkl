@@ -253,11 +253,13 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 				«mountCustomParamsListFilter»
 			
 			    // Sort
-			    if («VAR_FILTER».sortField) {
-			      // search/nameStartsWith?name=K&sort=name,desc
-			      const sortField = «VAR_FILTER».sortField;
-			      const sortValue = `${sortField.field},${sortField.order > 0 ? 'asc' : 'desc'}`;
-			      params = params.set('sort', sortValue);
+			    if («VAR_FILTER».sortFields) {
+			      // search/nameStartsWith?name=K&sort=name,asc&sort=value,desc
+			      
+					«VAR_FILTER».sortFields.forEach(sortField => {
+						const sortValue = `${sortField.field},${sortField.order > 0 ? 'asc' : 'desc'}`;
+						params = params.append('sort', sortValue);
+					});
 			    }
 			
 			    return params;

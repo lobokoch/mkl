@@ -711,7 +711,8 @@ class AutoComplete {
 }
 
 class Sort {
-	String order
+	String order = 'asc'
+	int position = '999999' // No position assigned.
 	
 	op boolean isASC() {
 		order == 'asc'
@@ -719,6 +720,10 @@ class Sort {
 	
 	op boolean isDESC() {
 		order == 'desc'
+	}
+	
+	op String getOrderVal() {
+		if (ASC) '1' else '0'
 	}
 }
 

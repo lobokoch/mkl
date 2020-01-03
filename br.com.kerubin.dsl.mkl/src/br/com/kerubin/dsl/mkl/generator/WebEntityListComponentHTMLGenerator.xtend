@@ -146,7 +146,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		<!-- Begin GRID -->
 		<div class="ui-g-12" name="data-grid">
 			<p-table selectionMode="single" [loading]="loading" 
-				[responsive]="true" [customSort]="true" [paginator]="true" [resizableColumns]="true"
+				[responsive]="true" sortMode="multiple" [paginator]="true" [resizableColumns]="true"
 				[value]="«entity.toEntityWebListItems»"
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
 			    [totalRecords]="«entity.toEntityWebListItemsTotalElements»"

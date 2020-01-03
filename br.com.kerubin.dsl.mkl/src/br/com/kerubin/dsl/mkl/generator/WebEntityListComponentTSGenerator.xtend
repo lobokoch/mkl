@@ -127,6 +127,8 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val component = entity.toEntityWebListComponentName
 		
+		val sortFields = entity.sortFields
+		
 		val body = '''
 		
 		@Component({
@@ -219,10 +221,23 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			«entity.toEntityListOnLazyLoadMethod»(event: LazyLoadEvent) {
-			    if (event.sortField) {
-			      this.«listFilterNameVar».sortField = new SortField(event.sortField, event.sortOrder);
+			    if (event.multiSortMeta) {
+			      this.«listFilterNameVar».sortFields = new Array(event.multiSortMeta.length);
+			      event.multiSortMeta.forEach(sortField => {
+			      	this.«listFilterNameVar».sortFields.push(new SortField(sortField.field, sortField.order));
+			      });
 			    } else {
-			      this.«listFilterNameVar».sortField = new SortField('«entity.defaultSortField»', «entity.defaultSortFieldOrderBy»); // asc
+			    	«IF !sortFields.empty»
+			    	this.«listFilterNameVar».sortFields = new Array(«sortFields.size»);
+			    	«sortFields.map[it |
+			    	'''
+			    	this.«listFilterNameVar».sortFields.push(new SortField('«it.fieldName»', «it.sort.orderVal»));
+			    	'''
+			    	].join»
+			    	«ELSE»
+			    	this.«listFilterNameVar».sortFields = new Array(1);
+			    	this.«listFilterNameVar».sortFields.push(new SortField('«entity.defaultSortField»', «entity.defaultSortFieldOrderBy»)); // asc
+			    	«ENDIF»
 			    }
 			    const pageNumber = event.first / event.rows;
 			    this.«entity.toEntityListListMethod»(pageNumber);

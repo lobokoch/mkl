@@ -1447,6 +1447,13 @@ class EntityUtils {
 		slot.fieldName
 	}
 	
+	def static getSortFields(Entity entity) {
+		val sortedSlots = entity.slots.tail.filter[it.hasSort]
+		val sortedByPosition = sortedSlots.sortBy[it.sort.position]
+		println('sortedByPosition:' + sortedByPosition.size)
+		sortedByPosition
+	}
+	
 	def static String getDefaultSortFieldOrderBy(Entity entity) {
 		val slot = entity.slots.tail.findFirst[it.hasSort] ?: entity.id
 		var orderBy = '1'
