@@ -21,7 +21,7 @@ class JavaEntityTestRepositoryGenerator extends GeneratorExecutor implements IGe
 	}
 	
 	def generateFiles() {
-		entities.filter[it.canGenerateRepository && it.canGenerateTest].forEach[generateRepository]
+		entities.filter[it.canGenerateRepository && it.canGenerateTest && !it.isOneToManyChild].forEach[generateRepository]
 	}
 	
 	def generateRepository(Entity entity) {

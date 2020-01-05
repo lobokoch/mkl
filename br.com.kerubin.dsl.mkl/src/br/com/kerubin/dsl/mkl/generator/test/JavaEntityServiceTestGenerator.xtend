@@ -27,7 +27,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	def generateFiles() {
-		entities.filter[it.canGenerateTest].forEach[generateTest]
+		entities.filter[it.canGenerateTest && !it.isOneToManyChild].forEach[generateTest]
 	}
 	
 	def generateTest(Entity entity) {
@@ -508,7 +508,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		val rulesFormOnCreate = entity.rulesFormOnCreate
 		val imports = entity.imports
 		
-		val testMethodName = 'testCreateWithAllFields' 
+		val testMethodName = 'testCreateWithAllFields'
 		
 		'''
 		

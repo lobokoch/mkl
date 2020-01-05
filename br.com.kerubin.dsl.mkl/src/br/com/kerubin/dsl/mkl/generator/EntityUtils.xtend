@@ -383,22 +383,6 @@ class EntityUtils {
 		}
 	}*/
 	
-	def static Slot getRelationOppositeSlot(Slot slot) {
-		(slot.relationship as RelationshipFeatured).field		
-	}
-	
-	def static boolean isBidirectional(Slot slot) {
-		if (slot.relationship !== null) {
-			val relationshipFeatured = slot.relationship as RelationshipFeatured
-			if (relationshipFeatured.field !== null) {
-				val result = relationshipFeatured.field.asEntity.name == slot.ownerEntity.name
-				return result
-			}
-		}
-		
-		false
-	}
-	
 	def static boolean isDTOFull(Slot slot) {
 		slot.relationContains && 
 		(slot.isOneToOne || slot.isOneToMany) 
@@ -426,6 +410,90 @@ class EntityUtils {
 	
 	def static boolean isOneToMany(Slot slot) {
 		slot?.relationship instanceof OneToMany
+	}
+	
+	def static boolean hasOneToMany(Entity entity) {
+		val result = entity.slots.exists[oneToMany]
+		result
+	}
+	
+	/**
+	 * Returns the first slot in entity parameter that:
+	 * - is an entity and is manyToOne
+	 * - in its own entity definition have:
+	 * -- a slot with the same type as entity parameter type
+	 * -- is OneToMany
+	 */
+	def static Slot getOneToManyOpposite(Entity entity) {
+		val result = entity.slots.findFirst[it |
+			if (it.isEntity && it.isManyToOne) {
+				val fkEntity = it.asEntity
+				val exists = fkEntity.slots.exists[it2 |
+					val ret = it2.isEntity && it2.asEntity.isSameEntity(entity) && it2.isOneToMany
+					// Should yet test opposite relationship attribute?
+					return ret
+				]
+				
+				return exists
+			}
+			return false
+		]
+		
+		result
+	}
+	
+	def static isOneToManyChild(Entity entity) {
+		return entity.getOneToManyOpposite !== null
+	}
+	
+	def static Slot getRelationOppositeSlot(Slot slot) {
+		(slot.relationship as RelationshipFeatured).field		
+	}
+	
+	def static boolean isBidirectional(Slot slot) {
+		if (slot.relationship !== null) {
+			val relationshipFeatured = slot.relationship as RelationshipFeatured
+			if (relationshipFeatured.field !== null) {
+				val result = relationshipFeatured.field.asEntity.name == slot.ownerEntity.name
+				return result
+			}
+		}
+		
+		false
+	}
+	
+	def static Slot getOppositeSlot(Slot slot) {
+		if (!slot.isEntity) {
+			return null
+		}
+		
+		var oppositeSlot = slot.getRelationOppositeSlot
+		if (oppositeSlot !== null) {
+			return oppositeSlot
+		}
+		
+		val entity = slot.asEntity
+		oppositeSlot = entity.slots.findFirst[it |
+			val ret = it.isEntity && 
+				it.relationship !== null && 
+				it.getRelationOppositeSlot !== null &&
+				it.getRelationOppositeSlot.name == slot.name
+				
+			return ret
+		]
+		
+		if (oppositeSlot !== null) {
+			return oppositeSlot
+		}
+		
+		oppositeSlot = entity.slots.findFirst[it |
+			val ret = it.isEntity && 
+				it.asEntity.isSameEntity(slot.asEntity)
+				
+			return ret
+		]
+		
+		return oppositeSlot
 	}
 	
 	def static boolean isToMany(Slot slot) {
@@ -787,6 +855,10 @@ class EntityUtils {
 		entity.name.toFirstUpper + "Entity"
 	}
 	
+	def static toEntityNameVar(Entity entity) {
+		entity.name.toFirstLower + "Entity"
+	}
+	
 	def static getRuleGridRows(Entity entity) {
 		val rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ROWS]
 		rules
@@ -1097,7 +1169,6 @@ class EntityUtils {
 			val autoCompleteName = entity.toAutoCompleteName
 			//val entityPackage = entity.package
 			val result = '''import { «autoCompleteName» } from './«entity.toEntityWebModelNameWithPah»';'''
-			//println('result: ' + result)
 			return result
 		}
 		return '<slot is not an entity>'
@@ -1169,6 +1240,10 @@ class EntityUtils {
 	
 	def static getFieldName(Slot slot) {
 		slot.name.toFirstLower
+	}
+	
+	def static getFieldNameAsSet(Slot slot) {
+		'set' + slot.name.toFirstUpper
 	}
 	
 	def static buildLambdaGetMethodForEntity(Slot slot) {
@@ -1450,7 +1525,6 @@ class EntityUtils {
 	def static getSortFields(Entity entity) {
 		val sortedSlots = entity.slots.tail.filter[it.hasSort]
 		val sortedByPosition = sortedSlots.sortBy[it.sort.position]
-		println('sortedByPosition:' + sortedByPosition.size)
 		sortedByPosition
 	}
 	

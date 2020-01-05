@@ -99,14 +99,22 @@ class TestUtils {
 		val idGetMethod = entity.id.buildMethodGet
 		
 		'''
+		«IF slot.isOneToMany»
+		assertThat(«varName».«slot.buildMethodGet»).isNotNull();
+		assertThat(«varName».«slot.buildMethodGet»).hasSize(1);
+		assertThat(«varName».«slot.buildMethodGet».get(0).«idGetMethod»).isNotNull();
+		«ELSE»
 		assertThat(«varName».«slot.buildMethodGet».«idGetMethod»).isNotNull();
+		«ENDIF»
 		'''
 	}
 	
 	def static CharSequence buildAssertThatEntitySlotIsNull(Slot slot, String varName) {
 		
+		val isNullOrIsEmpty = if (!slot.isOneToMany) 'isNull()' else 'isEmpty()' 
+		
 		'''
-		assertThat(«varName».«slot.buildMethodGet»).isNull();
+		assertThat(«varName».«slot.buildMethodGet»).«isNullOrIsEmpty»;
 		'''
 	}
 	
@@ -123,12 +131,13 @@ class TestUtils {
 	
 	def static CharSequence getIgnoredFields(Entity entity) {
 		val auditinFields = ServiceBoosterImpl.ENTITY_AUDITING_FIELDS.map['"' + it + '"'].join(', ')
+		val oneToManyFields = entity.slots.filter[it.isOneToMany].map['"' + it.fieldName + '"'].join(', ')
 		
-		'''«entity.getIdAsString»«IF entity.isAuditing», «auditinFields»«ENDIF»«IF entity.hasEntityVersion», "version"«ENDIF»'''
+		'''«entity.getIdAsString»«IF entity.isAuditing», «auditinFields»«ENDIF»«IF entity.hasEntityVersion», "version"«ENDIF»«IF !oneToManyFields.isEmpty», «oneToManyFields»«ENDIF»'''
 	}
 	
 	def static CharSequence buildAssertThatEntityAsVarIsEqualToIgnoringGivenFields(Entity entity, String varName) {
-		val fieldName = entity.fieldName
+		val fieldName = entity.fieldName		
 		
 		'''
 		assertThat(«varName»).isEqualToIgnoringGivenFields(«fieldName», «IGNORED_FIELDS»);
@@ -141,7 +150,11 @@ class TestUtils {
 		val fieldName = entity.fieldName
 		
 		'''
+		«IF slot.isOneToMany»
+		assertThat(«varName».«getField».get(0)).isEqualToIgnoringGivenFields(«fieldName».«getField».get(0), «IGNORED_FIELDS»);
+		«ELSE»
 		assertThat(«varName».«getField»).isEqualToIgnoringGivenFields(«fieldName».«getField», «IGNORED_FIELDS»);
+		«ENDIF»
 		'''
 	}
 	
@@ -190,13 +203,19 @@ class TestUtils {
 	}
 	
 	def static CharSequence buildEntityToDTO(Entity entity, String targetVar) {
+		val hasOneToMany = entity.hasOneToMany
+		
 		val entityVar = entity.toEntityName.toFirstLower
-		val entityDTOName = entity.toEntityDTOName
+		val entityType =  if (hasOneToMany) entity.toEntityName else entity.toEntityDTOName
 		val entityDTOVar = entity.toEntityDTOName.toFirstLower
 		val toDTO = 'convertEntityToDto'
 		
 		'''
-		«entityDTOName» «targetVar» = «entityDTOVar»DTOConverter.«toDTO»(«entityVar»);
+		«IF hasOneToMany»
+		«entityType» «targetVar» = «entityVar»;
+		«ELSE»
+		«entityType» «targetVar» = «entityDTOVar»DTOConverter.«toDTO»(«entityVar»);
+		«ENDIF»
 		'''
 	}
 	
@@ -208,7 +227,11 @@ class TestUtils {
 		val toEntity = 'convertDtoToEntity'
 		
 		'''
+		«IF entity.hasOneToMany»
+		«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»);
+		«ELSE»
 		«entityName» «entityVar» = «entityServiceVar».create(«entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
+		«ENDIF»
 		'''
 	}
 	
@@ -239,13 +262,36 @@ class TestUtils {
 		val entityServiceVar = entity.toServiceName.toFirstLower
 		val toEntity = 'convertDtoToEntity'
 		
+		val hasOneToMany = entity.hasOneToMany
+		val param = new StringBuilder('id, ')
+		
+		if (!hasOneToMany) {
+			param.append(entityDTOVar).append('DTOConverter.').append(toEntity).append('(')
+		}
+		
+		param.append(entityDTOVar)
+		
+		if (!hasOneToMany) {
+			param.append(')')
+		}
+		
 		'''
-		«entityName» «entityVar» = «entityServiceVar».update(id, «entityDTOVar»DTOConverter.«toEntity»(«entityDTOVar»));
+		«entityName» «entityVar» = «entityServiceVar».update(«param.toString»);
 		'''
 	}
 	
-	def static CharSequence buildNewEntityDTOVar(Entity entity) {
+	/*def static CharSequence buildNewEntityDTOVar(Entity entity) {
 		val name = entity.name.toFirstUpper
+		val fieldName = entity.fieldName
+		'''«name» «fieldName» = new «name»();'''
+	}*/
+	
+	/**
+	 * If entity has OneToMany, it uses entity type, otherwise, it uses the DTO type. 
+	 */
+	def static CharSequence buildNewEntityDTOVar(Entity entity) {
+		val hasOneToMany = entity.hasOneToMany
+		val name = if (hasOneToMany) entity.toEntityName else entity.toDtoName
 		val fieldName = entity.fieldName
 		'''«name» «fieldName» = new «name»();'''
 	}
@@ -254,11 +300,18 @@ class TestUtils {
 		entity.name.toFirstLower + "EntityParam"
 	}
 	
-	def static CharSequence buildNewEntityVar(Entity entity) {
+	def static CharSequence buildNewEntityVar(Slot slot) {
+		val entity = slot.asEntity
 		val name = entity.toEntityName
 		val fieldName = entity.getEntityParamFieldName
-		'''«name» «fieldName» = new«name»();'''
+		'''«name» «fieldName» = new«name»(«IF slot.isOneToMany»«slot.ownerEntity.fieldName»«ENDIF»);'''
 	}
+	
+	/*def static CharSequence buildNewEntityVar(Entity entity) {
+		val name = entity.toEntityName
+		val fieldName = entity.getEntityParamFieldName
+		'''«name» «fieldName» = new«name»(«IF entity.hasOneToMany»«entity.fieldName»«ENDIF»);'''
+	}*/
 	
 	def static CharSequence buildNewOldEntityVar(Entity entity) {
 		val name = entity.toEntityName
@@ -310,17 +363,75 @@ class TestUtils {
 			return result
 		]
 		
-		'''
+		val slotManyToOne_OneToMany = entity.getOneToManyOpposite
+		val hasOneToMany = entity.hasOneToMany
 		
+		val hasOwnerOneToMany = slotManyToOne_OneToMany !== null
+		var ownerOneToManyEntityType = ''
+		var ownerOneToManyEntityVar = ''
+		if (hasOwnerOneToMany) {
+			val slotManyToOne_OneToManyAsEntity = slotManyToOne_OneToMany.asEntity
+			ownerOneToManyEntityType = slotManyToOne_OneToManyAsEntity.toEntityName
+			ownerOneToManyEntityVar = slotManyToOne_OneToManyAsEntity.fieldName
+		}
+		
+		var params = new StringBuilder
+		val oneToManySize = 'oneToManySize'
+		var String paramsOwnerOneToMany = ''
+		if (hasOwnerOneToMany) {
+			params.append(ownerOneToManyEntityType).append(' ').append(ownerOneToManyEntityVar)
+			paramsOwnerOneToMany = params.toString
+			
+			params.append(', ')
+			
+			params.append('int ').append(oneToManySize)
+			
+		}
+		paramsOwnerOneToMany = params.toString
+		
+		params = new StringBuilder
+		if (hasOneToMany && !hasOwnerOneToMany) {
+			params.append('int ').append(oneToManySize)
+		} else if (hasOwnerOneToMany) {
+			params.append(ownerOneToManyEntityType).append(' ').append(ownerOneToManyEntityVar)
+		}
+		
+		
+		'''
+		«IF hasOneToMany»
 		protected «name» new«name»() {
+			return new«name»(2);
+		}
+		
+		«ENDIF»
+		
+		«IF hasOwnerOneToMany»
+		protected List<«name»> new«name»(«paramsOwnerOneToMany») {
+			List<«entity.toEntityName»> items = new ArrayList<>(«oneToManySize»);
+			for(int i = 0; i < «oneToManySize»; i++) {
+				items.add(new«name»(«ownerOneToManyEntityVar»));
+			}
+			return items;
+		}
+		
+		«ENDIF»
+		
+		protected «name» new«name»(«params.toString») {
 			«entity.buildNewEntityWithVar»
 			
-			«slots.filter[!it.isAuditingSlot && !it.isVersionSlot].map[generateSetterForTest].join»
+			«slots.filter[!it.isAuditingSlot && !it.isVersionSlot && !it.isOneToMany].map[generateSetterForTest].join»
 			
+			«slots.filter[it.isOneToMany].map[it | 
+				'''
+				«entity.toEntityNameVar».«it.getFieldNameAsSet»(new«it.asEntity.toEntityName»(«entity.toEntityNameVar», «oneToManySize»));
+				'''
+			].join»
+			«IF !hasOwnerOneToMany»
 			«fieldName» = em.persistAndFlush(«fieldName»);
-			
+			«ENDIF»
 			return «fieldName»;
 		}
+		
 		'''
 	}
 	
@@ -384,7 +495,10 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateSettersForDTO(Entity entity, List<Slot> excludedSlots) {
-		var slots = entity.slots.filter[!it.isAuditingSlot && !it.isVersionSlot]
+		var slots = entity.slots.filter[!it.isAuditingSlot && 
+			!it.isVersionSlot && 
+			!(it.isId && entity.hasOneToMany) // Will be an entity type variable, so id is auto generated by Hibernate.
+		]
 		
 		if (excludedSlots !== null) {
 			slots = slots.filter[ slot | !excludedSlots.exists[it === slot]]
@@ -397,14 +511,29 @@ class TestUtils {
 	
 	def static CharSequence generateSetterForDTO(Slot slot) {
 		val entity = slot.ownerEntity
+		val hasOneToMany = entity.hasOneToMany
+		if (hasOneToMany) {
+			entity.addImport('import java.util.Arrays;')
+		}
+		
 		val fieldName = entity.fieldName
+		
+		val paramName = if (slot.isEntity && hasOneToMany) slot.asEntity.getEntityParamFieldName else slot.fieldName
 		
 		'''
 		«IF slot.isEntity»
 		
-		«slot.asEntity.buildNewEntityVar»
+		«slot.buildNewEntityVar»
+		«IF hasOneToMany»
+		«IF slot.isOneToMany»
+		«fieldName».set«slot.name.toFirstUpper»(Arrays.asList(«paramName»));
+		«ELSE»
+		«fieldName».set«slot.name.toFirstUpper»(«paramName»);
+		«ENDIF»
+		«ELSE»
 		«slot.buildNewEntityLookupResultVar»
-		«fieldName».set«slot.name.toFirstUpper»(«slot.fieldName»);
+		«fieldName».set«slot.name.toFirstUpper»(«paramName»);
+		«ENDIF»
 		
 		«ELSE»
 		«fieldName».set«slot.name.toFirstUpper»(«slot.generateRandomTestValueForDTO»);
@@ -502,7 +631,21 @@ class TestUtils {
 				} 
 			} 
 			else if (slot.isEntity && slot.ownerEntity.isNotSameName(slot.asEntity)) {
-				'''new«slot.asEntity.entityFieldName.toFirstUpper»()'''
+				val ownerEntity = slot.ownerEntity
+				val slotOwnerOneToMany = ownerEntity.getOneToManyOpposite
+				var value = '''new«slot.asEntity.entityFieldName.toFirstUpper»()'''
+				
+				if (slotOwnerOneToMany !== null && slot.name == slotOwnerOneToMany.name) {
+					value = slotOwnerOneToMany.asEntity.fieldName
+				}
+				else if (slot.isOneToMany) {
+					val ownerAsParam = ownerEntity.toEntityNameVar
+					ownerEntity.addImport('import java.util.ArrayList;')
+					
+					value = '''Arrays.asList(new«slot.asEntity.entityFieldName.toFirstUpper»(«ownerAsParam»))'''
+				}
+				
+				'''«value»'''
 			}
 			else {
 				'''null'''
@@ -525,10 +668,16 @@ class TestUtils {
 	}
 	
 	def static void resolveEntityDTOLookupResultImports(Entity entitySource, Entity entityTarget) {
-		entitySource.slots.filter[isDTOLookupResult].forEach[
+		entitySource.slots.filter[isDTOLookupResultForTests].forEach[
 			val slotEntity = it.asEntity
-			entityTarget.addImport('import ' + slotEntity.package + '.' + slotEntity.toEntityLookupResultDTOName + ';')
+			val importValue = 'import ' + slotEntity.package + '.' + slotEntity.toEntityLookupResultDTOName + ';'
+			entityTarget.addImport(importValue)
 		]
+	}
+	
+	def static boolean isDTOLookupResultForTests(Slot slot) {
+		val result = slot.isEntity// && ! (slot.relationContains && (slot.isOneToOne /* || slot.isOneToMany)*/))
+		result
 	}
 	
 	def static void resolveEntityEnumImports(Entity entitySource, Entity entityTarget) {
@@ -558,7 +707,7 @@ class TestUtils {
 	}
 	
 	def static void resolveEntityDTOLookupResultImports(Entity entity) {
-		entity.slots.filter[isDTOLookupResult].forEach[
+		entity.slots.filter[isDTOLookupResultForTests].forEach[
 			val slotEntity = it.asEntity
 			entity.addImport('import ' + slotEntity.package + '.' + slotEntity.toEntityLookupResultDTOName + ';')
 		]
@@ -927,15 +1076,28 @@ class TestUtils {
 		entity.addImport('import java.util.ArrayList;')
 		
 		val entityName = entity.toEntityName
+		val slotManyToOne_OneToMany = entity.getOneToManyOpposite
+		val hasOwnerOneToMany = slotManyToOne_OneToMany !== null
+		var ownerEntityName = ''
+		var ownerEntityNameVar = ''
+		if (hasOwnerOneToMany) {
+			ownerEntityName = slotManyToOne_OneToMany.asEntity.toEntityName
+			ownerEntityNameVar = slotManyToOne_OneToMany.asEntity.toEntityNameVar
+		}
 		
 		'''
 		// Generate «lastRecord» records of data for «entityName» for this test.
-		final int «FIRST_RECORD_VAR» = «firstRecord»;
-		final int «LAST_RECORD_VAR» = «lastRecord»;
 		List<«entityName»> «TEST_DATA» = new ArrayList<>();
+		final int «LAST_RECORD_VAR» = «lastRecord»;
+		«IF hasOwnerOneToMany»
+		«ownerEntityName» «ownerEntityNameVar» = new«ownerEntityName»(lastRecord);
+		«TEST_DATA».addAll(«ownerEntityNameVar».«slotManyToOne_OneToMany.getOppositeSlot.buildMethodGet»);
+		«ELSE»
+		final int «FIRST_RECORD_VAR» = «firstRecord»;
 		for (int i = «FIRST_RECORD_VAR»; i <= «LAST_RECORD_VAR»; i++) {
 			«TEST_DATA».add(«entity.generateNewEntityRecord»);
 		}
+		«ENDIF»
 		
 		// Check if «lastRecord» records of «entityName» was generated.
 		long «COUNT_VAR» = «entity.toRepositoryName.toFirstLower».count();

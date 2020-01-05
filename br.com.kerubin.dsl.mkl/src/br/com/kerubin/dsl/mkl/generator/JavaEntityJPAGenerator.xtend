@@ -541,11 +541,13 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slotName») {
 		«ENDIF»
 			«IF slot.many && slot.isToMany && slot.isRelationContains»
+			// First remove existing items.
+			if (this.«slotName» != null) {
+				this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+			}
+			
 			if («slotName» != null) {
 				«slotName».forEach(this::add«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
-			}
-			else if (this.«slotName» != null) {
-				this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
 			}
 			«ELSEIF slot.isOneToOne && slot.relationContains && slot.isBidirectional»
 			if («slotName» == null) {
