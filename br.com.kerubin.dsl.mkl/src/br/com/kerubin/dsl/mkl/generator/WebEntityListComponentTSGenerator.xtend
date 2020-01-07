@@ -138,6 +138,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		})
 		
 		export class «entity.toEntityWebListClassName» implements OnInit {
+			tableLoading = false;
 			
 			«entity.toEntityWebListItems»: «dtoName»[];
 			«entity.toEntityWebListItemsTotalElements» = 0;
@@ -174,16 +175,24 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			«entity.toEntityListListMethod»(pageNumber = 0) {
+				this.tableLoading = true;
 			    this.«listFilterNameVar».pageNumber = pageNumber;
 			    this.«serviceVar»
 			    .«entity.toEntityListListMethod»(this.«listFilterNameVar»)
 			    .then(result => {
-			      	this.«entity.toEntityWebListItems» = result.items;
-			      	this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
-			      
-					«IF entity.hasSumFields»
-					this.«getMethodEntitySumFields»();
-					«ENDIF»
+			    	try {
+				      	this.«entity.toEntityWebListItems» = result.items;
+				      	this.«entity.toEntityWebListItemsTotalElements» = result.totalElements;
+				      
+						«IF entity.hasSumFields»
+						this.«getMethodEntitySumFields»();
+						«ENDIF»
+					} finally {
+						this.tableLoading = false;
+					}
+			    })
+			    .catch(e => {
+			    	this.tableLoading = false;
 			    });
 				
 			}
