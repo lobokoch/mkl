@@ -199,12 +199,18 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«IF entity.hasSumFields»
 			«getMethodEntitySumFields»() {
+				this.tableLoading = true;
 			    this.«serviceVar».«getMethodEntitySumFields»(this.«listFilterNameVar»)
 				.then(response => {
-				  this.«entitySumFieldsClassName.toFirstLower» = response;
+					try {
+						this.«entitySumFieldsClassName.toFirstLower» = response;
+					} finally {
+						this.tableLoading = false;
+					}
 				})
 				.catch(e => {
-				  this.messageHandler.showError(e);
+					this.tableLoading = false;
+					this.messageHandler.showError(e);
 				});
 			}
 			«ENDIF»
