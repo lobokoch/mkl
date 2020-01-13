@@ -45,6 +45,7 @@ class JavaGenerator extends BaseGenerator {
 			// new JavaObjectMapperGenerator(this),
 			new JavaEntityDTOConverterGenerator(this),
 			new JavaServiceConstantsGenerator(this),
+			new JavaServiceConfigGenerator(this),
 			new JavaClientPageResultGenerator(this),
 			new JavaEntityControllerGenerator(this),
 			new JavaPostgreSQLGenerator(this),
