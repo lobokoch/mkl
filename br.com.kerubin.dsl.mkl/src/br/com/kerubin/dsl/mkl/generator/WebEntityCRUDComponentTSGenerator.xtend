@@ -11,6 +11,7 @@ import br.com.kerubin.dsl.mkl.model.Rule
 import java.util.Set
 import java.util.LinkedHashSet
 import br.com.kerubin.dsl.mkl.model.RuleTargetField
+import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPServiceGenerator
 
 class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -59,6 +60,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rememberedSlots = entity.slots.filter[it.isWebRememberValue]
 		
 		val rulesPolling = entity.ruleFormPolling
+		val ruleSearchCEP = entity.ruleSearchCEP
 		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		imports.add('''import { «serviceName» } from './«webName».service';''')
@@ -84,6 +86,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		if (!ruleMakeCopies.empty) {
 			imports.add('''import {SelectItem, ConfirmationService} from 'primeng/api';''')
+		}
+		
+		if (ruleSearchCEP !== null) {
+			imports.add('''import { «WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME» } from './../../../../searchcep/«WebSearchCEPServiceGenerator.SERVICE_NAME»';''')
 		}
 
 		imports.add('''import { MessageHandlerService } from 'src/app/core/message-handler.service';''')
@@ -129,6 +135,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    private route: ActivatedRoute,
 			    «IF !ruleMakeCopies.empty»
 			    private confirmation: ConfirmationService,
+			    «ENDIF»
+			    «IF ruleSearchCEP !== null»
+			    private «WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME.toFirstLower»: «WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME»,
 			    «ENDIF»
 			    private messageHandler: MessageHandlerService
 			) { 
@@ -336,6 +345,9 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ENDIF»
 			«IF !rulesPolling.empty»
 			«rulesPolling.generatePollingMethodsForm»
+			«ENDIF»
+			«IF ruleSearchCEP !== null»
+			«ruleSearchCEP.generateSearchCEP»
 			«ENDIF»
 		}
 		'''
@@ -560,6 +572,64 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		this.«slot.ownerEntity.fieldName».«slot.fieldName» = this.«slot.webDropdownOptions»[«index»].value;
 		'''
 		
+	}
+	
+	def CharSequence generateSearchCEP(Rule rule) {
+		val entity = (rule.owner as Entity)
+		val entityVar = entity.fieldName
+		
+		val searchCEP = rule.apply.searchCEPExpression
+		val cepField = searchCEP.cepField
+		val ufField = searchCEP.ufField
+		val localidadeField = searchCEP.localidadeField
+		val bairroField = searchCEP.bairroField
+		val logradouroField = searchCEP.logradouroField
+		val complementoField = searchCEP.complementoField
+		val searchCEPService = WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME.toFirstLower
+		
+		'''
+		searchCEP() {
+		    let cep = this.«entityVar».«cepField.field.fieldName»;
+		    if (cep) {
+		      cep = cep.trim().replace('-', '');
+		    }
+		
+		    if (!cep || cep.length !== 8) {
+		      this.messageHandler.showError(`CEP '${this.«entityVar».cep}' inválido para busca.`);
+		      return;
+		    }
+		
+		    this.«searchCEPService».searchCEP(cep)
+		    .then(result => {
+		      this.clearSearchCEPData();
+		      if (result.erro) {
+		        this.messageHandler.showError(`CEP '${this.«entityVar».cep}' não encontrado.`);
+		        return;
+		      }
+		      this.«entityVar».cep = result.cep;
+		      const uf = this.«ufField.field.webDropdownOptions».find(it => it.value === result.uf);
+		
+		      this.«entityVar».«ufField.field.fieldName» = uf ? uf.value : null;
+		      this.«entityVar».«localidadeField.field.fieldName» = result.localidade;
+		      this.«entityVar».«bairroField.field.fieldName» = result.bairro;
+		      this.«entityVar».«logradouroField.field.fieldName» = result.logradouro;
+		      this.«entityVar».«complementoField.field.fieldName» = result.complemento;
+		    })
+		    .catch(e => {
+		      this.clearSearchCEPData();
+		      this.messageHandler.showError('Erro ao buscar CEP. Verifique se você informou um CEP válido.');
+		    });
+		
+		  }
+		
+		  clearSearchCEPData() {
+		    this.«entityVar».«ufField.field.fieldName» = null;
+		    this.«entityVar».«localidadeField.field.fieldName» = null;
+		    this.«entityVar».«bairroField.field.fieldName» = null;
+		    this.«entityVar».«logradouroField.field.fieldName» = null;
+		    this.«entityVar».«complementoField.field.fieldName» = null;
+		  }
+		'''
 	}
 	
 	def CharSequence generateRuleMakeCopiesActions(Rule rule) {

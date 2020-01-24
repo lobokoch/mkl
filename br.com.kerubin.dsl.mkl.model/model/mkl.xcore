@@ -42,6 +42,15 @@ class DisableEntityGeneration {
 
 // BEGIN Rule
 
+class SearchCEPExpression {
+	contains FieldObject cepField
+	contains FieldObject ufField
+	contains FieldObject localidadeField
+	contains FieldObject bairroField
+	contains FieldObject logradouroField
+	contains FieldObject complementoField
+}
+
 class MakeCopiesExpression {
 	String title
 	int minCopies = '1'
@@ -347,6 +356,7 @@ class RuleApply {
 	contains FieldMathExpression fieldMathExpression
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
+	contains SearchCEPExpression searchCEPExpression
 	contains RuleFunction ruleFunction
 	contains RulePolling rulePolling
 	contains DisableCUD disableCUD
@@ -385,6 +395,10 @@ class RuleApply {
 	
 	op boolean hasMakeCopiesExpression() {
 		makeCopiesExpression !== null
+	}
+	
+	op boolean hasSearchCEPExpression() {
+		searchCEPExpression !== null
 	}
 	
 	op boolean hasFieldMathExpression() {

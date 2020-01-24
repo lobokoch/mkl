@@ -64,6 +64,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		if (entity.hasSumFields) {
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
+		
 		imports.add("import { environment } from 'src/environments/environment';")
 		
 		if (!fkSlots.empty) {
@@ -74,6 +75,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		
 		val ruleMakeCopies = entity.ruleMakeCopies
+		
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		
 		

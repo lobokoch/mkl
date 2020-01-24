@@ -4,6 +4,7 @@ import br.com.kerubin.dsl.mkl.model.Entity
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPServiceGenerator
 
 class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -33,6 +34,8 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		val entityWebName = entity.toWebName
 		val relations = entity.slots.filter[isEntity && !asEntity.isSameEntity(entity)]
 		val hasRelations = !relations.isEmpty
+		
+		val ruleSearchCEP = entity.ruleSearchCEP
 		
 		'''
 		import { CommonModule } from '@angular/common';
@@ -64,6 +67,9 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		import { «entityName»RoutingModule } from './«entityWebName»-routing.module';
 		«IF hasRelations»
 		«relations.generateImports_1_RelationModules»
+		«ENDIF»
+		«IF ruleSearchCEP !== null»
+		import { «WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME» } from './../../../../searchcep/«WebSearchCEPServiceGenerator.SERVICE_NAME»';
 		«ENDIF»
 		// Kerubin - END
 		
@@ -110,6 +116,9 @@ class WebEntityModuleGenerator extends GeneratorExecutor implements IGeneratorEx
 		
 		  providers: [
 		    «serviceName»,
+		    «IF ruleSearchCEP !== null»
+		    «WebSearchCEPServiceGenerator.SERVICE_CLASS_NAME»,
+		    «ENDIF»
 		    «tranlationServiceName»
 		  ]
 		

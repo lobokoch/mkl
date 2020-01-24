@@ -199,7 +199,15 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			styleClassMethodName = slot.toRuleWithSlotAppyStyleClassMethodName
 		}
 		
-		
+		val ruleSearchCEP = entity.ruleSearchCEP
+		var Slot cepField = null
+		if (ruleSearchCEP !== null) {
+			val searchCEP = ruleSearchCEP.apply.searchCEPExpression
+			val searchCEPField = searchCEP.cepField.field
+			if (searchCEPField.name == slot.name) {
+				cepField = searchCEPField
+			}
+		}
 		
 		'''
 		«IF slot.isToMany»
@@ -207,7 +215,14 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		«ELSE»
 		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»>
 			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»</label>
+			«IF cepField !== null»
+			<div class="ui-inputgroup">
+				«slot.generateWebComponent»
+				<button pButton type="button" label="Buscar" (click)="searchCEP()"></button>
+			</div>
+			«ELSE»
 			«slot.generateWebComponent»
+			«ENDIF»
 		</div>
 		«ENDIF»
 		'''

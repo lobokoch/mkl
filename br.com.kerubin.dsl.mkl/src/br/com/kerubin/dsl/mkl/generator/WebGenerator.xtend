@@ -9,6 +9,8 @@ import br.com.kerubin.dsl.mkl.generator.web.account.WebUserAccountServiceGenerat
 import br.com.kerubin.dsl.mkl.generator.web.others.WebStylesGenerator
 import br.com.kerubin.dsl.mkl.generator.web.diretive.WebFocusDirectiveGenerator
 import br.com.kerubin.dsl.mkl.generator.web.account.WebAccountModuleGenerator
+import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPServiceGenerator
+import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPDTOServiceGenerator
 
 class WebGenerator extends BaseGenerator {
 	
@@ -65,7 +67,10 @@ class WebGenerator extends BaseGenerator {
 			new WebFocusDirectiveGenerator(this),
 			new WebEntityRoutingModuleGenerator(this),
 			new WebEntityModuleGenerator(this),
-			new WebAppRoutingModuleGenerator(this)
+			new WebAppRoutingModuleGenerator(this),
+			
+			new WebSearchCEPServiceGenerator(this),
+			new WebSearchCEPDTOServiceGenerator(this)
 		]
 		
 		generators.forEach[it.generate]	 

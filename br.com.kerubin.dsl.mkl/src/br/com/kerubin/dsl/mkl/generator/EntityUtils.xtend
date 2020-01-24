@@ -1000,6 +1000,11 @@ class EntityUtils {
 		.filter[it.apply !== null && it.apply.hasMakeCopiesExpression]
 	}
 	
+	def static ruleSearchCEP(Entity entity) {
+		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
+		.filter[it.apply !== null && it.apply.hasSearchCEPExpression].head
+	}
+	
 	def static getRulesFormOnCreate(Entity entity) {
 		entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM]
 		.filter[it.when !== null && it.when.hasFormOnCreate]

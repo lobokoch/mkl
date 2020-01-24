@@ -479,6 +479,7 @@ RuleApply:
 		('equation' '(' fieldMathExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
+		(searchCEPExpression = SearchCEPExpression)? &
 		(disableCUD = DisableCUD)? &
 		(hideCUDWebListActions = HideCUDWebListActions)? &
 		(hideWebListActions = HideWebListActions)? &
@@ -537,6 +538,19 @@ MakeCopiesExpression:
 			('title' ':' title = STRING)? &
 			('minCopies' ':' minCopies = INT)? &
 			('maxCopies' ':' maxCopies = INT)?
+		)
+	')'
+;
+
+SearchCEPExpression:
+	'searchCEP' '('
+		(
+			('cepField' ':' cepField = FieldObject) &
+			('ufField' ':' ufField = FieldObject) &
+			('localidadeField' ':' localidadeField = FieldObject) &
+			('bairroField' ':' bairroField = FieldObject) &
+			('logradouroField' ':' logradouroField = FieldObject) &
+			('complementoField' ':' complementoField = FieldObject)
 		)
 	')'
 ;
