@@ -181,7 +181,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		              		<a pButton [routerLink]="['/«entity.toWebName»', «entity.fieldName».«entity.id.fieldName»]" icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"></a>
 		              		<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»(«entity.fieldName»)"«ENDIF» (click)="«entity.toWebEntityListDeleteItem»(«entity.fieldName»)" pButton icon="pi pi-trash"  pTooltip="Excluir" tooltipPosition="top"></button>
 		              		«ENDIF»
-		              		«ruleActions.map[it.generateRuleActions].join»
+		              		«ruleActions.map[it.generateRuleActions(ruleActions)].join»
 		              	</td>
 		              	«ENDIF»
 		            </tr>
@@ -249,18 +249,22 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 	}
 	
-	def CharSequence generateRuleActions(Rule rule) {
+	def CharSequence generateRuleActions(Rule rule, Iterable<Rule> ruleActions) {
 		val actionName = rule.getRuleActionName
 		val entity = (rule.owner as Entity)
 		val entityVar = entity.fieldName
 		val icon = rule.action?.actionButton?.icon ?: 'pi pi-cog' //gear
 		val tooltip = rule.action?.actionButton?.tooltip ?: actionName
 		
+		// https://github.com/valor-software/ngx-bootstrap/issues/3075
+		// Ocorre o problema (flickering) quando o último tooltipPosition=top, por isso muda o último para left.
+		val tooltipPosition = if (rule === ruleActions.last) 'left' else 'top' // Bug no tooltipPosition=top PrimeNG
+		
 		'''
 		<button pButton
 		    [disabled]="!«rule.getRuleActionWhenName»(«entityVar»)"
 		    (click)="«actionName»(«entityVar»)"
-		    icon="«icon»"  tooltipPosition="top"
+		    icon="«icon»"  tooltipPosition="«tooltipPosition»"
 		    pTooltip="«tooltip»">
 		</button>
 		'''

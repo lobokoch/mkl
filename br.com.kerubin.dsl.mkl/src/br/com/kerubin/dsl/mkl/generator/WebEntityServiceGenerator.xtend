@@ -8,6 +8,7 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
+import br.com.kerubin.dsl.mkl.generator.web.analitycs.WebAnalitycsGenerator
 
 class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -65,6 +66,11 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
 		
+		val hasAnalitycs = entity.hasAnalitycs
+		if (hasAnalitycs) {
+			imports.add('''import { «WebAnalitycsGenerator.SERVICE_CLASS_NAME» } from './../../../../«Utils.WEB_ANALITYCS_DIR»«WebAnalitycsGenerator.SERVICE_NAME»';''')
+		}
+		
 		imports.add("import { environment } from 'src/environments/environment';")
 		
 		if (!fkSlots.empty) {
@@ -86,7 +92,13 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			url = environment.apiUrl + '/«service.domain»/«service.name»/entities/«varName»';
 			
-			constructor(private http: HttpClientWithToken) { }
+			constructor(
+				«IF hasAnalitycs»
+				private analitycs: «WebAnalitycsGenerator.SERVICE_CLASS_NAME»,
+				«ENDIF» 
+				private http: HttpClientWithToken) { 
+				// Generated code.
+			}
 			
 			// TODO: Provisório
 			private getHeaders(): Headers {
@@ -98,7 +110,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			create(«varName»: «dtoName»): Promise<«dtoName»> {
 				const headers = this.getHeaders();    
-			
+				«entity.generateAnalitycsSendEvent('create')»
 			    return this.http.post(this.url, «varName», { headers })
 			    .toPromise()
 			    .then(response => {
@@ -111,7 +123,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			update(«varName»: «dtoName»): Promise<«dtoName»> {
 			    const headers = this.getHeaders();
-			
+				«entity.generateAnalitycsSendEvent('update')»
 			    return this.http.put(`${this.url}/${«varName».«entity.id.fieldName»}`, «varName», { headers })
 			    .toPromise()
 			    .then(response => {
@@ -123,12 +135,14 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			}
 			
 			delete(id: string): Promise<void> {
+				«entity.generateAnalitycsSendEvent('delete')»
 			    return this.http.delete(`${this.url}/${id}`)
 			    .toPromise()
 			    .then(() => null);
 			}
 			
 			retrieve(id: string): Promise<«dtoName»> {
+				«entity.generateAnalitycsSendEvent('retrieve')»
 			    const headers = this.getHeaders();
 			    return this.http.get<«dtoName»>(`${this.url}/${id}`, { headers })
 			    .toPromise()
@@ -179,7 +193,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			    let params = new HttpParams();
 			    params = params.set('query', query);
-			
+				«entity.generateAnalitycsSendEvent('autoComplete', 'JSON.stringify(params)', true)»
 			    return this.http.get<«entity.toAutoCompleteName»[]>(`${this.url}/autoComplete`, { headers, params })
 			      .toPromise()
 			      .then(response => {
@@ -205,7 +219,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			    const headers = this.getHeaders();
 			
 			    const params = this.mountAndGetSearchParams(«varName»ListFilter);
-			
+				«entity.generateAnalitycsSendEvent(varName + 'List', 'JSON.stringify(params)', true)»
 			    return this.http.get<any>(this.url, { headers, params })
 			      .toPromise()
 			      .then(response => {
@@ -229,8 +243,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			
 			get«entitySumFieldsClassName»(«entity.toEntityListFilterName»: «entity.toEntityListFilterClassName»): Promise<«entitySumFieldsClassName»> {
 			    const headers = this.getHeaders();
-			    
 				const params = this.mountAndGetSearchParams(«entity.toEntityListFilterName»);
+			    «entity.generateAnalitycsSendEvent('get' + entitySumFieldsClassName, 'JSON.stringify(params)', true)»
 				return this.http.get<any>(`${this.url}/«entitySumFieldsClassName.toFirstLower»`, { headers, params })
 				  .toPromise()
 				  .then(response => {
@@ -297,8 +311,9 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 				
 			getTotais«VAR_FILTER»«dtoName»(«VAR_FILTER»: «dtoName»rListFilter): Promise<Totais«VAR_FILTER»«dtoName»> {
 			    const headers = this.getHeaders();
-			
+				
 			    const params = this.mountAndGetSearchParams(«VAR_FILTER»);
+				«entity.generateAnalitycsSendEvent('getTotais' + VAR_FILTER + dtoName, 'JSON.stringify(params)', true)»
 			    return this.http.get<Totais«VAR_FILTER»«dtoName»>(`${this.url}/getTotais«VAR_FILTER»«dtoName»`, { headers, params })
 			    .toPromise()
 			    .then(response => {
@@ -340,7 +355,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		    let params = new HttpParams();
 		    params = params.set('query', query);
-		
+			«entity.generateAnalitycsSendEvent(slotAutoCompleteName, 'JSON.stringify(params)', true)»
 		    return this.http.«IF hasAutoCompleteWithOwnerParams»post«ELSE»get«ENDIF»<«autoCompleteClassName»[]>(`${this.url}/«slotAutoCompleteName»`«IF hasAutoCompleteWithOwnerParams», «ownerEntity.fieldName»«ENDIF», { headers, params })
 		      .toPromise()
 		      .then(response => {
@@ -363,7 +378,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		'''
 		«methodName»(«varName»: «dtoName»): Promise<«dtoName»> {
 		    const headers = this.getHeaders();
-		
+			«entity.generateAnalitycsSendEvent(methodName)»
 		    return this.http.put(`${this.url}/«methodName»/${«varName».«entity.id.fieldName»}`, «varName», { headers })
 		    .toPromise()
 		    .then(response => {
@@ -380,12 +395,14 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	def CharSequence generateRuleMakeCopiesActions(Rule rule) {
 		val actionName = rule.getRuleActionMakeCopiesName
 		val grouperField = rule.ruleMakeCopiesGrouperSlot
+		val entity = (rule.owner as Entity)
 		
 		'''
 		 
 		«actionName»(id: string, numberOfCopies: Number, referenceFieldInterval: Number, «grouperField.fieldName»: String): Promise<void> {
 		    const headers = this.getHeaders();
 		      const entityCopy = { id, numberOfCopies, referenceFieldInterval, «grouperField.fieldName» };
+		      «entity.generateAnalitycsSendEvent(actionName.toString, 'JSON.stringify(entityCopy)', true)»
 			    return this.http.post(`${this.url}/«actionName»`, entityCopy, { headers })
 			    .toPromise()
 			    .then( () => null);
@@ -395,12 +412,13 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def CharSequence generateRuleActions(Rule rule) {
 		val actionName = rule.getRuleActionName
+		val entity = (rule.owner as Entity)
 		
 		'''
 		 
 		«actionName»(id: string): Promise<void> {
 			const headers = this.getHeaders();
-			
+			«entity.generateAnalitycsSendEvent(actionName.toString)»
 			return this.http.put(`${this.url}/«actionName»/${id}`, { headers })
 			.toPromise()
 			.then(() => null);
@@ -410,6 +428,8 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 	
 	def CharSequence generateListFilterAutoComplete(Slot slot) {
 		val autoComplateName = slot.toAutoCompleteName
+		val entity = slot.ownerEntity
+		
 		'''
 		
 		«autoComplateName»(query: string): Promise<any> {
@@ -417,7 +437,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		    let params = new HttpParams();
 		    params = params.set('query', query);
-		
+			«entity.generateAnalitycsSendEvent(autoComplateName.toString, 'JSON.stringify(params)', true)»
 		    return this.http.get<any>(`${this.url}/«autoComplateName»`, { headers, params })
 		      .toPromise()
 		      .then(response => {
@@ -538,6 +558,29 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		
 		import { HttpClientWithToken } from '../../../../security/http-client-token';
 		''')
+	}
+	
+	def CharSequence generateAnalitycsSendEvent(Entity entity, String action) {
+		val label = '''«action» «entity.name»'''
+		entity.generateAnalitycsSendEvent(action, label, false)
+	}
+	
+	def CharSequence generateAnalitycsSendEvent(Entity entity, String action, String label, boolean labelAsObject) {
+		if (entity.hasAnalitycs) {
+			val category = '''«entity.service.domain».«entity.service.name».«entity.name»''' 
+			val label_ = if (label !== null) label else '''«action» «entity.name»'''
+			generateAnalitycsSendEvent(category, action, label_, labelAsObject)
+		}
+		else {
+			''''''
+		}
+	}
+	
+	def CharSequence generateAnalitycsSendEvent(String category, String action, String label, boolean labelAsObject) {
+		val label_ = if (labelAsObject) label else "'" + label + "'"
+		'''
+		this.analitycs.sendEvent('«category»', '«action»', «label_»);
+		'''
 	}
 	
 }

@@ -65,7 +65,7 @@ class WebCoreMessageHandlerServiceGenerator extends GeneratorExecutor implements
 		
 		    if (typeof errorResponse === 'string') {
 		      message = errorResponse;
-		    } else if (errorIsResponse && errorResponse.status >= 400 && errorResponse.status <= 499) {
+		    } else if (errorIsResponse && errorResponse.status >= 400 && errorResponse.status <= 500) {
 		      try {
 		
 		        if (errorResponse.error) {
@@ -94,7 +94,7 @@ class WebCoreMessageHandlerServiceGenerator extends GeneratorExecutor implements
 		    	message = 'Usuário inexistente ou senha inválida.';
 		    }
 		
-		    this.messageService.add({severity: 'error', summary: 'Erro', detail: message});
+		    this.messageService.add({severity: 'error', summary: 'Erro', detail: message, life: 10000});
 		    console.log('Ocorreu um erro:' + errorResponse);
 		  }
 		

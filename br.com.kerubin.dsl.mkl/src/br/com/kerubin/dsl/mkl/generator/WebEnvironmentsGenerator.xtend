@@ -34,9 +34,11 @@ class WebEnvironmentsGenerator extends GeneratorExecutor implements IGeneratorEx
 		export const environment = {
 		  production: true,
 		
-		  apiUrl: 'https://www.kerubin.com.br',
-		  tokenWhitelistedDomains: [ new RegExp('www.kerubin.com.br') ],
-		  tokenBlacklistedRoutes: [ new RegExp('\/oauth\/token') ]
+		  apiUrl: 'https://www.kerubin.com.br/api',
+		  authApiUrl: 'https://www.kerubin.com.br/api',
+		  tokenWhitelistedDomains: [ 'www.kerubin.com.br' ],
+		
+		  tokenBlacklistedRoutes: [ 'www.kerubin.com.br/api/oauth/token', 'https://www.kerubin.com.br/api/oauth/token' ]
 		};
 		'''
 	}
@@ -57,13 +59,13 @@ class WebEnvironmentsGenerator extends GeneratorExecutor implements IGeneratorEx
 		  apiUrl: 'http://localhost:9090/api',
 		  authApiUrl: 'http://localhost:9090/api',
 		
-		  tokenWhitelistedDomains: [
+		  /*tokenWhitelistedDomains: [
 		    new RegExp('localhost:9090')
-		  ],
+		  ],*/
 		
-		  tokenBlacklistedRoutes: [
-		    new RegExp('\/oauth\/token')
-		  ]
+		  tokenWhitelistedDomains: ['localhost:9090'],
+		
+		  tokenBlacklistedRoutes: [ new RegExp('\/api\/oauth\/token') ]
 		};
 		
 		/*

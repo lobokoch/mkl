@@ -4,6 +4,20 @@ package br.com.kerubin.dsl.mkl.model
 import java.util.Set
 import java.util.LinkedHashSet
 
+class WebAnalitycs {
+	Boolean enable
+	Boolean onlyInProduction
+	String ^id
+	
+	op boolean isEnabled() {
+		enable === null || enable
+	}
+	
+	op boolean isOnlyInProductionEnabled() {
+		onlyInProduction === null || onlyInProduction
+	}
+}
+
 class DisableServiceGeneration {
 	boolean backend
 	boolean backendTest
@@ -541,7 +555,6 @@ class Service extends Element {
 	String label
 	boolean enableCustomTestConfig
 	boolean enableDoc
-	
 	container DomainModel domainModel opposite service
 	op String domain() {
 		//(eContainer as DomainModel).domain
@@ -552,10 +565,24 @@ class Service extends Element {
 		label !== null && !label.trim.empty
 	}
 	
+	contains WebAnalitycs webAnalitycs	
 	contains DisableServiceGeneration disableGeneration
 	contains Configuration configuration
 	contains MavenDependency[] dependencies
 	contains ServiceElement[] elements opposite service
+	
+	op boolean hasWebAnalitycs() {
+		webAnalitycs !== null && webAnalitycs.isEnabled
+	}
+	
+	op String getWebAnalitycsId() {
+		if (hasWebAnalitycs) {
+			webAnalitycs.id
+		}
+		else {
+			null
+		}
+	}
 	
 	op boolean notHasDisableGeneration() {
 		disableGeneration === null
@@ -1393,6 +1420,7 @@ class Entity extends PublicObject, Rulled {
 	boolean baseRepository
 	boolean enableReplication
 	boolean externalEntity = 'false'
+	boolean disableWebAnalytics
 	String label
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
@@ -1402,6 +1430,10 @@ class Entity extends PublicObject, Rulled {
 	contains HibFilterDef[] hibFilterDefList
 	contains HibFilters[] hibFiltersList
 	contains EntityVersion entityVersion
+	
+	op boolean hasAnalitycs() {
+		!disableWebAnalytics && service.hasWebAnalitycs
+	}
 	
 	op String getTitle() {
 		if (label !== null) {

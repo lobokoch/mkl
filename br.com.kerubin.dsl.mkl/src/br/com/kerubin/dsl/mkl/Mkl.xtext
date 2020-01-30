@@ -13,6 +13,7 @@ DomainModel:
 Service:
 	(
 		(disableGeneration=DisableServiceGeneration)? &
+		(webAnalitycs=WebAnalitycs)? &
 		('@label' '(' label=STRING ')')? & 
 		(enableCustomTestConfig ?= '@enableCustomTestConfig')? &
 		(enableDoc ?= '@enableDoc')?
@@ -92,6 +93,7 @@ Entity:
 		(subscribeEntityEvents=SubscribeEntityEvents)? & 
 		(publishEntityEvents=PublishEntityEvents)? & 
 		(enableReplication?='@enableReplication')? &
+		(disableWebAnalytics?='@disableWebAnalytics')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
 		(baseRepository?='@baseRepository')? &
@@ -150,6 +152,18 @@ HibFilter:
 ;
 
 
+
+WebAnalitycs:
+{WebAnalitycs}	
+	'@webAnalitycs'
+	'(' 
+		(
+			('enabled' ':' enable = BooleanObject)? & // Default true
+			('onlyInProduction' ':' onlyInProduction = BooleanObject)? & // Default true 
+			('tagId' ':' id = STRING)
+		)
+	')'	
+;
 
 DisableServiceGeneration:
 {DisableServiceGeneration}	
@@ -213,6 +227,7 @@ PublicObject:
 
 
 // All conflict keywords can go here. So we can skip use of "^" skip symbol.
+// WARNING: Cannot ad 'id' here, errors will happen in the grammar.
 ID_KEYWORD:
 	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 
 	'transient' | 'validation' | 'description' | 'version' | 'title'
@@ -778,9 +793,15 @@ enum AssociationType:
 	CONTAINS = 'contains' |	REFERS = 'refers'
 ;
 
+BooleanObject returns ecore::EBooleanObject:
+	'false' | 'true'
+;
+
+
 ServiceObject:
 	PublicObject | Entity
 ;
+
 
 BasicTypeReference:
 	basicType=BasicType

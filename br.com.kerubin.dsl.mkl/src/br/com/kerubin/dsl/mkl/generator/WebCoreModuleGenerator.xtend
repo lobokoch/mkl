@@ -1,6 +1,7 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import static br.com.kerubin.dsl.mkl.generator.Utils.*
+import br.com.kerubin.dsl.mkl.generator.web.analitycs.WebAnalitycsGenerator
 
 class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -29,7 +30,10 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateCoreModuleTSContent() {
+		val hasWebAnalitycs = service.hasWebAnalitycs
+		
 		'''
+		// Angular
 		// Angular
 		import { HttpClientModule } from '@angular/common/http';
 		import { NgModule, LOCALE_ID } from '@angular/core';
@@ -50,6 +54,8 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		import { JwtHelperService } from '@auth0/angular-jwt';
 		
 		// Kerubin - BEGIN
+		import { HomeModule } from './../home/home.module';
+		import { HomeComponent } from './../home/home.component';
 		import { NavbarComponent } from './../navbar/navbar.component';
 		import { KerubinMenuModule } from './../menu/kerubin-menu.module';
 		import { FocusDirective } from './../directive/focus.directive';
@@ -58,6 +64,11 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		import { UserAccountService } from '../account/useraccount.service';
 		import { SecurityModule } from './../security/security.module';
 		import { KerubinAccountModule } from './../account/kerubin-account.module';
+		import { CreditBalanceModule } from './../modules/custom/creditbalance/creditbalance.module';
+		import { PaymentModule } from './../payment/payment.module';
+		«IF hasWebAnalitycs»
+		import { «WebAnalitycsGenerator.MODULE_CLASS_NAME» } from './../«Utils.WEB_ANALITYCS_DIR»«WebAnalitycsGenerator.MODULE_NAME»';
+		«ENDIF»
 		// Kerubin - END
 		
 		
@@ -83,6 +94,12 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		    KerubinMenuModule,
 		    KerubinAccountModule,
 		    SecurityModule,
+		    PaymentModule,
+		    CreditBalanceModule,
+		    «IF hasWebAnalitycs»
+		    «WebAnalitycsGenerator.MODULE_CLASS_NAME»,
+		    «ENDIF»
+		    HomeModule
 		  ],
 		
 		  declarations: [
@@ -94,7 +111,8 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		    NavbarComponent,
 		    ToastModule,
 		    KerubinMenuModule,
-		    ConfirmDialogModule
+		    ConfirmDialogModule,
+		    HomeComponent
 		  ],
 		
 		  providers: [
@@ -108,7 +126,10 @@ class WebCoreModuleGenerator extends GeneratorExecutor implements IGeneratorExec
 		    { provide: CURRENCY_MASK_CONFIG, useValue: CustomCurrencyMaskConfig }
 		  ]
 		})
-		export class CoreModule { }
+		
+		export class CoreModule { 
+			// Generated code.
+		}
 		
 		'''
 	}

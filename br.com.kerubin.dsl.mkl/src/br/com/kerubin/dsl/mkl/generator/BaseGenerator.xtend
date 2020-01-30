@@ -4,7 +4,6 @@ import br.com.kerubin.dsl.mkl.model.Configuration
 import br.com.kerubin.dsl.mkl.model.Entity
 import br.com.kerubin.dsl.mkl.model.Enumeration
 import br.com.kerubin.dsl.mkl.model.Service
-import java.time.LocalDateTime
 import org.eclipse.emf.ecore.resource.Resource
 import org.eclipse.xtext.generator.IFileSystemAccess2
 import org.osgi.framework.FrameworkUtil

@@ -44,6 +44,7 @@ class Utils {
 	static val WEB_SECURITY_DIR = 'security/'
 	static val WEB_ACCOUNT_DIR = 'account/'
 	static val WEB_SEARCH_CEP_DIR = 'searchcep/'
+	public static val WEB_ANALITYCS_DIR = 'analitycs/'
 	static val WEB_ENVIRONMENTS_DIR = 'environments/'
 	static val WEB_CORE_DIR = 'core/'
 	static val WEB_DIRECTIVE_DIR = 'directive/'
@@ -66,6 +67,10 @@ class Utils {
 	
 	def static getWebSearchCEPDir() {
 		WEB_SEARCH_CEP_DIR.webDir
+	}
+	
+	def static getWebAnalitycsDir() {
+		WEB_ANALITYCS_DIR.webDir
 	}
 	
 	def static getWebSecurityDir() {
