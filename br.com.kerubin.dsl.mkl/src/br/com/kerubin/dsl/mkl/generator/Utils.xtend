@@ -166,6 +166,10 @@ class Utils {
 		SERVER_SOURCE_GEN_DIR + JAVA_BASE_DIR
 	}
 	
+	def static getMesagingDir() {
+		SERVER_SOURCE_GEN_DIR + JAVA_BASE_DIR + "messaging/"
+	}
+	
 	def static getServerTestGenSourceFolder() {
 		SERVER_SOURCE_GEN_DIR + JAVA_TEST_BASE_DIR
 	}

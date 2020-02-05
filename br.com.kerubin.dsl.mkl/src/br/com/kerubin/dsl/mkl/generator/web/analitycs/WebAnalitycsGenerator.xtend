@@ -71,12 +71,26 @@ class WebAnalitycsGenerator extends GeneratorExecutor implements IGeneratorExecu
 		export class «SERVICE_CLASS_NAME» {
 		
 		  constructor() { }
-		
-		  sendGTag(url: string) {
-		  	if (CAN_EXECUTE) {
-		  	  gtag('config', ID, {'page_path': url});
-		  	}
-		  }
+		  
+			sendGTag(url: string) {
+				if (CAN_EXECUTE && url) {
+			    // Replaces the real uuid with a token "uuid"
+			    // from: https://www.kerubin.com.br/contapagar/ba73db96-8766-4ab1-819c-28859f89add4
+			    // to:   https://www.kerubin.com.br/contapagar/uuid
+			    const index = url.lastIndexOf('/');
+			    let pagePath = url;
+			    if (index > -1) {
+			      const id = url.substring(index + 1);
+			      if (id && id.length > 32) { // length of ba73db96-8766-4ab1-819c-28859f89add4
+			        const parts = id.split('-');
+			        if (parts && parts.length === 5) {
+			          pagePath = url.substring(0, index) + '/uuid';
+			        }
+			      }
+			    }
+				  gtag('config', ID, {'page_path': pagePath});
+				}
+			}
 		
 		  sendEvent(category: string, action: string, label: string, value: number = 0) {
 		  	if (CAN_EXECUTE) {

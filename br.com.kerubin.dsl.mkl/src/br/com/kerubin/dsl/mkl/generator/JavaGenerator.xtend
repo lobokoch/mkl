@@ -9,6 +9,7 @@ import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestApplicationGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestRepositoryGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityBaseTestGenerator
 import br.com.kerubin.dsl.mkl.generator.test.JavaEntityTestVisitorGenerator
+import br.com.kerubin.dsl.mkl.generator.messaging.JavaServerMessagingGenerator
 
 class JavaGenerator extends BaseGenerator {
 	
@@ -55,7 +56,8 @@ class JavaGenerator extends BaseGenerator {
 			new JavaMessagingAfterReceivePostProcessorsGenerator(this),
 			new JavaEntityRuleFunctionsGenerator(this),		
 			new JavaSwaggerConfigGenerator(this),
-			new JavaMapConverterGenerator(this)
+			new JavaMapConverterGenerator(this),
+			new JavaServerMessagingGenerator(this)
 		)
 		
 		if (canGenerateServiceBackendTest) {

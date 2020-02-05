@@ -25,6 +25,7 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 		package «service.servicePackage»;
 		
 		import static br.com.kerubin.api.messaging.utils.Utils.isEmpty;
+		import static br.com.kerubin.api.messaging.utils.Utils.isNotEmpty;
 		
 		import org.slf4j.Logger;
 		import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 		
 		import static br.com.kerubin.api.messaging.constants.MessagingConstants.HEADER_TENANT;
 		import static br.com.kerubin.api.messaging.constants.MessagingConstants.HEADER_USER;
+		import static br.com.kerubin.api.messaging.constants.MessagingConstants.HEADER_TENANT_ACCOUNT_TYPE;
 		
 		public class «service.toMessageAfterReceivePostProcessorsName» implements MessagePostProcessor {
 			
@@ -49,6 +51,7 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 				
 				Object tenant = message.getMessageProperties().getHeaders().get(HEADER_TENANT);
 				Object user = message.getMessageProperties().getHeaders().get(HEADER_USER);
+				Object tenantAccountType = message.getMessageProperties().getHeaders().get(HEADER_TENANT_ACCOUNT_TYPE);
 				
 				if (isEmpty(tenant) || isEmpty(user)) {
 					log.error("Empty or null tenant/user received from broker in message header tenant: {}, user: {}, message: ", tenant, user, message);
@@ -58,6 +61,13 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 				
 				ServiceContext.setTenant(tenant.toString());
 				ServiceContext.setUser(user.toString());
+				
+				if (isNotEmpty(tenantAccountType)) {
+					ServiceContext.setTenantAccountType(tenantAccountType.toString());
+				}
+				else {
+					log.error("Empty or null tenantAccountType received from broker in message header tenant: {}, user: {}, message: ", tenant, user, message);
+				}
 				
 				ServiceContext.setDomain(«domainAndService».DOMAIN);
 				ServiceContext.setService(«domainAndService».SERVICE);

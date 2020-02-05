@@ -4,6 +4,14 @@ package br.com.kerubin.dsl.mkl.model
 import java.util.Set
 import java.util.LinkedHashSet
 
+class MessagingEventHandler {
+	Boolean enable
+	
+	op boolean isEnabled() {
+		enable === null || enable
+	}	
+}
+
 class WebAnalitycs {
 	Boolean enable
 	Boolean onlyInProduction
@@ -566,10 +574,15 @@ class Service extends Element {
 	}
 	
 	contains WebAnalitycs webAnalitycs	
+	contains MessagingEventHandler messagingEventHandler	
 	contains DisableServiceGeneration disableGeneration
 	contains Configuration configuration
 	contains MavenDependency[] dependencies
 	contains ServiceElement[] elements opposite service
+	
+	op boolean hasMessagingEventHandler() {
+		messagingEventHandler !== null && messagingEventHandler.isEnabled
+	}
 	
 	op boolean hasWebAnalitycs() {
 		webAnalitycs !== null && webAnalitycs.isEnabled
