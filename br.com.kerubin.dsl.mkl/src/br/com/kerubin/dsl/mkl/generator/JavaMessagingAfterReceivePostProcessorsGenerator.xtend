@@ -34,7 +34,6 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 		import org.springframework.amqp.core.MessagePostProcessor;
 		
 		import br.com.kerubin.api.database.core.ServiceContext;
-		import br.com.kerubin.api.messaging.core.DomainEventPublisher;
 		
 		import static br.com.kerubin.api.messaging.constants.MessagingConstants.HEADER_TENANT;
 		import static br.com.kerubin.api.messaging.constants.MessagingConstants.HEADER_USER;
@@ -42,12 +41,11 @@ class JavaMessagingAfterReceivePostProcessorsGenerator extends GeneratorExecutor
 		
 		public class «service.toMessageAfterReceivePostProcessorsName» implements MessagePostProcessor {
 			
-			private static final Logger log = LoggerFactory.getLogger(DomainEventPublisher.class);
+			private static final Logger log = LoggerFactory.getLogger(«service.toMessageAfterReceivePostProcessorsName».class);
 				
 			@Override
 			public Message postProcessMessage(Message message) throws AmqpException {
-				
-				log.info(«domainAndService».DOMAIN + "." + «domainAndService».SERVICE + " receiving message: " + message);
+				log.info("Receiving message from broker RabbitMQ, message data: {}", message);
 				
 				Object tenant = message.getMessageProperties().getHeaders().get(HEADER_TENANT);
 				Object user = message.getMessageProperties().getHeaders().get(HEADER_USER);

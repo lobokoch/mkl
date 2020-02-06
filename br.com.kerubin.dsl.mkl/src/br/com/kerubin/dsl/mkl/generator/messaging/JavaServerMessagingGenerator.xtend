@@ -1,6 +1,7 @@
 package br.com.kerubin.dsl.mkl.generator.messaging
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.toConstantName
 import br.com.kerubin.dsl.mkl.generator.GeneratorExecutor
 import br.com.kerubin.dsl.mkl.generator.IGeneratorExecutor
 import br.com.kerubin.dsl.mkl.generator.BaseGenerator
@@ -77,12 +78,14 @@ class JavaServerMessagingGenerator extends GeneratorExecutor implements IGenerat
 	}
 	
 	def CharSequence generateServiceEventHandler() {
+		val domainAndService = service.domain.toCamelCase + service.name.toCamelCase
+		
 		'''
 		package «service.servicePackage».«MESSAGING»;
 		
 		import br.com.kerubin.api.messaging.core.DomainMessage;
 		
-		public interface «service.domain.toCamelCase»«service.name.toCamelCase»EventHandler {
+		public interface «domainAndService»EventHandler {
 		
 			void handleEvent(DomainMessage message);
 		
@@ -92,7 +95,10 @@ class JavaServerMessagingGenerator extends GeneratorExecutor implements IGenerat
 	}
 	
 	def CharSequence generateServiceEventConfig() {
-		val domaAndService = service.toServiceConstantsName
+		val serviceConstantsName = service.toServiceConstantsName
+		val domainAndService = service.domain.toCamelCase + service.name.toCamelCase
+		val serviceMainQueue = domainAndService.toFirstLower + 'Queue'
+		val serviceMainQueueConstant = serviceMainQueue.toConstantName
 		
 		'''
 		package «service.servicePackage».«MESSAGING»;
@@ -109,15 +115,17 @@ class JavaServerMessagingGenerator extends GeneratorExecutor implements IGenerat
 		
 		@ComponentScan({"br.com.kerubin.api.messaging.core"})
 		@Configuration
-		public class «service.domain.toCamelCase»«service.name.toCamelCase»EventConfig {
+		public class «domainAndService»EventConfig {
+			
+			public static final String «serviceMainQueueConstant» = "«serviceMainQueue»";
 			
 			@Bean
-			public Queue financeiroFluxoCaixaQueue() {
+			public Queue «serviceMainQueue»() {
 				// Default queue for this service.
 				String queueName = MessageFormat.format("{0}_{1}_{2}", //
 					DomainEventConstants.APPLICATION, //
-					«domaAndService».DOMAIN, //
-					«domaAndService».DOMAIN); //
+					«serviceConstantsName».DOMAIN, //
+					«serviceConstantsName».SERVICE); //
 				
 				return new Queue(queueName, true);
 			}
