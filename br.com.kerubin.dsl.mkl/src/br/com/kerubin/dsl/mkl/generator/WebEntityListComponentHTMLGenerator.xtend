@@ -204,6 +204,11 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 						«IF !hasHideWebListActions»<td class="kb-sum-footer">«entity.buildEntityRuleWithSum»</td>«ENDIF»
 					</tr>
 				</ng-template>
+				
+				<ng-template pTemplate="summary">
+					«slots.tail.map[it.generateSumFieldForSummary].join»
+					<div>Sumarização «entity.buildEntityRuleWithSum»</div>
+				</ng-template>
 				«ENDIF»
 			</p-table>
 		</div>
@@ -334,6 +339,12 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		''''''
 	}
 	
+	def CharSequence generateSumFieldForSummary(Slot slot) {
+		'''
+		«IF slot.hasSumField»<div class="kb-mobile-block"><span«slot.generateSumFieldCSS(true)»>Soma "«slot.title»" «slot.generateSumFieldValue»</span></div>«ENDIF»
+		'''
+	}
+	
 	def CharSequence generateSumField(Slot slot) {
 		'''
 		«IF slot.hasSumField»<td«slot.generateSumFieldCSS»>«slot.generateSumFieldValue»</td>«ELSE»<td class="kb-sum-footer"></td>«ENDIF»
@@ -341,8 +352,12 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateSumFieldCSS(Slot slot) {
+		slot.generateSumFieldCSS(/*isSummary=*/false)
+	}
+	
+	def CharSequence generateSumFieldCSS(Slot slot, boolean isSummary) {
 		val sum = slot.sumField
-		''' class="kb-sum-footer sumField«IF sum.hasStyleClass» «sum.styleClass»«ENDIF»"«IF sum.hasStyleCss» style="«sum.styleCss»"«ENDIF»'''
+		''' class="«IF !isSummary»kb-sum-footer sumField«ENDIF»«IF sum.hasStyleClass» «sum.styleClass»«ENDIF»"«IF sum.hasStyleCss» style="«sum.styleCss»"«ENDIF»'''
 	}
 	
 	def CharSequence generateSumFieldValue(Slot slot) {
@@ -352,7 +367,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			fieldName = fieldName.toGridShowNumberAsNegative
 		}
 		
-		'''«IF slot.sumField.hasLabel»«slot.sumField.label»: «ENDIF»{{ «fieldName»«IF slot.isMoney» | «IF slot.isGridNoCurrencySimbol»number:'1.2-2'«ELSE»currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF»«ENDIF» }}'''
+		'''«IF slot.sumField.hasLabel»(«slot.sumField.label»): «ENDIF»{{ «fieldName»«IF slot.isMoney» | «IF slot.isGridNoCurrencySimbol»number:'1.2-2'«ELSE»currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF»«ENDIF» }}'''
 	}
 	
 	def CharSequence generateHTMLExtras(Entity entity) {
@@ -399,6 +414,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 		<td«IF hasDataIcon» style="text-align: center"«ENDIF»«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
+			<span class="ui-column-title">«slot.getTranslationKeyGridFunc»:</span>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy' }}
