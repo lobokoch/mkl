@@ -1,31 +1,38 @@
 package br.com.kerubin.dsl.mkl.generator
 
-import br.com.kerubin.dsl.mkl.model.Rule
-import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
-import br.com.kerubin.dsl.mkl.model.FieldObject
-import br.com.kerubin.dsl.mkl.model.TemporalObject
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
-import br.com.kerubin.dsl.mkl.model.NumberObject
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotNull
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
-import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
-import java.util.Set
-import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
-import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
-import br.com.kerubin.dsl.mkl.model.FieldAndValue
-import br.com.kerubin.dsl.mkl.model.NullObject
 import br.com.kerubin.dsl.mkl.model.Entity
-import br.com.kerubin.dsl.mkl.model.Slot
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
-import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
-import br.com.kerubin.dsl.mkl.model.Enumeration
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
-import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.EntityAndFieldObject
+import br.com.kerubin.dsl.mkl.model.Enumeration
+import br.com.kerubin.dsl.mkl.model.FieldAndValue
+import br.com.kerubin.dsl.mkl.model.FieldObject
+import br.com.kerubin.dsl.mkl.model.NullObject
+import br.com.kerubin.dsl.mkl.model.NumberObject
+import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.RuleError
+import br.com.kerubin.dsl.mkl.model.RuleTarget
+import br.com.kerubin.dsl.mkl.model.RuleWhenEqualsValue
+import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsAfter
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsEquals
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotEquals
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotNull
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
+import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
+import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
+import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
+import br.com.kerubin.dsl.mkl.model.Slot
+import br.com.kerubin.dsl.mkl.model.TemporalObject
+import java.util.Set
+
+import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
+import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBoolean
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotTrue
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsTrue
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsFalse
 
 class RuleUtils {
 	
@@ -53,6 +60,55 @@ class RuleUtils {
 	
 	def static CharSequence getRuleActionWhenName(Rule rule) {
 		rule.getRuleActionName + 'When'
+	}
+	
+	def static getTodayFormatted(Set<String> imports) {
+		imports.add('import java.time.LocalDate;')
+		imports.add('import java.time.format.DateTimeFormatter;')
+		
+		'LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))'
+	}
+	
+	def static getYesterdayFormatted(Set<String> imports) {
+		imports.add('import java.time.LocalDate;')
+		imports.add('import java.time.format.DateTimeFormatter;')
+		
+		'LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))'
+	}
+	
+	def static getTomorrowFormatted(Set<String> imports) {
+		imports.add('import java.time.LocalDate;')
+		imports.add('import java.time.format.DateTimeFormatter;')
+		
+		'LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))'
+	}
+	
+	def static buildRuleErrorMessageForJava(RuleError ruleError, Set<String> imports) {
+		
+		if (ruleError === null) {
+			return '"Há uma regra condicional de erro sem descrição que impede continuar a operação."'
+		}
+		
+		if (!ruleError.hasParams) {
+			return '"' + ruleError.errorMessage + '"'
+		}
+		
+		val params = ruleError.params.map[it |
+			switch (it.paramStr) {
+				case 'today': getTodayFormatted(imports)
+				case 'yesterday': '${' + getYesterdayFormatted(imports) + '}'
+				case 'tomorrow': '${' + getTomorrowFormatted(imports) + '}'
+				default: it
+			}
+		]
+		
+		imports.add('import java.text.MessageFormat;')
+		
+		val paramsAsArray = params.toArray.map[it].join(', ')
+		
+		val errorMessage = '''MessageFormat.format("«ruleError.errorMessage»", «paramsAsArray»)''';
+		
+		errorMessage		
 	}
 	
 	def static String buildRuleWhenExpressionForJava(Rule rule, Set<String> imports) {
@@ -96,6 +152,7 @@ class RuleUtils {
 		var isNumber = false
 		// var isObjForm = false
 		var isObjEnum = false
+		var isObjBool = false
 		var Slot slot = null
 		var isObjSlot = false
 		var isObjEntityAndField = false
@@ -112,7 +169,8 @@ class RuleUtils {
 			isObjStr = slot.isString
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
-			strExpression = objName
+			isObjBool = slot.isBoolean
+			strExpression = objName			
 		}
 		else if (expression.left.whenObject instanceof EntityAndFieldObject) {
 			isObjEntityAndField = true
@@ -188,8 +246,17 @@ class RuleUtils {
 				//else {
 				//	resultStrExp.concatSB('''«objName» == «value»''')					
 				//}
-			}
-			else if (op instanceof RuleWhenOpIsEquals) {
+			} else if (op instanceof RuleWhenOpIsBoolean) {
+				
+				if (op instanceof RuleWhenOpIsNotTrue) {
+					resultStrExp.concatSB('''(!Boolean.TRUE.equals(«objName»))''')
+				} else if (op instanceof RuleWhenOpIsTrue) {
+					resultStrExp.concatSB('''(Boolean.TRUE.equals(«objName»))''')
+				} else if (op instanceof RuleWhenOpIsFalse) {
+					resultStrExp.concatSB('''(Boolean.FALSE.equals(«objName»))''')
+				}
+				
+			} else if (op instanceof RuleWhenOpIsEquals) {
 				val opIsEquals = op as RuleWhenOpIsEquals
 				val value = opIsEquals.valueToCompare.getRuleWhenEqualsValueForJava(entity, imports)
 				if (isRuleWithSubscribe) {
@@ -215,6 +282,15 @@ class RuleUtils {
 				val value = opIsBefore.valueToCompare.getTemporalValueForJava(imports)
 				if (isObjDate) {
 					resultStrExp.concatSB('''«objName».isBefore(«value»)''')
+				}
+				else {
+					resultStrExp.concatSB('''«objName» < «value»''')					
+				}
+			} else if (op instanceof RuleWhenOpIsAfter) {
+				val opIsAfter = op as RuleWhenOpIsAfter
+				val value = opIsAfter.valueToCompare.getTemporalValueForJava(imports)
+				if (isObjDate) {
+					resultStrExp.concatSB('''«objName».isAfter(«value»)''')
 				}
 				else {
 					resultStrExp.concatSB('''«objName» < «value»''')					

@@ -197,6 +197,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
 		val rulesWithSlotAppyModifierFunction = entity.getRulesWithSlotAppyModifierFunction
 		
+		val rulesFormBeforeSave = entity.getRulesFormBeforeSave
+		
 		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
 		
 		if (entity.hasAutoComplete) {
@@ -277,6 +279,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Transactional
 			@Override
 			public «entityName» create(«entityName» «entityVar») {
+				«IF !rulesFormBeforeSave.empty»
+				«DO_RULES_FORM_BEFORE_SAVE_METHOD»(«entityVar»);
+				«ENDIF»
 				«IF !rulesFormWithDisableCUD.empty»
 				«ruleFormWithDisableCUDMethodName»(«entityVar»);
 				
@@ -317,6 +322,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			@Transactional
 			@Override
 			public «entityName» update(«idType» «idVar», «entityName» «entityVar») {
+				«IF !rulesFormBeforeSave.empty»
+				«DO_RULES_FORM_BEFORE_SAVE_METHOD»(«entityVar»);
+				«ENDIF»
 				«IF !rulesFormWithDisableCUD.empty»
 				«ruleFormWithDisableCUDMethodName»(«entityVar»);
 				
@@ -350,6 +358,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				«rulesFormOnUpdate.map[generateRuleFormOnUpdate(imports)].join»
 			}
 			
+			«ENDIF»
+			«IF !rulesFormBeforeSave.empty»
+			«rulesFormBeforeSave.generateRulesFormBeforeSave(imports)»
 			«ENDIF»
 			
 			@Transactional
@@ -452,6 +463,41 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val result = pakage + preImports + imports.join('\n\r') + '\n\r' + code;
 		
 		result
+	}
+	
+	def CharSequence generateRulesFormBeforeSave(Iterable<Rule> rules, Set<String> imports) {
+		val entity = rules.get(0).ruleOwnerEntity
+		
+		val entityName = entity.toEntityName
+		val entityVar = entity.fieldName
+		
+		'''
+		
+		private void «DO_RULES_FORM_BEFORE_SAVE_METHOD»(«entityName» «entityVar») {
+			«rules.map[it.buildApplyRuleFormBeforeSave(imports)].join»
+		}
+		
+		'''
+		
+	}
+	
+	def CharSequence buildApplyRuleFormBeforeSave(Rule rule, Set<String> imports) {
+		val hasWhen = rule.hasWhen
+		var String whenExpression = 'false'
+		if (hasWhen) {
+			whenExpression = rule.buildRuleWhenExpressionForJava(imports)
+		}
+		
+		val errorMessage = rule?.apply?.ruleError.buildRuleErrorMessageForJava(imports)
+		
+		'''
+		
+		if («whenExpression») {
+			throw new IllegalStateException(«errorMessage»);
+		}
+		
+		'''
+		
 	}
 	
 	def CharSequence applyRulesWithSlotAppyModifierFunction(Rule rule) {

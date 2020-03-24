@@ -100,13 +100,43 @@ Entity:
 		(baseRepository?='@baseRepository')? &
 		(auditing?='@auditing')? &
 		('@parent' '(' parent=[Entity] ')')? &
-		('@label' '(' label=STRING ')')?
+		(label=Label)? &
+		(help=Help)?
 	)
 	'entity' Name ('extends' superType=[Entity] )? '{'
 		Slots
 		Rules?
 	'}'
 ;
+
+Help:
+{Help}
+	('@help' | 'help') '('
+	(
+		('text' ':' text=STRING) &
+		('icon' ':' icon=STRING)? &
+		('styleClass' ':' styleClass=STRING)?
+	)
+	
+	')'
+;
+
+Label:
+{Label}	
+	('@label' | 'label') '('
+		(
+			('title' ':' title=STRING) &
+			('shortTitle' ':' shortTitle=STRING)? /* &
+			('gender' ':' gender=NounGender)? &
+			('plural' ':' plural=STRING)?*/
+		)
+	')'
+;
+
+/*enum NounGender:
+	MASCULINE='masculine' | FEMININE='feminine'
+;*/
+
 
 EntityVersion:
 {EntityVersion}	
@@ -253,6 +283,7 @@ fragment Slots returns Slotted:
 ;
 
 Slot:
+	(separator = SlotSeparator)?
 	Name ':' (associationType=AssociationType)? 
 		(parent ?= 'parent')?
 		slotType=TypeReference 
@@ -265,7 +296,7 @@ Slot:
 			(index = ColumnIndex)? &
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
-			('help' ':' help=STRING)? &
+			(help = Help)? &
 			('label' ':' label=STRING)? &
 			//('labelGrid' ':' labelGrid=STRING)? &
 			(sumField = SumField)? &
@@ -280,9 +311,23 @@ Slot:
 			(validations += Validation*) &
 			//(hibFilterDefList += HibFilterDef*) &
 			(repositoryFindBy += RepositoryFindBy*) &
+			(onChange ?= 'onChange')? &
 			(autoCompleteWithOwnerParams?='autoCompleteWithOwnerParams')?
 			
 		)
+;
+
+SlotSeparator:
+{SlotSeparator}	
+	'separator' 
+	(
+	'('
+		('enabled' ':' enabled = BooleanObject)? &
+		('before' ':' before = BooleanObject)? &
+		('after' ':' after = BooleanObject)? &
+		('styleClass' ':' styleClass = STRING)?
+	')'	
+	)?
 ;
 
 RepositoryFindBy:
@@ -389,13 +434,17 @@ RuleWhenAbstractObjectOperation:
 	RuleWhenOpIsBetween | 
 	RuleWhenOpIsSame | 
 	RuleWhenOpIsBefore | 
+	RuleWhenOpIsAfter | 
 	RuleWhenOpIsNull |
 	RuleWhenOpIsNotNull |
 	RuleWhenOpIsEquals |
 	RuleWhenOpIsNotEquals |
 	RuleWhenOpOnCreate |
 	RuleWhenOpOnUpdate |
-	RuleWhenOpOnInit
+	RuleWhenOpOnInit |
+	RuleWhenOpIsNotTrue |
+	RuleWhenOpIsTrue |
+	RuleWhenOpIsFalse
 ;
 
 RuleWhenOpOnCreate:
@@ -418,6 +467,18 @@ RuleWhenOpIsNotNull:
 	methodName = 'isNotNull'
 ;
 
+RuleWhenOpIsNotTrue:
+	methodName = 'isNotTrue'
+;
+
+RuleWhenOpIsTrue:
+	methodName = 'isTrue'
+;
+
+RuleWhenOpIsFalse:
+	methodName = 'isFalse'
+;
+
 RuleWhenOpIsBetween:
 	methodName = 'isBetween' '(' betweenFrom = RuleWhenTemporalValue ',' betweenTo = RuleWhenTemporalValue ')'
 ;
@@ -428,6 +489,10 @@ RuleWhenOpIsSame:
 
 RuleWhenOpIsBefore:
 	methodName = 'isBefore' '(' valueToCompare = RuleWhenTemporalValue ')'
+;
+
+RuleWhenOpIsAfter:
+	methodName = 'isAfter' '(' valueToCompare = RuleWhenTemporalValue ')'
 ;
 
 RuleWhenOpAddDays:
@@ -502,18 +567,34 @@ RuleApply:
 		('styleClass' ':' styleClass = STRING)? & 
 		('styleCss' ':' styleCss = STRING)? &
 		('label' ':' label = STRING)? &
+		('title' ':' title = STRING)? &
 		('equation' '(' fieldMathExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
 		(searchCEPExpression = SearchCEPExpression)? &
 		(disableCUD = DisableCUD)? &
+		(disableComponent = DisableComponent)? &
+		(hiddeComponent = HiddeComponent)? &
+		(crudButtons = CrudButtons)? &
 		(hideCUDWebListActions = HideCUDWebListActions)? &
 		(hideWebListActions = HideWebListActions)? &
 		(webActionsColumn = WebActionsColumn)? &
 		(ruleFunction = RuleFunction)? & 
 		(rulePolling = RulePolling)? &
+		(ruleError = RuleError)? &
 		(modifierFunction = ModifierFunction)?
 	)
+;
+
+CrudButtons:
+{CrudButtons}	
+	'crudButtons' '('
+		(
+			('buttonSave' '(' buttonSave = ActionButton ')')? &
+			('buttonNew' '(' buttonNew = ActionButton ')')? &
+			('buttonBack' '(' buttonBack = ActionButton ')')?
+		)
+	')'
 ;
 
 WebActionsColumn:
@@ -530,8 +611,24 @@ HideWebListActions:
 	hideWebListActions ?= 'hideWebListActions'
 ;
 
+DisableComponent:
+	disableComponent ?= 'disableComponent'
+;
+
+HiddeComponent:
+	hiddeComponent ?= 'hiddeComponent'
+;
+
 DisableCUD:
 	disableCUD ?= 'disableCUD'
+;
+
+RuleError:
+	'error' '('
+		/*'errorMessage' ':'*/ errorMessage=STRING
+		(',' /*'params' ':'*/ '[' (params += FunctionParam*) ']')?
+		
+	')'
 ;
 
 RuleFunction:
@@ -561,7 +658,12 @@ MakeCopiesExpression:
 		(
 			('grouperField' ':' grouperField = FieldObject) &
 			('referenceField' ':' referenceField = FieldObject) &
+			('hiddeWhen' '(' hiddeWhen = RuleWhen ')')? & 
 			('title' ':' title = STRING)? &
+			(help = Help)? &
+			('helpFieldNumberOfCopies' ':' helpFieldNumberOfCopies = Help)? &
+			('helpFieldInterval' ':' helpFieldInterval = Help)? &
+			('helpFieldReferenceField' ':' helpFieldReferenceField = Help)? &
 			('minCopies' ':' minCopies = INT)? &
 			('maxCopies' ':' maxCopies = INT)?
 		)
@@ -638,8 +740,10 @@ enum RuleTarget:
 	 GRID_ACTIONS = 'grid.actions' |
 	 FORM = 'form' |
 	 FORM_ACTIONS = 'form.actions' |
+	 FORM_BEFORE_SAVE = 'form.beforeSave' |
 	 SUBSCRIBE = 'subscribe' | 
-	 FORM_LIST = 'formList'
+	 FORM_LIST = 'formList' |
+	 LIST_FILTER = 'listFilter'
 ;
 
 //END Rule
@@ -787,7 +891,6 @@ enum EnumType:
 ;
 
 
-
 TypeReference:
 	BasicTypeReference | ObjectTypeReference
 ;
@@ -812,7 +915,6 @@ BooleanObject returns ecore::EBooleanObject:
 ServiceObject:
 	PublicObject | Entity
 ;
-
 
 BasicTypeReference:
 	basicType=BasicType

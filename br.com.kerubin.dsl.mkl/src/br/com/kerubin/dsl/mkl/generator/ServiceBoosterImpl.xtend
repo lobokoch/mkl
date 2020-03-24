@@ -66,7 +66,7 @@ class ServiceBoosterImpl implements ServiceBooster {
 		// If an entity slot doesn't has a label, it takes the label from his entity definition.
 		entity.slots.filter[isEntity].forEach[
 			if (!it.hasLabel) {
-				it.label = it.asEntity.label
+				it.label = it.asEntity.title
 			}
 			
 			if (it.isToMany && !it.isMany) {

@@ -1,5 +1,6 @@
 package br.com.kerubin.dsl.mkl.generator
 
+import br.com.kerubin.dsl.mkl.model.AbstractRuleTarget
 import br.com.kerubin.dsl.mkl.model.BasicType
 import br.com.kerubin.dsl.mkl.model.BasicTypeReference
 import br.com.kerubin.dsl.mkl.model.BooleanType
@@ -13,15 +14,21 @@ import br.com.kerubin.dsl.mkl.model.FilterOperatorEnum
 import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.ManyToMany
 import br.com.kerubin.dsl.mkl.model.ManyToOne
+import br.com.kerubin.dsl.mkl.model.ModelFactory
 import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.ObjectTypeReference
 import br.com.kerubin.dsl.mkl.model.OneToMany
 import br.com.kerubin.dsl.mkl.model.OneToOne
 import br.com.kerubin.dsl.mkl.model.PublicObject
 import br.com.kerubin.dsl.mkl.model.RelationshipFeatured
+import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
+import br.com.kerubin.dsl.mkl.model.RepositoryResultKind
+import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleAction
 import br.com.kerubin.dsl.mkl.model.RuleFunction
 import br.com.kerubin.dsl.mkl.model.RuleTarget
+import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.Service
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.SmallintType
@@ -32,16 +39,10 @@ import java.util.ArrayList
 import java.util.List
 import java.util.Set
 import org.eclipse.emf.common.util.EList
+import org.eclipse.emf.ecore.EObject
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
-import br.com.kerubin.dsl.mkl.model.AbstractRuleTarget
-import br.com.kerubin.dsl.mkl.model.RuleTargetField
-import br.com.kerubin.dsl.mkl.model.RuleTargetEnum
-import br.com.kerubin.dsl.mkl.model.Rule
-import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
-import org.eclipse.emf.ecore.EObject
-import br.com.kerubin.dsl.mkl.model.RepositoryResultKind
 
 class EntityUtils {
 	
@@ -59,6 +60,10 @@ class EntityUtils {
 	public static val DELETED_FIELD_NAME = 'deleted'
 	public static val DELETED_FIELD_LABEL = 'inativo'
 	public static val VERSION_SLOT = 'version'
+	public static val SHOW_HIDE_HELP = 'showHideHelp'
+	public static val SHOW_HIDE_HELP_LABEL_METHOD = 'getShowHideHelpLabel'
+	
+	public static val DO_RULES_FORM_BEFORE_SAVE_METHOD = 'doRulesFormBeforeSave'
 	
 	public static val VALIDATION_MAP_IMPORTS = #{
 		'CpfOrCnpj' -> 'br.com.kerubin.api.servicecore.validator.constraint.CpfOrCnpj',
@@ -622,7 +627,8 @@ class EntityUtils {
 	}
 	
 	def static String getLabelValue(Entity entity) {
-		val label = entity.label ?: entity.translationKey
+		val title = entity?.label?.title
+		val label = title ?: entity.translationKey
 		label
 	}
 	
@@ -688,6 +694,10 @@ class EntityUtils {
 		'crud-' + entity.toEntityWebComponentName
 	}
 	
+	def static toEntityWebCustomServiceFileName(Entity entity) {
+		'custom-' + entity.name.toLowerCase.removeUnderline + '.service'
+	}
+	
 	def static toEntityWebCRUDAppComponentName(Entity entity) {
 		'app-crud-' + entity.name.toLowerCase.removeUnderline
 	}
@@ -744,6 +754,14 @@ class EntityUtils {
 	
 	def static toEntityWebServiceClassName(Entity entity) {
 		entity.toDtoName + 'Service'
+	}
+	
+	def static toEntityWebCustomServiceClassName(Entity entity) {
+		'Custom' + entity.toDtoName + 'Service'
+	}
+	
+	def static toEntityWebCustomServiceVarName(Entity entity) {
+		'custom' + entity.toDtoName + 'Service'
 	}
 	
 	def static toEntityWebModuleClassName(Entity entity) {
@@ -892,6 +910,20 @@ class EntityUtils {
 		rules		
 	}
 	
+	def static getRulesFormBeforeSave(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_BEFORE_SAVE && 
+			it.apply !== null]
+		
+		rules		
+	}
+	
+	def static getRuleFormCrudButtons(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_ACTIONS && 
+			it.apply !== null && it.apply.hasCrudButtons]
+		
+		rules.head
+	}
+	
 	def static getRulesGridActionsHideCUDWebListActions(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS && 
 			it.apply !== null && it.apply.hasHideCUDWebListActions]
@@ -926,6 +958,12 @@ class EntityUtils {
 	def static getRuleFormListPolling(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.FORM_LIST && 
 			it.apply !== null && it.apply.hasRulePolling]
+		rules
+	}
+	
+	def static getRuleListFilterTitle(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.LIST_FILTER && 
+			it.apply !== null && it.apply.hasTitle]
 		rules
 	}
 	
@@ -964,12 +1002,42 @@ class EntityUtils {
 		rule.owner as Entity
 	}
 	
+	def static buildSlotRuleDisableComponentMethodName(Slot slot) {
+		slot.fieldName.concat('RuleDisableComponent')
+	}
+	
 	def static getRulesWithSlotAppyStyleClass(Entity entity) {
 		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasStyleClass] 
 	}
 	
 	def static getRulesWithSlotAppyMathExpression(Entity entity) {
 		entity.getRulesWithSlot.filter[it.apply !== null && it.apply.hasFieldMathExpression] 
+	}
+	
+	def static getRulesWithSlotAppyDisableComponent(Entity entity) {
+		entity.getRulesWithSlot.filter[it.apply !== null &&	it.apply.hasDisableComponent] 
+	}
+	
+	def static getRulesWithSlotAppyHiddeComponent(Entity entity) {
+		entity.getRulesWithSlot.filter[it.apply !== null &&	
+			it.apply.hasHiddeComponent
+		] 
+	}
+	
+	def static getRuleWithSlotAppyHiddeComponent(Slot slot) {
+		val entity = slot.ownerEntity
+		entity.getRulesWithSlot.filter[it.apply !== null && 
+			it.apply.hasHiddeComponent &&
+			it.target.asRuleWithTargetField.target.field.name == slot.name
+		].head
+	}
+	
+	def static getRulesWithSlotAppyDisableComponent(Slot slot) {
+		val entity = slot.ownerEntity
+		entity.getRulesWithSlot.filter[it.apply !== null && 
+			it.apply.hasDisableComponent &&
+			it.target.asRuleWithTargetField.target.field.name == slot.name
+		] 
 	}
 	
 	def static getRulesWithSlotAppyModifierFunction(Entity entity) {
@@ -1476,6 +1544,17 @@ class EntityUtils {
 	def static toRuleWithSlotAppyStyleClassMethodName(Slot slot) {
 		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyStyleClass'
 		name
+	}
+	
+	def static toRuleWithSlotAppyHiddeComponentMethodName(Slot slot) {
+		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyHiddeComponent'
+		name
+	}
+	
+	def static toRuleWithSlotAppyHiddeComponentHTMLDirective(Slot slot) {
+		val methodName = slot.toRuleWithSlotAppyHiddeComponentMethodName
+		val result = '''[style.display]="«methodName»()"'''
+		result
 	}
 	
 	def static toRuleWithSlotAppyMathExpressionMethodName(Slot slot) {
@@ -2179,6 +2258,24 @@ class EntityUtils {
 			type = "calendar"
 			
 		type
+	}
+	
+	def static newHelp(String text) {
+		val help = ModelFactory.eINSTANCE.createHelp
+		help.text = text
+		help
+	}
+	
+	def static endsWithDot(CharSequence text) {
+		text?.toString?.endsWithDot
+	}
+	
+	def static endsWithDot(String text) {
+		if (text !== null && !text.endsWith('.')) {
+			return text.concat('.')
+		}
+		
+		text
 	}
 	
 	

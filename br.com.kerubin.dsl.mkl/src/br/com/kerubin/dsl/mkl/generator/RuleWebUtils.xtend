@@ -35,6 +35,16 @@ import br.com.kerubin.dsl.mkl.model.StringObject
 import br.com.kerubin.dsl.mkl.model.FieldMathExpression
 import br.com.kerubin.dsl.mkl.model.TerminalFieldMathExpression
 import br.com.kerubin.dsl.mkl.model.RulePolling
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBoolean
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotTrue
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsTrue
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsFalse
+import br.com.kerubin.dsl.mkl.model.ActionButton
+import br.com.kerubin.dsl.mkl.model.CrudButtons
+import br.com.kerubin.dsl.mkl.model.ModelFactory
+import br.com.kerubin.dsl.mkl.model.RuleError
+import java.text.MessageFormat
+import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsAfter
 
 class RuleWebUtils {
 	
@@ -156,6 +166,44 @@ class RuleWebUtils {
 		}
 	}
 	
+	def static getTodayFormatted() {
+		"moment().format('DD/MM/YYYY')"
+	}
+	
+	def static getYesterdayFormatted() {
+		"moment().add(-1, 'day').format('DD/MM/YYYY')"
+	}
+	
+	def static getTomorrowFormatted() {
+		"moment().add(1, 'day').format('DD/MM/YYYY')"
+	}
+	
+	def static buildRuleErrorMessageForTypeScript(RuleError ruleError) {
+		
+		if (ruleError === null) {
+			return "'Há uma regra condicional de erro sem descrição que impede continuar a operação.'"
+		}
+		
+		if (!ruleError.hasParams) {
+			return "'" + ruleError.errorMessage + "'"
+		}
+		
+		val params = ruleError.params.map[it |
+			switch (it.paramStr) {
+				case 'today': '${' + getTodayFormatted() + '}'
+				case 'yesterday': '${' + getYesterdayFormatted() + '}'
+				case 'tomorrow': '${' + getTomorrowFormatted() + '}'
+				default: it
+			}
+		]
+		
+		val paramsAsArray = params.toArray
+		
+		val errorMessage = '`' + MessageFormat.format(ruleError.errorMessage, paramsAsArray) + '`';
+		
+		errorMessage		
+	}
+	
 	def static void buildRuleWhenExpression(RuleWhenExpression expression, StringBuilder resultStrExp) {
 		val isThis = true
 		buildRuleWhenExpression(expression, resultStrExp, isThis);
@@ -173,6 +221,7 @@ class RuleWebUtils {
 		var isNumber = false
 		var isObjForm = false
 		var isObjEnum = false
+		var isObjBool = false
 		var Entity entity = null
 		var Slot slot = null
 		var isObjSlot = false
@@ -193,6 +242,7 @@ class RuleWebUtils {
 			isObjDate = slot.isDate
 			isNumber = slot.isNumber
 			isObjEnum = slot.isEnum
+			isObjBool = slot.isBoolean
 			strExpression = objName
 		}
 		else if (expression.left.whenObject instanceof EntityAndFieldObject) {
@@ -243,7 +293,7 @@ class RuleWebUtils {
 		if (op !== null) {
 			if (op instanceof RuleWhenOpIsNull) {
 				if (isObjStr) {
-					resultStrExp.concatSB('(').append('!').append(objName).concatSB('||').concatSB(objName).append('.trim().length == 0)')						
+					resultStrExp.concatSB('(').append('!').append(objName).concatSB('||').concatSB(objName).append('.trim().length === 0)')						
 				}
 				else {
 					resultStrExp.concatSB('!').append(objName)					
@@ -277,6 +327,17 @@ class RuleWebUtils {
 				else {
 					resultStrExp.concatSB('''«objName» == «value»''')					
 				}
+			}
+			else if (op instanceof RuleWhenOpIsBoolean) {
+				
+				if (op instanceof RuleWhenOpIsNotTrue) {
+					resultStrExp.concatSB('''(!«objName»)''')
+				} else if (op instanceof RuleWhenOpIsTrue) {
+					resultStrExp.concatSB('''(«objName»)''')
+				} else if (op instanceof RuleWhenOpIsFalse) {
+					resultStrExp.concatSB('''(«objName» === false)''')
+				}
+				
 			}
 			else if (op instanceof RuleWhenOpIsEquals) {
 				val opIsEquals = op as RuleWhenOpIsEquals
@@ -315,6 +376,15 @@ class RuleWebUtils {
 				val value = opIsBefore.valueToCompare.getTemporalValue
 				if (isObjDate) {
 					resultStrExp.concatSB('''«objName.toDateMoment».isBefore(«value», 'day')''')
+				}
+				else {
+					resultStrExp.concatSB('''«objName» < «value»''')					
+				}
+			} else if (op instanceof RuleWhenOpIsAfter) {
+				val opIsAfter = op as RuleWhenOpIsAfter
+				val value = opIsAfter.valueToCompare.getTemporalValue
+				if (isObjDate) {
+					resultStrExp.concatSB('''«objName.toDateMoment».isAfter(«value», 'day')''')
 				}
 				else {
 					resultStrExp.concatSB('''«objName» < «value»''')					
@@ -526,5 +596,90 @@ class RuleWebUtils {
 		'''
 	}
 	// *********** End polling *********** 
+	
+	// ******* Begin CRUD buttons *************
+	def static String buildCrudButtonSave(CrudButtons crudButtons, Entity entity) {
+		var button = crudButtons?.buttonSave
+		if (button === null) {
+			button = ModelFactory.eINSTANCE.createActionButton
+			//val genderArticle = entity?.label?.gender?.getGenderArticle
+						
+			val shortTitle = entity?.label?.shortTitle
+			
+			val tooltip = new StringBuilder('Salvar registro')
+			if (shortTitle !== null) {
+				tooltip.append(' de ').append(shortTitle)
+			}
+			else {
+				tooltip.append(' ').append('registro')
+			}
+			
+			button.tooltip = tooltip.toString.endsWithDot
+			
+			button.label = 'Salvar'
+			button.cssClass = 'botao-margem-direita'
+		}
+		else {
+			button.cssClass = 'botao-margem-direita' + ' ' + button.cssClass 
+		}
+		
+		button.buildCrudButton
+	}
+	
+	def static String buildCrudButtonNew(CrudButtons crudButtons, Entity entity) {
+		var button = crudButtons?.buttonNew
+		if (button === null) {
+			button = ModelFactory.eINSTANCE.createActionButton
+			
+			val shortTitle = entity?.label?.shortTitle
+			
+			val tooltip = new StringBuilder('Criar novo registro')
+			if (shortTitle !== null) {
+				tooltip.append(' de ').append(shortTitle)
+			}
+			
+			button.tooltip = tooltip.toString.endsWithDot
+			
+			button.label = 'Novo'
+		}
+		button.buildCrudButton
+	}
+	
+	def static String buildCrudButtonBack(CrudButtons crudButtons, Entity entity) {
+		var button = crudButtons?.buttonBack
+		if (button === null) {
+			button = ModelFactory.eINSTANCE.createActionButton
+			
+			val title = entity?.label?.title ?: 'registros'
+			
+			button.tooltip = '''Voltar para a listagem de «title»'''.endsWithDot
+			button.label = 'Voltar'
+			
+		}
+		button.buildCrudButton
+	}
+	
+	def static String buildCrudButton(ActionButton button) {
+		val sb = new StringBuilder
+		
+		if (button.cssClass !== null && !button.cssClass.trim.empty) {
+			sb.append('''  class="«button.cssClass»"''')
+		}
+		
+		sb.append(''' label="«button.label»"''')
+		
+		if (button.tooltip !== null && !button.tooltip.trim.empty) {
+			sb.append(''' tooltipPosition="top" pTooltip="«button.tooltip.toLowerCase.toFirstUpper»"''')
+		}
+		
+		if (button.icon !== null && !button.icon.trim.empty) {
+			sb.append('''  icon="«button.icon»"''')
+		}
+		
+		
+		sb.toString
+	}
+	// ******* End CRUD buttons *************
+	
 	
 }

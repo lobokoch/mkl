@@ -6,6 +6,8 @@ import br.com.kerubin.dsl.mkl.model.Slot
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
+import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
+
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
 import br.com.kerubin.dsl.mkl.model.FieldObject
@@ -62,11 +64,14 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLFiltersWithAccordion(Entity entity) {
+		val ruleListFilterTitle = entity.getRuleListFilterTitle.head
+		val title = if (ruleListFilterTitle !== null) ruleListFilterTitle.apply.title else 'Filtros'
+		
 		'''
 		
 		<!-- Begin Filters -->
 		<p-accordion class="ui-g-12">
-			<p-accordionTab header="Filtros">
+			<p-accordionTab header="«title»">
 			
 				<div class="ui-g">
 					<div class="ui-g-12">
@@ -457,11 +462,19 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLButtons(Entity entity) {
+		val ruleFormCrudButtons = entity.getRuleFormCrudButtons
+		
+		val crudButtons = ruleFormCrudButtons?.apply?.crudButtons
+		val buttonNew = crudButtons.buildCrudButtonNew(entity)
+		
 		'''
 		
-		<div class="ui-g-12 ui-md-2 ui-fluid">
-			<a routerLink="/«entity.toWebName»/novo" pButton label="Novo registro"></a>
+		<div class="ui-g-12 crud-buttons">
+		  <div class="ui-g-12 ui-md-2 ui-fluid">
+		    <a routerLink="/«entity.toWebName»/novo" pButton «buttonNew»></a>
+		  </div>
 		</div>
+		
 		'''
 	}
 	

@@ -4,6 +4,41 @@ package br.com.kerubin.dsl.mkl.model
 import java.util.Set
 import java.util.LinkedHashSet
 
+class BaseHelp {
+	String styleClass // kb-help-class-id
+	
+}
+
+class Help extends BaseHelp {
+	String text
+	String icon = 'pi pi-question-circle' // default question icon
+	
+	// Simulates override with inheritance
+	op String getStyleClass() {
+		var result = 'kb-help-class-id'
+		if (super.styleClass !== null) {
+			result += ' ' + super.styleClass 
+		}
+		
+		result
+		
+	}
+}
+
+class Label {
+	String title
+	String shortTitle
+	// NounGender gender
+	// String plural
+}
+
+
+class CrudButtons {
+	contains ActionButton buttonSave
+	contains ActionButton buttonNew
+	contains ActionButton buttonBack
+}
+
 class MessagingEventHandler {
 	Boolean enable
 	
@@ -75,13 +110,24 @@ class SearchCEPExpression {
 
 class MakeCopiesExpression {
 	String title
+	contains Help help
+	
+	contains Help helpFieldNumberOfCopies
+	contains Help helpFieldInterval
+	contains Help helpFieldReferenceField
+	
 	int minCopies = '1'
 	int maxCopies = '60'
 	contains FieldObject referenceField
 	contains FieldObject grouperField
+	contains RuleWhen hiddeWhen
 	
 	op boolean hasTitle() {
 		title !== null && !title.trim.empty
+	}
+	
+	op String getHiddeWhenMethodName() {
+		'actionMakeCopiesHiddeWhen'
 	}
 }
 
@@ -277,6 +323,10 @@ class RuleWhenOpIsBefore extends RuleWhenAbstractObjectOperation {
 	contains RuleWhenTemporalValue valueToCompare
 }
 
+class RuleWhenOpIsAfter extends RuleWhenAbstractObjectOperation {
+	contains RuleWhenTemporalValue valueToCompare
+}
+
 class RuleWhenOpIsEquals extends RuleWhenAbstractObjectOperation {
 	contains RuleWhenEqualsValue valueToCompare
 }
@@ -305,6 +355,22 @@ class RuleWhenOpIsNotNull extends RuleWhenAbstractObjectOperation {
 	
 }
 
+class RuleWhenOpIsBoolean extends RuleWhenAbstractObjectOperation {
+	
+}
+
+class RuleWhenOpIsNotTrue extends RuleWhenOpIsBoolean {
+	
+}
+
+class RuleWhenOpIsTrue extends RuleWhenOpIsBoolean {
+	
+}
+
+class RuleWhenOpIsFalse extends RuleWhenOpIsBoolean {
+	
+}
+
 class RuleWhenEqualsValue /*extends RuleWhenTemporalValue*/ {
 	contains FieldObject fieldObject
 	contains EnumObject enumObject
@@ -324,6 +390,11 @@ class RuleWhenTemporalValue {
 class RuleWhenOperator {
 	String operator
 }
+
+/*enum NounGender {
+	MASCULINE as 'masculine'
+	FEMININE as 'feminine'
+}*/
 
 enum RepositoryResultKind {
 	ENTITY as 'Entity'
@@ -352,6 +423,16 @@ class RulePolling {
 	int interval = '3000' // default
 }
 
+class RuleError {
+	String errorMessage
+	
+	contains FunctionParam[] params
+	
+	op boolean hasParams() {
+		params !== null && !params.empty
+	}
+}
+
 class ModifierFunction {
 	ModifierFunctionName function
 	contains FunctionParam[] funcParams
@@ -375,17 +456,30 @@ class RuleApply {
 	String styleClass
 	String styleCss
 	String label
+	String title
 	contains FieldMathExpression fieldMathExpression
 	contains FieldAssignExpression actionExpression
 	contains MakeCopiesExpression makeCopiesExpression
 	contains SearchCEPExpression searchCEPExpression
 	contains RuleFunction ruleFunction
 	contains RulePolling rulePolling
+	contains RuleError ruleError
 	contains DisableCUD disableCUD
+	contains CrudButtons crudButtons
+	contains HiddeComponent hiddeComponent
+	contains DisableComponent disableComponent
 	contains HideCUDWebListActions hideCUDWebListActions
 	contains HideWebListActions hideWebListActions
 	contains WebActionsColumn webActionsColumn
 	contains ModifierFunction modifierFunction
+	
+	op boolean hasHiddeComponent() {
+		return hiddeComponent !== null
+	}
+	
+	op boolean hasTitle() {
+		return title !== null && !title.trim.empty
+	}
 	
 	op boolean hasHideWebListActions() {
 		hideWebListActions !== null
@@ -397,6 +491,11 @@ class RuleApply {
 	
 	op boolean hasDisableCUD() {
 		disableCUD !== null
+	}
+	
+	op boolean hasCrudButtons() {
+		(crudButtons !== null) && 
+		(crudButtons.buttonSave !== null || crudButtons.buttonNew !== null || crudButtons.buttonBack !== null)
 	}
 	
 	op boolean hasHideCUDWebListActions() {
@@ -425,6 +524,10 @@ class RuleApply {
 	
 	op boolean hasFieldMathExpression() {
 		fieldMathExpression !== null
+	}
+	
+	op boolean hasDisableComponent() {
+		disableComponent !== null
 	}
 	
 	op boolean hasModifierFunction() {
@@ -465,6 +568,14 @@ class RuleApply {
 
 class DisableCUD {
 	boolean disableCUD
+}
+
+class DisableComponent {
+	boolean disableComponent
+}
+
+class HiddeComponent {
+	boolean hiddeComponent
 }
 
 class HideCUDWebListActions {
@@ -521,8 +632,10 @@ enum RuleTarget {
 	GRID_ACTIONS as 'grid.actions'
 	FORM as 'form'
 	FORM_ACTIONS as 'form.actions'
+	FORM_BEFORE_SAVE as 'form.beforeSave'
 	SUBSCRIBE as 'subscribe'
 	FORM_LIST as 'formList'
+	LIST_FILTER as 'listFilter'
 }
 
 // END Rule
@@ -719,9 +832,19 @@ enum CascadeType {
 	REMOVE as 'remove'
 }
 
+class SlotSeparator {
+	Boolean enabled = 'true'
+	Boolean before = 'true'
+	Boolean after = 'false'
+	String styleClass
+}
+
 class BasicTypeReference extends TypeReference {
 	contains BasicType basicType
 }
+
+
+
 
 abstract class ServiceObject extends ServiceElement {
 	
@@ -944,16 +1067,31 @@ class Slot extends Element {
 	contains Validation[] validations
 	contains RepositoryFindBy[] repositoryFindBy opposite ownerSlot
 	
-	String help
+	contains Help help
 	String label
 	//String labelGrid
 	String mask
+	boolean onChange = 'false'
+	
+	contains SlotSeparator separator
 	
 	// String defaultValue
 	
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasSeparator() {
+		return separator !== null && separator.enabled
+	}
+	
+	op boolean hasSeparatorBefore() {
+		return hasSeparator && separator.before
+	}
+	
+	op boolean hasSeparatorAfter() {
+		return hasSeparator && separator.after
+	}
 	
 	op int getPosition() {
 		val slots = ownerEntity.slots
@@ -1080,7 +1218,6 @@ class Slot extends Element {
 	op boolean hasWebLabel() {
 		return web !== null && web.label !== null
 	}
-	
 	
 	op boolean isString() {
 		if (this.slotType instanceof BasicTypeReference) {
@@ -1434,7 +1571,8 @@ class Entity extends PublicObject, Rulled {
 	boolean enableReplication
 	boolean externalEntity = 'false'
 	boolean disableWebAnalytics
-	String label
+	contains Label label
+	contains Help help
 	contains SubscribeEntityEvents subscribeEntityEvents
 	contains PublishEntityEvents publishEntityEvents
 	contains DisableEntityGeneration disableGeneration
@@ -1450,7 +1588,7 @@ class Entity extends PublicObject, Rulled {
 	
 	op String getTitle() {
 		if (label !== null) {
-			return label
+			return label.title
 		}
 		name
 	}

@@ -6,9 +6,11 @@ import br.com.kerubin.dsl.mkl.model.DateTimeType
 import br.com.kerubin.dsl.mkl.model.DateType
 import br.com.kerubin.dsl.mkl.model.DoubleType
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.FieldObject
 import br.com.kerubin.dsl.mkl.model.IntegerType
 import br.com.kerubin.dsl.mkl.model.MoneyType
 import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.model.SmallintType
 import br.com.kerubin.dsl.mkl.model.StringType
@@ -19,8 +21,7 @@ import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
-import br.com.kerubin.dsl.mkl.model.RuleTargetField
-import br.com.kerubin.dsl.mkl.model.FieldObject
+import br.com.kerubin.dsl.mkl.model.Help
 
 class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	val closedHTMLTags = #['p-', 'textarea']
@@ -76,33 +77,61 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		val actionName = rule.getRuleActionMakeCopiesName
 		
 		val actionButton = rule?.action?.actionButton
-		val buttonToolTip = actionButton?.tooltip ?: 'Gerar cópias deste registro'
-		val buttonLabel = actionButton?.label ?: 'Gerar cópias'
+		val buttonToolTip = actionButton?.tooltip ?: 'Criar e salvar as cópias.'
+		val buttonLabel = actionButton?.label ?: 'Criar cópias'
 		val buttonIcon = actionButton?.icon ?: 'pi pi-clone'
 		val min = makeCopies.minCopies
 		val max = makeCopies.maxCopies
+		val hiddeWhen = makeCopies.hiddeWhen
+		
+		val fielRefDescription = makeCopies?.referenceField?.field?.label ?: makeCopies?.referenceField?.field?.fieldName ?: 'Campo de referência'
+		
+		val help = makeCopies?.help ?: newHelp('Crie várias cópias do registro atual.')
+		val helpFieldNumberOfCopies = makeCopies?.helpFieldNumberOfCopies ?: newHelp('Informe quantas cópias deste registro você deseja criar')
+		val helpFieldReferenceField = makeCopies.helpFieldReferenceField ?: newHelp('Campo do tipo data que será usado como referência e terá sua data incrementada automaticamente nos novos registros copiados')
+		val helpFieldInterval = makeCopies.helpFieldInterval ?: newHelp('Informe o intervalo de dias que as datas do campo \'' + 
+			fielRefDescription + '\' dos registros copiados serão incrementados. Para um intervalo de 30 dias, mantém fixo o dia e incrementa o mês das novas datas')
 		
 		'''
 		 
 		<!-- BEGIN make copies -->
 		<!-- placeholder="Informe um identificador, exemplo: #luz_2019" -->
 		<!-- <div class="invalid-message" *ngIf="copiesMustHaveGroup && !contaPagar.agrupador">Campo obrigatório para gerar cópias.</div> -->
-		    <p-panel *ngIf="isEditing" class="ui-g-12" header="«title»"  [toggleable]="true" [collapsed]="true">
+		    <p-accordion *ngIf="isEditing«IF hiddeWhen !== null» && !«makeCopies.hiddeWhenMethodName»()«ENDIF»" class="ui-g-12">
+		    	<p-accordionTab>
+		    	
+		    	<p-header>
+		    	<span style="font-weight: bold;">«title»</span>
+		    	«help.generateHelp»
+		    	</p-header>
+		    	
 			    <div class="ui-g">
+			    	  <div class="ui-g-12">
+		    	        <div [innerHTML]="«actionName»Help()"></div>
+		    	      </div>
 			    
 				      <div class="ui-g-12 ui-fluid">
 				        <div class="ui-g-12 ui-fluid ui-md-2">
-				          <label for="numberOfCopies">Número de cópias</label>
+				          <label for="numberOfCopies">
+				          Número de cópias
+				          «helpFieldNumberOfCopies.generateHelp»
+				          </label>
 				          <p-spinner size="30" name="numberOfCopies" [(ngModel)]="numberOfCopies" [min]="«min»" [max]="«max»"></p-spinner>
 				        </div>
 				
 				        <div class="ui-g-12 ui-fluid ui-md-2">
-				          <label for="copiesReferenceField" style="display: block">Campo de referência</label>
+				          <label for="copiesReferenceField" style="display: block">
+				          Campo de referência
+				          «helpFieldReferenceField.generateHelp»
+				          </label>
 				          <p-dropdown optionLabel="label" name="copiesReferenceField" #copiesReferenceField="ngModel" [options]="copiesReferenceFieldOptions" ngModel [(ngModel)]="copiesReferenceFieldSelected" placeholder="Selecione"></p-dropdown>
 				        </div>
 				
 				        <div class="ui-g-12 ui-md-2 ui-fluid">
-				          <label for="copiesReferenceFieldInterval" style="display: block">Intervalo (dias)</label>
+				          <label for="copiesReferenceFieldInterval" style="display: block">
+				          Intervalo (dias)
+				          «helpFieldInterval.generateHelp»
+				          </label>
 				          <p-spinner size="30" name="copiesReferenceFieldInterval" [(ngModel)]="copiesReferenceFieldInterval" [min]="1" [max]="1000"></p-spinner>
 				        </div>
 				
@@ -114,7 +143,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				      
 			    </div>
 		    
-		    </p-panel>
+		    	</p-accordionTab>
+		    </p-accordion>
 		    <!-- END make copies -->
 		'''
 	}
@@ -124,17 +154,24 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		val hasRulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD.size > 0
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
 		
+		val ruleFormCrudButtons = entity.getRuleFormCrudButtons
+		
+		val crudButtons = ruleFormCrudButtons?.apply?.crudButtons
+		val buttonSave = crudButtons.buildCrudButtonSave(entity)
+		val buttonNew = crudButtons.buildCrudButtonNew(entity)
+		val buttonBack = crudButtons.buildCrudButtonBack(entity)
+		
 		'''
 		
-		<div class="ui-g-12">
+		<div class="ui-g-12 crud-buttons">
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»()"«ENDIF» class="botao-margem-direita" pButton type="submit" label="Salvar"></button>
+				<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»()"«ENDIF» pButton type="submit" «buttonSave»></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<button pButton (click)="begin(form1)" type="button" label="Novo"></button>
+				<button pButton (click)="begin(form1)" type="button" «buttonNew»></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<a routerLink="/«entity.toWebName»" pButton label="Pesquisar"></a>
+				<a routerLink="/«entity.toWebName»" pButton «buttonBack»></a>
 			</div>
 			«IF !ruleFormActionsWithFunction.empty»
 			
@@ -148,6 +185,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 	}
+	
+	
 	
 	def CharSequence generateRuleFormActionsWithFunction(Rule rule) {
 		val entity = (rule.owner as Entity)
@@ -175,10 +214,36 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateEntityTitle(Entity entity) {
+		var title = entity?.title ?: entity.name		
+		val formHelp = entity?.help ?: newHelp('Nesta tela, controle os registros de ' + title.toLowerCase)
+		
+		val help = newHelp('Mostre ou oculte as dicas de ajuda dos campos.')
+		// <div class="kb-no-margins1" style="display: flex; align-items: center; justify-content: center;">
+		
+		
 		'''
 		<p-panel>
 			<p-header>
-				<div class="kb-form-panel-header">«entity.translationKey.translationKeyFunc»</div>
+				<div class="ui-g kb-no-margins1">
+				
+				  <div class="ui-g-12 ui-md-10 kb-no-margins1">
+				    <div class="kb-form-panel-header">
+					  «entity.translationKey.translationKeyFunc»
+					    «formHelp.generateHelp»
+					</div>
+				  </div>
+				  
+				  <div class="ui-g-12 ui-md-2 kb-no-margins1">
+		            <div class="kb-no-margins1" style="display: flex; align-items: center; justify-content: flex-end;">
+		              <p-inputSwitch [(ngModel)]="«SHOW_HIDE_HELP»"></p-inputSwitch>
+		              <span style="margin-left: 3px;">
+		              {{ «SHOW_HIDE_HELP_LABEL_METHOD»() }}
+		               «help.generateHelpVisible»
+		              </span>
+		            </div>
+		          </div>
+				  
+				</div>
 			</p-header>
 		
 		'''
@@ -193,6 +258,10 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateField(Slot slot, Entity entity) {
+		val help = slot.help
+		
+		val ruleWithSlotAppyHiddeComponent = slot.getRuleWithSlotAppyHiddeComponent
+		
 		val ruleWithSlotAppyStyleClass = slot.getRuleWithSlotAppyStyleClassForSlot
 		var styleClassMethodName = ''
 		if (ruleWithSlotAppyStyleClass !== null) {
@@ -210,11 +279,20 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		
 		'''
+		«IF slot.hasSeparatorBefore»
+		«slot.generateSeparator»
+		«ENDIF»
 		«IF slot.isToMany»
 		slot.isToMany
 		«ELSE»
-		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»>
-			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>«slot.webLabel»«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»</label>
+		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»«IF ruleWithSlotAppyHiddeComponent !== null» «slot.toRuleWithSlotAppyHiddeComponentHTMLDirective»«ENDIF»>
+			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>
+				«slot.webLabel»
+				«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»
+				«IF help !== null»
+				«help.generateHelp»
+				«ENDIF»
+			</label>
 			«IF cepField !== null»
 			<div class="ui-inputgroup">
 				«slot.generateWebComponent»
@@ -224,7 +302,48 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			«slot.generateWebComponent»
 			«ENDIF»
 		</div>
+		«IF slot.hasSeparatorAfter»
+		«slot.generateSeparator»
 		«ENDIF»
+		«ENDIF»
+		'''
+	}
+	
+	def CharSequence generateHelp(Help help) {
+		help.generateHelp('showHideHelp')
+	}
+	
+	def CharSequence generateHelpVisible(Help help) {
+		help.generateHelp(null)
+	}
+	
+	def CharSequence generateHelp(Help help, String visibleCondition) {
+		val icon = help.icon
+		val text = help?.text?.endsWithDot
+		val styleClass =  help.styleClass
+		
+		'''
+		<!-- help -->
+		<i«IF visibleCondition !== null» *ngIf="«visibleCondition»"«ENDIF» class="«icon»" tooltipStyleClass="«styleClass»" pTooltip="«text»"></i>
+		<!-- help -->
+		'''
+	}
+	
+	def CharSequence generateSeparator(Slot slot) {
+		
+		val ruleWithSlotAppyHiddeComponent = slot.getRuleWithSlotAppyHiddeComponent
+		
+		val separator = slot.separator
+		val styleClass = if (separator.styleClass !== null) separator.styleClass else 'separator-default' 
+		
+		'''
+		
+		<!-- separator -->
+		<div class="ui-g-12"«IF ruleWithSlotAppyHiddeComponent !== null» «slot.toRuleWithSlotAppyHiddeComponentHTMLDirective»«ENDIF»>
+			<hr class="«styleClass»">
+		</div>
+		<!-- separator -->
+		
 		'''
 	}
 	
@@ -279,11 +398,22 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.decorateWebComponentAppFocus(builder)
 		slot.decorateWebComponentNgModel(builder)
 		slot.decorateWebComponentName(builder)
+		slot.decorateWebComponentOnChange(builder)
 		slot.decorateWebComponentRulesWithSlotAppyMathExpression(builder)
+		slot.decorateWebComponentApplyRules(builder)
 		slot.decorateWebComponentRules(builder)
 		
 		// Tem que ser por último, porque fecha a tag.
 		slot.decorateWebComponentAutoCompleteTemplate(builder)
+	}
+	
+	def void decorateWebComponentApplyRules(Slot slot, StringConcatenationExt builder) {
+		// Begin rule AppyDisableComponent at slot
+		val rules = slot.getRulesWithSlotAppyDisableComponent
+		if (!rules.empty) {
+			builder.concat(''' [disabled]="«slot.buildSlotRuleDisableComponentMethodName»()"''')
+		}
+		// End rule AppyDisableComponent at slot
 	}
 	
 	def void decorateWebComponentRulesWithSlotAppyMathExpression(Slot slot, StringConcatenationExt builder) {
@@ -355,6 +485,12 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def void decorateWebComponentName(Slot slot, StringConcatenationExt builder) {
 		builder.concat(''' name="«slot.fieldName»"''')
+	}
+	
+	def void decorateWebComponentOnChange(Slot slot, StringConcatenationExt builder) {
+		if (slot.onChange) {
+			builder.concat(''' (onChange)="«slot.fieldName»Change($event)"''')
+		}
 	}
 	
 	def void decorateWebComponentRules(Slot slot, StringConcatenationExt builder) {

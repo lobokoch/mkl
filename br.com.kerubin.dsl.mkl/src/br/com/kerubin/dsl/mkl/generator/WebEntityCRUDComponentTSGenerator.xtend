@@ -1,22 +1,26 @@
 package br.com.kerubin.dsl.mkl.generator
 
+import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPServiceGenerator
 import br.com.kerubin.dsl.mkl.model.Entity
+import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.Slot
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
+import java.util.Arrays
+import java.util.LinkedHashSet
+import java.util.Set
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
-import br.com.kerubin.dsl.mkl.model.Rule
-import java.util.Set
-import java.util.LinkedHashSet
-import br.com.kerubin.dsl.mkl.model.RuleTargetField
-import br.com.kerubin.dsl.mkl.generator.web.searchcep.WebSearchCEPServiceGenerator
 
 class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	StringConcatenationExt imports
 	val LinkedHashSet<String> importsSet = newLinkedHashSet
+	
+	val LinkedHashSet<String> customActions = newLinkedHashSet
+	
 	
 	new(BaseGenerator baseGenerator) {
 		super(baseGenerator)
@@ -34,6 +38,55 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val path = entity.webEntityPath
 		val entityFile = path + entity.toEntityWebCRUDComponentName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityTSComponent)
+		
+		val fileName = path + entity.toEntityWebCustomServiceFileName + '.ts'
+		generateFile(fileName, entity.doGenerateEntityTSCustomService)
+	}
+	
+	def CharSequence doGenerateEntityTSCustomService(Entity entity) {
+		val component = entity.toEntityWebCRUDComponentName
+		val customServiceName = entity.toEntityWebCustomServiceClassName
+		val componentClassName = entity.toEntityWebComponentClassName
+		
+		'''
+		import { «entity.toEntityWebComponentClassName» } from './«component»';
+		import { Injectable } from '@angular/core';
+		
+		@Injectable()
+		export class «customServiceName» {
+		
+		  component: «componentClassName»;
+		
+		  setComponent(component: «componentClassName») {
+		    this.component = component;
+		  }
+		
+		  «customActions.map[it.generateActionDefinition].join»
+		
+		}
+		
+		'''	
+	}
+	
+	def CharSequence generateActionDefinition(String methodDef) {
+		
+		var String returnValue = null
+		if (methodDef.endsWith(': boolean')) {
+			returnValue = 'return true'
+		} else if (methodDef.endsWith(': string')) {
+			returnValue = 'return \'\''
+		} 
+		
+		'''
+		
+		«methodDef» {
+			// This method can be overridden.
+			«IF returnValue !== null»
+			«returnValue»;
+			«ENDIF»
+		}
+		
+		'''
 	}
 	
 	def CharSequence doGenerateEntityTSComponent(Entity entity) {
@@ -43,15 +96,22 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val fieldName = entity.fieldName
+		
 		val serviceName = entity.toEntityWebServiceClassName
 		val serviceVar = serviceName.toFirstLower
+		
+		val customServiceName = entity.toEntityWebCustomServiceClassName
+		val customServiceVar = customServiceName.toFirstLower
+		
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val rulesFormOnCreate = entity.rulesFormOnCreate
 		val rulesFormOnUpdate = entity.rulesFormOnUpdate
 		val rulesFormOnInit = entity.rulesFormOnInit
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		val rulesWithSlotAppyStyleClass = entity.rulesWithSlotAppyStyleClass
+		val rulesWithSlotAppyHiddeComponent = entity.rulesWithSlotAppyHiddeComponent
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
+		val rulesFormBeforeSave = entity.getRulesFormBeforeSave
 		
 		val rulesWithSlotAppyMathExpression = entity.getRulesWithSlotAppyMathExpression
 		
@@ -62,8 +122,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val rulesPolling = entity.ruleFormPolling
 		val ruleSearchCEP = entity.ruleSearchCEP
 		
+		val rulesDisableComponent = entity.getRulesWithSlotAppyDisableComponent
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
+		
 		imports.add('''import { «serviceName» } from './«webName».service';''')
+		imports.add('''import { «customServiceName» } from './custom-«webName».service';''')
+		
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
 		if (entity.hasDate || entity.fieldsAsEntityHasDate) {
 			imports.add('''import * as moment from 'moment';''')
@@ -108,6 +173,8 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		})
 		
 		export class «entity.toEntityWebComponentClassName» implements OnInit {
+			«SHOW_HIDE_HELP» = false; // for show/hide help.
+			
 			«IF hasCalendar»
 			
 			«getCalendarLocaleSettingsVarName»: any;
@@ -130,6 +197,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			constructor(
 			    private «serviceVar»: «serviceName»,
+			    private «customServiceVar»: «customServiceName»,
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    «entity.slots.filter[isEntity && it.asEntity.isNotSameName(entity)].map[mountServiceConstructorInject].join('\n\r')»
 			    private route: ActivatedRoute,
@@ -141,13 +209,17 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    «ENDIF»
 			    private messageHandler: MessageHandlerService
 			) { 
+				this.«customServiceVar».setComponent(this);
+				«customServiceVar.buildCustomActionBefore('constructor')»
 				«entity.slots.filter[isEnum].map['''this.«it.webDropdownOptionsInitializationMethod»();'''].join('\n\r')»
 				«IF !ruleMakeCopies.empty»
 				this.initializeCopiesReferenceFieldOptions();
 				«ENDIF»
+				«customServiceVar.buildCustomActionAfter('constructor')»
 			}
 			
 			ngOnInit() {
+				«customServiceVar.buildCustomActionBefore('onInit')»
 				«IF hasCalendar»
 				this.initLocaleSettings();
 				«ENDIF»
@@ -166,11 +238,15 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    if (id) {
 			      this.get«dtoName»ById(id);
 			    }
+			    «customServiceVar.buildCustomActionAfter('onInit')»
 			}
+			
+			«generateGetShowHideHelpLabel»
 			
 			begin(form: FormControl) {
 			    form.reset();
 			    setTimeout(function() {
+			    	«customServiceVar.buildCustomActionBefore('onNewRecord')»
 			      this.«fieldName» = new «dtoName»();
 			      «IF !rulesFormOnInit.empty»
 			      this.rulesOnInit();
@@ -183,6 +259,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				  	this.«entity.buildApplyRememberValuesMethodName»();
 				  	
 				  «ENDIF»
+				  «customServiceVar.buildCustomActionAfter('onNewRecord')»
 			    }.bind(this), 1);
 			}
 			
@@ -203,11 +280,19 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.validateAllFormFields(form);
 			      return;
 			    }
+				«IF !rulesFormBeforeSave.empty»
+				
+				if (!this.«DO_RULES_FORM_BEFORE_SAVE_METHOD»()) {
+					return;
+				}
+				
+				«ENDIF»
 				«IF !rememberedSlots.empty»
 				
 				this.«entity.buildRememberValuesMethodName»();
 				
 				«ENDIF»
+				«customServiceVar.buildCustomActionBefore('save')»
 			    if (this.isEditing) {
 			      this.update();
 			    } else {
@@ -216,9 +301,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				«IF !ruleMakeCopies.empty»
 				this.initializeCopiesReferenceFieldOptions();
 				«ENDIF»
+				«customServiceVar.buildCustomActionAfter('save')»
 			}
-			
+			«IF !rulesFormBeforeSave.empty»
+			«rulesFormBeforeSave.generateRulesFormBeforeSave»
+			«ENDIF»
 			create() {
+				«customServiceVar.buildCustomActionBefore('create')»
 				«IF !rulesFormOnCreate.empty»
 				this.rulesOnCreate();
 				«ENDIF»
@@ -227,6 +316,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
 			      this.messageHandler.showSuccess('Registro criado com sucesso!');
+			      «customServiceVar.buildCustomActionAfter('create')»
 			    }).
 			    catch(error => {
 			      this.messageHandler.showError(error);
@@ -234,6 +324,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			update() {
+				«customServiceVar.buildCustomActionBefore('update')»
 				«IF !rulesFormOnUpdate.empty»
 				this.rulesOnUpdate();
 				
@@ -242,6 +333,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
 			      this.messageHandler.showSuccess('Registro alterado!');
+			      «customServiceVar.buildCustomActionAfter('update')»
 			    })
 			    .catch(error => {
 			      this.messageHandler.showError(error);
@@ -249,8 +341,22 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			get«dtoName»ById(id: string) {
+				«buildCustomActionBefore(new ActionConfig()
+					.setCustomServiceName(customServiceVar)
+					.setAction('getById')
+					.setParams(Arrays.asList('id'))
+					.setParamsTypes(Arrays.asList('string'))
+				)»
 			    this.«serviceVar».retrieve(id)
-			    .then((«fieldName») => this.«fieldName» = «fieldName»)
+			    .then((«fieldName») => { 
+			    	this.«fieldName» = «fieldName»;
+			    	«buildCustomActionAfter(new ActionConfig()
+					.setCustomServiceName(customServiceVar)
+					.setAction('getById')
+					.setParams(Arrays.asList('id'))
+					.setParamsTypes(Arrays.asList('string'))
+				)»
+			    })
 			    .catch(error => {
 			      this.messageHandler.showError(error);
 			    });
@@ -316,6 +422,20 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			// End Begin RuleWithSlotAppyStyleClass
 			«ENDIF»
 			
+			«IF !rulesWithSlotAppyHiddeComponent.empty»
+												
+			// Begin RuleWithSlotAppyHiddeComponent 
+			«rulesWithSlotAppyHiddeComponent.map[it.generateRuleWithSlotAppyHiddeComponent].join»
+			// End Begin RuleWithSlotAppyHiddeComponent
+			«ENDIF»
+			
+			«IF !rulesDisableComponent.empty»
+												
+			// Begin RuleDisableComponent 
+			«rulesDisableComponent.map[it.generateRuleDisableComponent].join»
+			// End Begin RuleDisableComponent
+			«ENDIF»
+			
 			«IF !rulesWithSlotAppyMathExpression.empty»
 												
 			// Begin RulesWithSlotAppyMathExpression 
@@ -349,12 +469,152 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF ruleSearchCEP !== null»
 			«ruleSearchCEP.generateSearchCEP»
 			«ENDIF»
+			
+			«entity.slots.filter[it.onChange].map[mountSlotOnChange].join('\n\r')»
 		}
 		'''
 		
 		val source = imports.ln.toString /*+ importsSet.join('\r\n')*/ + '\r\n' + body
 		source
 	}
+	
+	def CharSequence generateRulesFormBeforeSave(Iterable<Rule> rules) {
+		
+		'''
+		
+		// Begin rulesFormBeforeSave
+		«DO_RULES_FORM_BEFORE_SAVE_METHOD»(): boolean {
+			«rules.map[it.buildApplyRuleFormBeforeSave].join»
+			return true;
+		}
+		// End rulesFormBeforeSave
+		
+		'''
+		
+	}
+	
+	def CharSequence buildApplyRuleFormBeforeSave(Rule rule) {
+		val hasWhen = rule.hasWhen
+		var String whenExpression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			whenExpression = resultStrExp.toString
+		}
+		
+		val errorMessage = rule?.apply?.ruleError.buildRuleErrorMessageForTypeScript		
+		
+		'''
+		
+		if («whenExpression») {
+			this.messageHandler.showError(«errorMessage»);
+			return false;
+		}
+		
+		'''
+		
+	}
+	
+	def CharSequence generateGetShowHideHelpLabel() {		
+		'''
+		«SHOW_HIDE_HELP_LABEL_METHOD»(): string {
+			return this.«SHOW_HIDE_HELP» ? 'Ocultar ajuda' : 'Mostrar ajuda';
+		}
+		'''
+	}
+	
+	def CharSequence mountSlotOnChange(Slot slot) {
+		val config = new ActionConfig()
+			.setCustomServiceName(slot.ownerEntity.toEntityWebCustomServiceVarName)
+			.setAction(slot.fieldName.concat('Change'))
+			.setParams(Arrays.asList('event'))
+			.setParamsTypes(Arrays.asList('any'))
+			.setIsVoid(true)
+			
+		
+		'''
+		«slot.fieldName»Change(event: any) {
+			«buildCustomActionBefore(config)»
+		}
+		'''
+	}
+	
+	def CharSequence buildCustomActionBefore(String customServiceName, String action) {
+		val config = new ActionConfig()
+		.setCustomServiceName(customServiceName)
+		.setAction(action)
+		
+		buildCustomActionBefore(config)
+	}
+	
+	def CharSequence buildCustomActionAfter(String customServiceName, String action) {
+		val config = new ActionConfig()
+		.setCustomServiceName(customServiceName)
+		.setAction(action)
+		
+		buildCustomActionAfter(config)
+	}
+	
+	def CharSequence buildCustomActionBefore(ActionConfig config) {
+		config.prefix = 'before';
+		buildCustomAction(config)
+	}
+	
+	def CharSequence buildCustomActionAfter(ActionConfig config) {
+		config.prefix = 'after';
+		buildCustomAction(config)
+	}
+		
+	def CharSequence buildCustomAction(ActionConfig config) {
+		
+		val sbMethoCall = new StringBuilder
+		val sbMethoDefine = new StringBuilder
+		if (config.prefix !== null) {
+			sbMethoDefine.append(config.prefix)
+			sbMethoDefine.append(config.action.toFirstUpper)
+		}
+		else {
+			sbMethoDefine.append(config.action.toFirstUpper)
+		}
+		
+		sbMethoDefine.append('(');
+		sbMethoCall.append(sbMethoDefine.toString)
+		
+		if (config.params !== null) {
+			for (var i = 0; i < config.params.size; i++) {
+				if (i > 0) {
+					sbMethoDefine.append(', ')
+					sbMethoCall.append(', ')
+				}
+				sbMethoDefine.append(config.params.get(i)).append(': ').append(config.paramsTypes.get(i))
+				sbMethoCall.append(config.params.get(i))
+			}
+		}
+		
+		sbMethoDefine.append(')');
+		sbMethoCall.append(')');
+		
+		if (!config.isVoid) {
+			sbMethoDefine.append(': boolean');
+		}
+		
+		customActions.add(sbMethoDefine.toString);
+		
+		'''
+		
+		// Begin custom action.
+		«IF config.isVoid»
+		this.«config.customServiceName».«sbMethoCall.toString»;
+		«ELSE»
+		if (!this.«config.customServiceName».«sbMethoCall.toString») {
+			return;
+		}
+		«ENDIF»
+		// End custom action.
+		
+		'''
+	}
+	
 	
 	def CharSequence buildAssignRememberValue(Slot slot) {
 		'''
@@ -392,10 +652,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		
 		'''
+		
 		«methodName»() {
 			const expression = «expression»;
 			return expression;
-			
 		}
 		'''
 	}
@@ -423,6 +683,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val thisEntity = 'this.' + entity.fieldName
 		
 		'''
+		
 		«methodName»(event) {
 			if («thisEntity») {
 				const whenExpression = «whenExpression»;
@@ -430,7 +691,52 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 					«thisEntity».«slot.fieldName» = «applyExpression»;
 				}
 			}
-			
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleDisableComponent(Rule rule) {
+		val slot = (rule.target as RuleTargetField).target.field
+		val methodName = slot.buildSlotRuleDisableComponentMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		'''
+		
+		«methodName»() {
+			const expression = «expression»;
+			return expression;
+		}
+		'''
+	}
+	
+	def CharSequence generateRuleWithSlotAppyHiddeComponent(Rule rule) {
+		val slot = (rule.target as RuleTargetField).target.field
+		val methodName = slot.toRuleWithSlotAppyHiddeComponentMethodName
+		
+		val hasWhen = rule.hasWhen
+		var String expression = 'false'
+		if (hasWhen) {
+			val resultStrExp = new StringBuilder
+			rule.when.expression.buildRuleWhenExpression(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		'''
+		
+		«methodName»() {
+			const expression = «expression»;
+			if (expression) {
+				return 'none'; // Will hidde de component.
+			} else {
+				return 'inline'; // Default css show element value.
+			}
 		}
 		'''
 	}
@@ -450,6 +756,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val styleClass = rule.apply.getResutValue
 		
 		'''
+		
 		«methodName»() {
 			const expression = «expression»;
 			if (expression) {
@@ -457,7 +764,6 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			} else {
 				return '';
 			}
-			
 		}
 		'''
 	}
@@ -484,6 +790,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		}
 		
 		'''
+		
 		«ruleActionWhenConditionName»(): boolean {
 			«IF hasWhen»		    
 			return «expression»;
@@ -508,7 +815,6 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		      this.messageHandler.showError(error);
 		    });
 		}
-		
 		'''
 	}
 	
@@ -642,20 +948,46 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val referenceField = rule.getRuleMakeCopiesReferenceField
 		val refField = '''this.«entityVar».«referenceField.fieldName»'''
 		val refFieldName = referenceField.fieldName
+		val customServiceVarName = entity.toEntityWebCustomServiceVarName
+		
+		val helpMethodName = actionName.toString.concat('Help()');
+		customActions.add(helpMethodName.concat(': string'));
+		
+		val hiddeWhen = rule?.apply?.makeCopiesExpression?.hiddeWhen
+		var expression = ''
+		if (hiddeWhen !== null) {
+			val resultStrExp = new StringBuilder
+			hiddeWhen.expression.buildRuleWhenExpression(resultStrExp)
+			expression = resultStrExp.toString
+		}
+		
+		val grouperFieldText = grouperField?.label ?: grouperField.fieldName.toFirstUpper
+		val refFieldText = referenceField?.label ?: refFieldName.toFirstUpper
 		
 		'''
 		
+		«IF hiddeWhen !== null»
+		«rule.apply.makeCopiesExpression.hiddeWhenMethodName»(): boolean {
+			const expression = («expression»);
+			return expression;
+		}
+		
+		«ENDIF»
+		«helpMethodName»: string {
+			return this.«customServiceVarName».«helpMethodName»;
+		}
+		
 		«actionName»(form: FormControl) {
 		      if (!this.«entityVar».«grouperField.fieldName») {
-		        this.messageHandler.showError('Campo \'«grouperField.fieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
+		        this.messageHandler.showError('Campo \'«grouperFieldText»\' deve ser informado para gerar cópias.');
 		        return;
 		      }
 		      
 		      if (!«refField») {
-		        this.messageHandler.showError('Campo \'«refFieldName.toFirstUpper»\' deve ser informado para gerar cópias.');
+		        this.messageHandler.showError('Campo \'«refFieldText»\' deve ser informado para gerar cópias.');
 		        return;
 		      }
-		      
+		      «customServiceVarName.buildCustomActionBefore(actionName.toString)»
 		      // Begin validation for past dates
 		      const «refFieldName»FirstCopy = moment(«refField»).add(1, 'month');
 		      const today = moment();
@@ -670,30 +1002,31 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				    ///
 				    this.«serviceVar».«actionName»(this.«entityVar».«entity.id.fieldName», this.numberOfCopies,
 						this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
-				    .then(() => {
-				    this.messageHandler.showSuccess('Operação realizada com sucesso!');
-				    }).
-				    catch(error => {
-				    const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
-				    console.log(error);
-				      this.messageHandler.showError(message);
-				  	});
+				    	.then(() => {
+				    		this.messageHandler.showSuccess('Operação realizada com sucesso!');
+				    		«customServiceVarName.buildCustomActionAfter(actionName.toString)»
+				    	}).
+				    	catch(error => {
+					    	const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
+					    	console.log(error);
+					      	this.messageHandler.showError(message);
+				  		});
 				  }
 				});
 		      
 		      	return;
 		      }
 		      // End validation
-		
 		      this.«serviceVar».«actionName»(this.«entityVar».«entity.id.fieldName», this.numberOfCopies,
 		        this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
 			    .then(() => {
-		        this.messageHandler.showSuccess('Operação realizada com sucesso!');
+		        	this.messageHandler.showSuccess('Operação realizada com sucesso!');
+			  		«customServiceVarName.buildCustomActionAfter(actionName.toString)»
 			    }).
 			    catch(error => {
-		        const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
-		        console.log(error);
-			      this.messageHandler.showError(message);
+		        	const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
+		        	console.log(error);
+			      	this.messageHandler.showError(message);
 			  });
 		}
 		'''
