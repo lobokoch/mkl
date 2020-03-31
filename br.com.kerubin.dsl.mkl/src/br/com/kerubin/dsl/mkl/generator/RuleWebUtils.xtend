@@ -610,9 +610,6 @@ class RuleWebUtils {
 			if (shortTitle !== null) {
 				tooltip.append(' de ').append(shortTitle)
 			}
-			else {
-				tooltip.append(' ').append('registro')
-			}
 			
 			button.tooltip = tooltip.toString.endsWithDot
 			

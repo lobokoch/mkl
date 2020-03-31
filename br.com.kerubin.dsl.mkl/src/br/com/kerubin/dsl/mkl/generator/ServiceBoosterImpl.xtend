@@ -112,6 +112,15 @@ class ServiceBoosterImpl implements ServiceBooster {
 		
 		entity.boostSlotAtivo
 		entity.boostPasswordSlots
+		entity.boostSlotHelp
+	}
+	
+	def void boostSlotHelp(Entity entity) {
+		entity?.slots?.forEach[it |
+			if (it.help === null && !(it.label === null)) {
+				it.help = newHelp(it.label) // Use the label as help text for default.
+			}
+		]
 	}
 	
 	def void boostPasswordSlots(Entity entity) {

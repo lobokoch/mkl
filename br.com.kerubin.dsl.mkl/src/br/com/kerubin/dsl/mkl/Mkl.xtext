@@ -94,6 +94,7 @@ Entity:
 		(subscribeEntityEvents=SubscribeEntityEvents)? & 
 		(publishEntityEvents=PublishEntityEvents)? & 
 		(enableReplication?='@enableReplication')? &
+		(enableWebCustomService?='@enableWebCustomService')? &
 		(disableWebAnalytics?='@disableWebAnalytics')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
@@ -312,6 +313,7 @@ Slot:
 			//(hibFilterDefList += HibFilterDef*) &
 			(repositoryFindBy += RepositoryFindBy*) &
 			(onChange ?= 'onChange')? &
+			(autoFocus ?= 'autoFocus')? &
 			(autoCompleteWithOwnerParams?='autoCompleteWithOwnerParams')?
 			
 		)
@@ -796,6 +798,7 @@ Web:
 			('styleClass' ':' styleClass = STRING)? &
 			('label' ':' label = STRING)? &
 			(readOnly ?= 'readOnly')? &
+			(disabled ?= 'disabled')? &
 			(rememberValue ?= 'rememberValue')?
 		)
 	')'

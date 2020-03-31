@@ -1,14 +1,21 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import java.util.List
+import br.com.kerubin.dsl.mkl.model.Entity
 
 class ActionConfig {
+	public Entity entity;
 	public String customServiceName; 
 	public String action;
 	public String prefix 
 	public List<String> params; 
 	public List<String> paramsTypes; 
 	public boolean isVoid;
+	
+	def ActionConfig setEntity(Entity entity) {
+		this.entity = entity;
+		this;
+	}
 	
 	def ActionConfig setCustomServiceName(String customServiceName) {
 		this.customServiceName = customServiceName;

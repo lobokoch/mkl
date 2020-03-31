@@ -2278,5 +2278,24 @@ class EntityUtils {
 		text
 	}
 	
+	def static Slot getDefaultSlotForFocus(Entity entity) {
+		var result = entity.slots.findFirst[it.autoFocus] ?: entity.slots.findFirst[!it.isHiddenSlot && it !== it.ownerEntity.id]
+		result
+	}
 	
+	def static getWebElementRefName(Slot slot) {
+		slot.fieldName + 'ElementRef'
+	}
+	
+	def static getWebElementRef(Slot slot) {
+		'#' + slot.getWebElementRefName
+	}
+	
+	def static getDefaultElementSetFocusMethodName() {
+		'defaultElementSetFocus'
+	}
+	
+	def static callDefaultElementSetFocus() {
+		'''this.«getDefaultElementSetFocusMethodName»();'''
+	}
 }

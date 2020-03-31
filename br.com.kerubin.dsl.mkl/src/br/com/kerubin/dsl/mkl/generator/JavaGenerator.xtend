@@ -28,7 +28,10 @@ class JavaGenerator extends BaseGenerator {
 		var List<IGeneratorExecutor> generators = newArrayList(
 			new JavaProjectsGenerator(this),
 			new JavaServerConfigGenerator(this),
-			new JavaCustomResponseEntityExceptionHandlerGenerator(this),
+			
+			// Não usado mais, o br.com.kerubin.api.servicecore.error.RestExceptionHandler já faz esse trabalho de tratar a exceções.
+			// new JavaCustomResponseEntityExceptionHandlerGenerator(this),
+			
 			new JavaEntityJPAGenerator(this),
 			new JavaEntityRepositoryGenerator(this),
 			new JavaEntityServiceGenerator(this),

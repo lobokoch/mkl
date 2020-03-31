@@ -400,8 +400,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.decorateWebComponentName(builder)
 		slot.decorateWebComponentOnChange(builder)
 		slot.decorateWebComponentRulesWithSlotAppyMathExpression(builder)
-		slot.decorateWebComponentApplyRules(builder)
 		slot.decorateWebComponentRules(builder)
+		slot.decorateWebComponentApplyRules(builder)
 		
 		// Tem que ser por último, porque fecha a tag.
 		slot.decorateWebComponentAutoCompleteTemplate(builder)
@@ -475,12 +475,16 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def void decorateWebComponentAppFocus(Slot slot, StringConcatenationExt builder) {
-		if (!hasFocus && !slot.isHiddenSlot && slot !== slot.ownerEntity.id) {
+		val slotForFocus = slot.ownerEntity.getDefaultSlotForFocus
+		if (slot === slotForFocus) {
+			builder.concat(''' «slot.webElementRef»''')
+		}
+		/*if (!hasFocus && !slot.isHiddenSlot && slot !== slot.ownerEntity.id) {
 			if (!slot.isEntity) { // Autocomplete não pode receber focu assim, tem que ver outro jeito.
 				builder.concat(''' appFocus''')
 			}
 			hasFocus = true;
-		}
+		}*/
 	}
 	
 	def void decorateWebComponentName(Slot slot, StringConcatenationExt builder) {
@@ -497,11 +501,16 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		if (!slot.UUID && !slot.optional) {
 			builder.concat(' required')
 		}
+		
+		if (slot.isWebDisabled) {
+			builder.concat(' [disabled]="true"')
+		}
 	}
 	
 	
 	def void decorateWebComponentNgModel(Slot slot, StringConcatenationExt builder) {
-			builder.concat(''' #«slot.fieldName»="ngModel" ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
+			builder.concat(''' #«slot.fieldName»="ngModel" [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
+			// builder.concat(''' #«slot.fieldName»="ngModel" ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
 	}
 	
 	def void decorateWebComponentAutoCompleteTemplate(Slot slot, StringConcatenationExt builder) {
@@ -587,6 +596,9 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		else if (basicType instanceof BooleanType) {
 			webComponentType = 'p-inputSwitch'
 			builder.concat(webComponentType)
+			if (slot.isWebReadOnly) {
+				builder.concat(''' [readonly]="true"''')
+			}
 		}
 		else if (basicType instanceof DateType) {
 			webComponentType = 'p-calendar'

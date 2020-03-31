@@ -986,6 +986,7 @@ class Web {
 	String styleClass
 	String label
 	boolean readOnly
+	boolean disabled
 	boolean rememberValue
 }
 
@@ -1072,6 +1073,7 @@ class Slot extends Element {
 	//String labelGrid
 	String mask
 	boolean onChange = 'false'
+	boolean autoFocus = 'false'
 	
 	contains SlotSeparator separator
 	
@@ -1209,6 +1211,10 @@ class Slot extends Element {
 	
 	op boolean isWebReadOnly() {
 		return web !== null && web.readOnly
+	}
+	
+	op boolean isWebDisabled() {
+		return web !== null && web.disabled
 	}
 	
 	op boolean isWebRememberValue() {
@@ -1569,6 +1575,7 @@ class Entity extends PublicObject, Rulled {
 	boolean mapped
 	boolean baseRepository
 	boolean enableReplication
+	boolean enableWebCustomService
 	boolean externalEntity = 'false'
 	boolean disableWebAnalytics
 	contains Label label

@@ -39,8 +39,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		val entityFile = path + entity.toEntityWebCRUDComponentName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityTSComponent)
 		
-		val fileName = path + entity.toEntityWebCustomServiceFileName + '.ts'
-		generateFile(fileName, entity.doGenerateEntityTSCustomService)
+		if (entity.enableWebCustomService) {
+			val fileName = path + entity.toEntityWebCustomServiceFileName + '.ts'
+			generateFile(fileName, entity.doGenerateEntityTSCustomService)
+		}
 	}
 	
 	def CharSequence doGenerateEntityTSCustomService(Entity entity) {
@@ -124,10 +126,25 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		val rulesDisableComponent = entity.getRulesWithSlotAppyDisableComponent
 		
+		val slotForFocus = entity.defaultSlotForFocus
+		
+		if (slotForFocus !== null) {
+			if (slotForFocus.isEntity) {
+				imports.add('''import { AutoComplete } from 'primeng/autocomplete';''')
+				imports.add('''import { ViewChild } from '@angular/core';''')
+			}
+			else {
+				imports.add('''import { ElementRef, ViewChild } from '@angular/core';''')
+			}
+		}
+		
 		imports.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		
 		imports.add('''import { «serviceName» } from './«webName».service';''')
-		imports.add('''import { «customServiceName» } from './custom-«webName».service';''')
+		
+		if (entity.enableWebCustomService) {
+			imports.add('''import { «customServiceName» } from './custom-«webName».service';''')
+		}
 		
 		imports.add('''import { «service.toTranslationServiceClassName» } from '«service.serviceWebTranslationComponentPathName»';''')
 		if (entity.hasDate || entity.fieldsAsEntityHasDate) {
@@ -194,10 +211,16 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !rulesPolling.empty»
 			«rulesPolling.generatePollingVars»
 			«ENDIF»
+			«IF slotForFocus !== null»
+			
+			@ViewChild('«slotForFocus.webElementRefName»', {static: true}) defaultElementRef: «IF slotForFocus.isEntity»AutoComplete«ELSE»ElementRef«ENDIF»;
+			«ENDIF»
 			
 			constructor(
 			    private «serviceVar»: «serviceName»,
+			    «IF entity.enableWebCustomService»
 			    private «customServiceVar»: «customServiceName»,
+			    «ENDIF»
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    «entity.slots.filter[isEntity && it.asEntity.isNotSameName(entity)].map[mountServiceConstructorInject].join('\n\r')»
 			    private route: ActivatedRoute,
@@ -209,17 +232,19 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    «ENDIF»
 			    private messageHandler: MessageHandlerService
 			) { 
+				«IF entity.enableWebCustomService»
 				this.«customServiceVar».setComponent(this);
-				«customServiceVar.buildCustomActionBefore('constructor')»
+				«ENDIF»
+				«customServiceVar.buildCustomActionBefore('constructor', entity)»
 				«entity.slots.filter[isEnum].map['''this.«it.webDropdownOptionsInitializationMethod»();'''].join('\n\r')»
 				«IF !ruleMakeCopies.empty»
 				this.initializeCopiesReferenceFieldOptions();
 				«ENDIF»
-				«customServiceVar.buildCustomActionAfter('constructor')»
+				«customServiceVar.buildCustomActionAfter('constructor', entity)»
 			}
 			
 			ngOnInit() {
-				«customServiceVar.buildCustomActionBefore('onInit')»
+				«customServiceVar.buildCustomActionBefore('onInit', entity)»
 				«IF hasCalendar»
 				this.initLocaleSettings();
 				«ENDIF»
@@ -238,7 +263,16 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    if (id) {
 			      this.get«dtoName»ById(id);
 			    }
-			    «customServiceVar.buildCustomActionAfter('onInit')»
+			    «customServiceVar.buildCustomActionAfter('onInit', entity)»
+			    «IF slotForFocus !== null»
+			    «IF !slotForFocus.isEntity»
+			    «callDefaultElementSetFocus»
+			    «ELSE»
+			    setTimeout(function() {
+			    	«callDefaultElementSetFocus»
+			    }.bind(this), 1);
+			    «ENDIF»
+			    «ENDIF»
 			}
 			
 			«generateGetShowHideHelpLabel»
@@ -246,7 +280,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			begin(form: FormControl) {
 			    form.reset();
 			    setTimeout(function() {
-			    	«customServiceVar.buildCustomActionBefore('onNewRecord')»
+			    	«customServiceVar.buildCustomActionBefore('onNewRecord', entity)»
 			      this.«fieldName» = new «dtoName»();
 			      «IF !rulesFormOnInit.empty»
 			      this.rulesOnInit();
@@ -259,7 +293,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				  	this.«entity.buildApplyRememberValuesMethodName»();
 				  	
 				  «ENDIF»
-				  «customServiceVar.buildCustomActionAfter('onNewRecord')»
+				  «customServiceVar.buildCustomActionAfter('onNewRecord', entity)»
+				  «IF slotForFocus !== null»
+				  «callDefaultElementSetFocus»
+				  «ENDIF»
 			    }.bind(this), 1);
 			}
 			
@@ -292,7 +329,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				this.«entity.buildRememberValuesMethodName»();
 				
 				«ENDIF»
-				«customServiceVar.buildCustomActionBefore('save')»
+				«customServiceVar.buildCustomActionBefore('save', entity)»
 			    if (this.isEditing) {
 			      this.update();
 			    } else {
@@ -301,13 +338,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				«IF !ruleMakeCopies.empty»
 				this.initializeCopiesReferenceFieldOptions();
 				«ENDIF»
-				«customServiceVar.buildCustomActionAfter('save')»
+				«customServiceVar.buildCustomActionAfter('save', entity)»
 			}
 			«IF !rulesFormBeforeSave.empty»
 			«rulesFormBeforeSave.generateRulesFormBeforeSave»
 			«ENDIF»
 			create() {
-				«customServiceVar.buildCustomActionBefore('create')»
+				«customServiceVar.buildCustomActionBefore('create', entity)»
 				«IF !rulesFormOnCreate.empty»
 				this.rulesOnCreate();
 				«ENDIF»
@@ -316,7 +353,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
 			      this.messageHandler.showSuccess('Registro criado com sucesso!');
-			      «customServiceVar.buildCustomActionAfter('create')»
+			      «customServiceVar.buildCustomActionAfter('create', entity)»
+			      «IF slotForFocus !== null»
+			      «callDefaultElementSetFocus»
+			      «ENDIF»
 			    }).
 			    catch(error => {
 			      this.messageHandler.showError(error);
@@ -324,7 +364,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			
 			update() {
-				«customServiceVar.buildCustomActionBefore('update')»
+				«customServiceVar.buildCustomActionBefore('update', entity)»
 				«IF !rulesFormOnUpdate.empty»
 				this.rulesOnUpdate();
 				
@@ -333,7 +373,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    .then((«fieldName») => {
 			      this.«fieldName» = «fieldName»;
 			      this.messageHandler.showSuccess('Registro alterado!');
-			      «customServiceVar.buildCustomActionAfter('update')»
+			      «customServiceVar.buildCustomActionAfter('update', entity)»
+			      «IF slotForFocus !== null»
+			      «callDefaultElementSetFocus»
+			      «ENDIF»
 			    })
 			    .catch(error => {
 			      this.messageHandler.showError(error);
@@ -342,6 +385,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			get«dtoName»ById(id: string) {
 				«buildCustomActionBefore(new ActionConfig()
+					.setEntity(entity)
 					.setCustomServiceName(customServiceVar)
 					.setAction('getById')
 					.setParams(Arrays.asList('id'))
@@ -351,6 +395,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    .then((«fieldName») => { 
 			    	this.«fieldName» = «fieldName»;
 			    	«buildCustomActionAfter(new ActionConfig()
+					.setEntity(entity)
 					.setCustomServiceName(customServiceVar)
 					.setAction('getById')
 					.setParams(Arrays.asList('id'))
@@ -471,6 +516,16 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ENDIF»
 			
 			«entity.slots.filter[it.onChange].map[mountSlotOnChange].join('\n\r')»
+			«IF slotForFocus !== null»
+						
+			«getDefaultElementSetFocusMethodName»() {
+				try {
+			    	this.defaultElementRef.«IF slotForFocus.isEntity»focusInput()«ELSE»nativeElement.focus()«ENDIF»;
+			    } catch (error) {
+			    	console.log('Error setting focus at «getDefaultElementSetFocusMethodName»:' + error);
+			    }
+			}
+			«ENDIF»
 		}
 		'''
 		
@@ -525,6 +580,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence mountSlotOnChange(Slot slot) {
 		val config = new ActionConfig()
+			.setEntity(slot.ownerEntity)
 			.setCustomServiceName(slot.ownerEntity.toEntityWebCustomServiceVarName)
 			.setAction(slot.fieldName.concat('Change'))
 			.setParams(Arrays.asList('event'))
@@ -534,21 +590,27 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 		'''
 		«slot.fieldName»Change(event: any) {
+			«IF config.entity.enableWebCustomService»
 			«buildCustomActionBefore(config)»
+			«ELSE»
+			// Do nothing yet.
+			«ENDIF»
 		}
 		'''
 	}
 	
-	def CharSequence buildCustomActionBefore(String customServiceName, String action) {
+	def CharSequence buildCustomActionBefore(String customServiceName, String action, Entity entity) {
 		val config = new ActionConfig()
+		.setEntity(entity)
 		.setCustomServiceName(customServiceName)
 		.setAction(action)
 		
 		buildCustomActionBefore(config)
 	}
 	
-	def CharSequence buildCustomActionAfter(String customServiceName, String action) {
+	def CharSequence buildCustomActionAfter(String customServiceName, String action, Entity entity) {
 		val config = new ActionConfig()
+		.setEntity(entity)
 		.setCustomServiceName(customServiceName)
 		.setAction(action)
 		
@@ -566,6 +628,13 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 	}
 		
 	def CharSequence buildCustomAction(ActionConfig config) {
+		if (config.entity === null) {
+			throw new IllegalArgumentException('ActionConfig.entity cannot be null.')
+		}
+		
+		if (/*config.entity === null || */!config.entity.enableWebCustomService)  {
+			return ''
+		}
 		
 		val sbMethoCall = new StringBuilder
 		val sbMethoDefine = new StringBuilder
@@ -987,7 +1056,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		        this.messageHandler.showError('Campo \'«refFieldText»\' deve ser informado para gerar cópias.');
 		        return;
 		      }
-		      «customServiceVarName.buildCustomActionBefore(actionName.toString)»
+		      «customServiceVarName.buildCustomActionBefore(actionName.toString, entity)»
 		      // Begin validation for past dates
 		      const «refFieldName»FirstCopy = moment(«refField»).add(1, 'month');
 		      const today = moment();
@@ -1004,7 +1073,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 						this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
 				    	.then(() => {
 				    		this.messageHandler.showSuccess('Operação realizada com sucesso!');
-				    		«customServiceVarName.buildCustomActionAfter(actionName.toString)»
+				    		«customServiceVarName.buildCustomActionAfter(actionName.toString, entity)»
 				    	}).
 				    	catch(error => {
 					    	const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
@@ -1021,7 +1090,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 		        this.copiesReferenceFieldInterval, this.«entityVar».«grouperField.fieldName»)
 			    .then(() => {
 		        	this.messageHandler.showSuccess('Operação realizada com sucesso!');
-			  		«customServiceVarName.buildCustomActionAfter(actionName.toString)»
+			  		«customServiceVarName.buildCustomActionAfter(actionName.toString, entity)»
 			    }).
 			    catch(error => {
 		        	const message =  JSON.parse(error._body).message || 'Não foi possível realizar a operação';
