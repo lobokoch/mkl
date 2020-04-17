@@ -172,6 +172,15 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 				«entityServiceVar».delete(«idVar»);
 			}
 			
+			@ResponseStatus(HttpStatus.NO_CONTENT)
+			@PostMapping("/«buildEntityDeleteInBulkMethdNameWithoutParams»")
+			«IF isEnableDoc»
+			@ApiOperation(value = "Delete a list of «title» by ids.")
+			«ENDIF»
+			public void «buildEntityDeleteInBulkMethdNameWithoutParams»(@RequestBody java.util.List<«idType»> idList) {
+				«entityServiceVar».«buildEntityDeleteInBulkMethdNameCall»;
+			}
+			
 			@Transactional(readOnly = true)
 			@GetMapping
 			«IF isEnableDoc»

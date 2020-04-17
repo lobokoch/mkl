@@ -213,7 +213,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«ENDIF»
 			«IF slotForFocus !== null»
 			
-			@ViewChild('«slotForFocus.webElementRefName»', {static: true}) defaultElementRef: «IF slotForFocus.isEntity»AutoComplete«ELSE»ElementRef«ENDIF»;
+			@ViewChild('«slotForFocus.webElementRefName»', {static: true}) «entity.getWebDefaultElementRefName»: «IF slotForFocus.isEntity»AutoComplete«ELSE»ElementRef«ENDIF»;
 			«ENDIF»
 			
 			constructor(
@@ -266,10 +266,10 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    «customServiceVar.buildCustomActionAfter('onInit', entity)»
 			    «IF slotForFocus !== null»
 			    «IF !slotForFocus.isEntity»
-			    «callDefaultElementSetFocus»
+			    «entity.callDefaultElementSetFocus»
 			    «ELSE»
 			    setTimeout(function() {
-			    	«callDefaultElementSetFocus»
+			    	«entity.callDefaultElementSetFocus»
 			    }.bind(this), 1);
 			    «ENDIF»
 			    «ENDIF»
@@ -277,7 +277,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			«generateGetShowHideHelpLabel»
 			
-			begin(form: FormControl) {
+			«entity.getWebFormBeginMethodName»(form: FormControl) {
 			    form.reset();
 			    setTimeout(function() {
 			    	«customServiceVar.buildCustomActionBefore('onNewRecord', entity)»
@@ -295,7 +295,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 				  «ENDIF»
 				  «customServiceVar.buildCustomActionAfter('onNewRecord', entity)»
 				  «IF slotForFocus !== null»
-				  «callDefaultElementSetFocus»
+				  «entity.callDefaultElementSetFocus»
 				  «ENDIF»
 			    }.bind(this), 1);
 			}
@@ -312,7 +312,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			    });
 			}
 			
-			save(form: FormGroup) {
+			«entity.getWebFormSaveMethodName»(form: FormGroup) {
 				if (!form.valid) {
 			      this.validateAllFormFields(form);
 			      return;
@@ -343,6 +343,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«IF !rulesFormBeforeSave.empty»
 			«rulesFormBeforeSave.generateRulesFormBeforeSave»
 			«ENDIF»
+			
 			create() {
 				«customServiceVar.buildCustomActionBefore('create', entity)»
 				«IF !rulesFormOnCreate.empty»
@@ -355,7 +356,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.messageHandler.showSuccess('Registro criado com sucesso!');
 			      «customServiceVar.buildCustomActionAfter('create', entity)»
 			      «IF slotForFocus !== null»
-			      «callDefaultElementSetFocus»
+			      «entity.callDefaultElementSetFocus»
 			      «ENDIF»
 			    }).
 			    catch(error => {
@@ -375,7 +376,7 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			      this.messageHandler.showSuccess('Registro alterado!');
 			      «customServiceVar.buildCustomActionAfter('update', entity)»
 			      «IF slotForFocus !== null»
-			      «callDefaultElementSetFocus»
+			      «entity.callDefaultElementSetFocus»
 			      «ENDIF»
 			    })
 			    .catch(error => {
@@ -518,11 +519,11 @@ class WebEntityCRUDComponentTSGenerator extends GeneratorExecutor implements IGe
 			«entity.slots.filter[it.onChange].map[mountSlotOnChange].join('\n\r')»
 			«IF slotForFocus !== null»
 						
-			«getDefaultElementSetFocusMethodName»() {
+			«entity.getDefaultElementSetFocusMethodName»() {
 				try {
-			    	this.defaultElementRef.«IF slotForFocus.isEntity»focusInput()«ELSE»nativeElement.focus()«ENDIF»;
+			    	this.«entity.webDefaultElementRefName».«IF slotForFocus.isEntity»focusInput()«ELSE»nativeElement.focus()«ENDIF»;
 			    } catch (error) {
-			    	console.log('Error setting focus at «getDefaultElementSetFocusMethodName»:' + error);
+			    	console.log('Error setting focus at «entity.getDefaultElementSetFocusMethodName»:' + error);
 			    }
 			}
 			«ENDIF»

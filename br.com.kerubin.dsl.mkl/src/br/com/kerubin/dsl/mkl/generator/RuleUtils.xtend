@@ -33,6 +33,8 @@ import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBoolean
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotTrue
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsTrue
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsFalse
+import br.com.kerubin.dsl.mkl.model.BooleanObject
+import br.com.kerubin.dsl.mkl.model.EnumObject
 
 class RuleUtils {
 	
@@ -436,10 +438,37 @@ class RuleUtils {
 			val object = (abstratcValue as NullObject)
 			valueExp = object.nullValue
 		} 
+		else if (abstratcValue instanceof BooleanObject) {
+			val object = (abstratcValue as BooleanObject)
+			valueExp = object.getBooleanObjectValue
+		} 
+		else if (abstratcValue instanceof EnumObject) {
+			val object = (abstratcValue as EnumObject)
+			valueExp = object.getEnumObjectValue(slot.ownerEntity, imports)
+		} 
 		
 		'''
 		«slot.buildMethodSet(targetObject, valueExp)»;
 		'''
+	}
+	
+	def static getEnumObjectValue(EnumObject enumObject, Entity entity, Set<String> imports) {
+		val enumeration = enumObject.enumeration
+		val enumItem = enumObject.enumItem
+		val result = enumeration.name + '.' + enumItem
+		val importValue = entity.getImportExternalEnumeration(enumeration)
+		imports.add(importValue)
+		
+		result
+	}
+	
+	def static getBooleanObjectValue(BooleanObject booleanObject) {
+		if (booleanObject !== null && booleanObject.value !== null) {
+			'Boolean.' + booleanObject.value.toString.toUpperCase				
+		}
+		else {
+			'Boolean.FALSE'
+		}
 	}
 	
 	def static getNumberValue(Slot slot, NumberObject numberObject, Set<String> imports) {

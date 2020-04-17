@@ -1108,6 +1108,15 @@ class EntityUtils {
 		entity.name.toFirstUpper
 	}
 	
+	def static toEntityAcronymName(Entity entity) {
+		val result = entity.toEntityName
+			.splitByCharacterTypeCamelCase
+			.map[it.charAt(0).toString]
+			.join.toLowerCase
+			
+		result
+	}
+	
 	def static toDtoName(Enumeration enumeration) {
 		enumeration.name.toFirstUpper
 	}
@@ -1313,6 +1322,14 @@ class EntityUtils {
 	
 	def static getFieldName(Slot slot) {
 		slot.name.toFirstLower
+	}
+	
+	def static getFieldNameFull(Slot slot) {
+		slot.ownerEntity.fieldName.concat('_').concat(slot.fieldName)
+	}
+	
+	def static getFieldNameFullUpper(Slot slot) {
+		slot.ownerEntity.fieldName.toFirstUpper.concat('_').concat(slot.fieldName)
 	}
 	
 	def static getFieldNameAsSet(Slot slot) {
@@ -1542,12 +1559,12 @@ class EntityUtils {
 	}
 	
 	def static toRuleWithSlotAppyStyleClassMethodName(Slot slot) {
-		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyStyleClass'
+		val name = '''rule«slot.ownerEntity.fieldName.toFirstUpper»_«slot.fieldName.toFirstUpper»AppyStyleClass'''
 		name
 	}
 	
 	def static toRuleWithSlotAppyHiddeComponentMethodName(Slot slot) {
-		val name = 'rule' + slot.fieldName.toFirstUpper + 'AppyHiddeComponent'
+		val name = '''rule«slot.ownerEntity.fieldName.toFirstUpper»_«slot.fieldName.toFirstUpper»AppyHiddeComponent'''
 		name
 	}
 	
@@ -2278,24 +2295,54 @@ class EntityUtils {
 		text
 	}
 	
+	def static buildEntityDeleteInBulkMethdNameWithoutParams() {
+		'''deleteInBulk'''
+	}
+	
+	def static buildEntityDeleteInBulkMethdName(Entity entity) {
+		val idType = if (entity.id.isEntity) entity.id.asEntity.id.toJavaType else entity.id.toJavaType
+		
+		'''void «buildEntityDeleteInBulkMethdNameWithoutParams»(java.util.List<«idType»> idList)'''
+	}
+	
+	def static buildEntityDeleteInBulkMethdNameCall() {
+		'''«buildEntityDeleteInBulkMethdNameWithoutParams»(idList)'''
+	}
+	
 	def static Slot getDefaultSlotForFocus(Entity entity) {
 		var result = entity.slots.findFirst[it.autoFocus] ?: entity.slots.findFirst[!it.isHiddenSlot && it !== it.ownerEntity.id]
 		result
 	}
 	
+	def static getWebFormBeginMethodName(Entity entity) {
+		'begin'.concat(entity.getWebFormName.toFirstUpper)
+	}
+	
+	def static getWebFormSaveMethodName(Entity entity) {
+		'save'.concat(entity.getWebFormName.toFirstUpper)
+	}
+	
+	def static getWebFormName(Entity entity) {
+		'form'.concat(entity.fieldName.toFirstUpper)
+	}
+	
+	def static getWebDefaultElementRefName(Entity entity) {
+		entity.fieldName.concat('DefaultElementRef')
+	}
+	
 	def static getWebElementRefName(Slot slot) {
-		slot.fieldName + 'ElementRef'
+		slot.fieldNameFull + '_elementRef'
 	}
 	
 	def static getWebElementRef(Slot slot) {
 		'#' + slot.getWebElementRefName
 	}
 	
-	def static getDefaultElementSetFocusMethodName() {
-		'defaultElementSetFocus'
+	def static getDefaultElementSetFocusMethodName(Entity entity) {
+		entity.fieldName.concat('DefaultElementSetFocus')
 	}
 	
-	def static callDefaultElementSetFocus() {
-		'''this.«getDefaultElementSetFocusMethodName»();'''
+	def static callDefaultElementSetFocus(Entity entity) {
+		'''this.«entity.getDefaultElementSetFocusMethodName»();'''
 	}
 }

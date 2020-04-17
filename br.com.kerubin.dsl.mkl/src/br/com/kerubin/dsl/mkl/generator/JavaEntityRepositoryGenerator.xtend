@@ -37,9 +37,13 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy]
 		val findBy = findBySlots.map[it.generateRepositoryFindByForEntity].join
 		
+		// Due deleteInBulk
+		entity.addImport('import org.springframework.data.jpa.repository.Query;')
+		entity.addImport('import org.springframework.data.jpa.repository.Modifying;')
+		entity.addImport('import org.springframework.transaction.annotation.Transactional;')
+		
 		if (hasAutoComplete) {
 			entity.addImport('import java.util.Collection;')
-			entity.addImport('import org.springframework.data.jpa.repository.Query;')
 		}
 		
 		val isBaseRepository = entity.isBaseRepository
@@ -65,6 +69,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		@Transactional(readOnly = true)
 		«ENDIF»
 		public interface «entity.toRepositoryName» extends JpaRepository<«entity.toEntityName», «idType»>, QuerydslPredicateExecutor<«entity.toEntityName»> {
+			«entity.generateDeleteInBulk»
 			«IF hasAutoComplete»
 			
 			// WARNING: supports only where clause with like for STRING fields. For relationships entities will get the first string autocomplete key field name.
@@ -81,6 +86,19 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			// End generated findBy
 			«ENDIF»
 		}
+		'''
+	}
+	
+	def CharSequence generateDeleteInBulk(Entity entity) {
+		val alias = entity.toEntityAcronymName
+		
+		'''
+		
+		@Transactional
+		@Modifying
+		@Query("delete from «entity.toEntityName» «alias» where «alias».id in ?1")
+		«entity.buildEntityDeleteInBulkMethdName»;
+		
 		'''
 	}
 	

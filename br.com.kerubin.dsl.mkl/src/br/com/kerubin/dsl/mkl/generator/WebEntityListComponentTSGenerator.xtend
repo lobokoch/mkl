@@ -1,30 +1,15 @@
 package br.com.kerubin.dsl.mkl.generator
 
 import br.com.kerubin.dsl.mkl.model.Entity
-import br.com.kerubin.dsl.mkl.model.FieldObject
-import br.com.kerubin.dsl.mkl.model.NumberObject
 import br.com.kerubin.dsl.mkl.model.Rule
 import br.com.kerubin.dsl.mkl.model.RuleTarget
-import br.com.kerubin.dsl.mkl.model.RuleWhenExpression
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBefore
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsBetween
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNotNull
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsNull
-import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsSame
-import br.com.kerubin.dsl.mkl.model.RuleWhenOperator
-import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalConstants
-import br.com.kerubin.dsl.mkl.model.RuleWhenTemporalValue
 import br.com.kerubin.dsl.mkl.model.Slot
-import br.com.kerubin.dsl.mkl.model.TemporalFunction
-import br.com.kerubin.dsl.mkl.model.TemporalFunctionNextDays
-import br.com.kerubin.dsl.mkl.model.TemporalObject
 import br.com.kerubin.dsl.mkl.util.StringConcatenationExt
+import java.util.Map.Entry
 
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
-import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
-import java.util.Map.Entry
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -411,7 +396,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 	
 	def CharSequence buildRuleForGridRowStyleClass(Rule rule) {
 		val resultStrExp = new StringBuilder
-		rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp)
+		rule.when.expression.buildRuleWhenForGridRowStyleClass(resultStrExp, false)
 		val exp = resultStrExp.toString
 		'''
 		
@@ -421,7 +406,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		'''
 	}
 	
+	/*
+	// DEPRECADO, mudei para usar o método geral, só testar e se tudo deu certo, pode remover esse método.
 	def void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp) {
+		
+		
 		if (expression ===  null) {
 			return
 		}
@@ -509,16 +498,16 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			resultStrExp.concatSB(expression.operator.adaptRuleWhenOperator)
 			expression.rigth.buildRuleWhenForGridRowStyleClass(resultStrExp)
 		}
-	}
+	}*/
 	
-	def StringBuilder insertSB(StringBuilder sb, String value) {
+	/*def private StringBuilder insertSB(StringBuilder sb, String value) {
 		if (sb.length > 0) {
 			sb.append(' ')
 		}
 		sb.append(value);
 	}
 	
-	def String adaptRuleWhenOperator(RuleWhenOperator operator) {
+	def private String adaptRuleWhenOperator(RuleWhenOperator operator) {
 		val opValue = operator.operator
 		switch (opValue) {
 			case 'and': {
@@ -533,7 +522,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		}
 	}
 	
-	def String getGetTemporalValue(RuleWhenTemporalValue temporalValue) {
+	def private String getGetTemporalValue(RuleWhenTemporalValue temporalValue) {
 		if (temporalValue.temporalObject !== null) {
 			val tempObj = temporalValue.temporalObject
 			if (tempObj.temporalFuncation !== null) {
@@ -550,11 +539,11 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		}
 	}
 	
-	def String toDateMoment(String objectName) {
+	def private String toDateMoment(String objectName) {
 		'moment(' + objectName + ')'
 	}
 	
-	def String getTemporalFuncationValue(TemporalFunction tf) {
+	def private String getTemporalFuncationValue(TemporalFunction tf) {
 		var result = '<INVALID_TEMPORAL_FUNCTION>'
 		if (tf instanceof TemporalFunctionNextDays) {
 			val func = tf as TemporalFunctionNextDays
@@ -565,7 +554,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		
 	}
 	
-	def String getTemporalConstantValue(RuleWhenTemporalConstants tc) {
+	def private  String getTemporalConstantValue(RuleWhenTemporalConstants tc) {
 		switch (tc) {
 			case RuleWhenTemporalConstants.TOMORROW: {
 				"moment().add(1, 'day')"
@@ -580,7 +569,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 				'moment()' // Today
 			}
 		}
-	}
+	}*/
 		
 	def CharSequence generateAutoCompleteMethod(Slot slot) {
 		val entity = slot.ownerEntity

@@ -190,8 +190,8 @@ WebAnalitycs:
 	'@webAnalitycs'
 	'(' 
 		(
-			('enabled' ':' enable = BooleanObject)? & // Default true
-			('onlyInProduction' ':' onlyInProduction = BooleanObject)? & // Default true 
+			('enabled' ':' enable = BooleanValue)? & // Default true
+			('onlyInProduction' ':' onlyInProduction = BooleanValue)? & // Default true 
 			('tagId' ':' id = STRING)
 		)
 	')'	
@@ -202,7 +202,7 @@ MessagingEventHandler:
 	'@messagingEventHandler'
 	('(' 
 		(
-			('enabled' ':' enable = BooleanObject)
+			('enabled' ':' enable = BooleanValue)
 		)
 	')')?
 ;
@@ -324,9 +324,9 @@ SlotSeparator:
 	'separator' 
 	(
 	'('
-		('enabled' ':' enabled = BooleanObject)? &
-		('before' ':' before = BooleanObject)? &
-		('after' ':' after = BooleanObject)? &
+		('enabled' ':' enabled = BooleanValue)? &
+		('before' ':' before = BooleanValue)? &
+		('after' ':' after = BooleanValue)? &
 		('styleClass' ':' styleClass = STRING)?
 	')'	
 	)?
@@ -542,6 +542,7 @@ NumberObject:
 	value = EDoubleType
 ;
 
+
 EDoubleType returns ecore::EDouble:
 	INT ('.' INT)?
 ;
@@ -705,7 +706,7 @@ FieldAssignExpression:
 ;
 
 FieldAndValue:
-	field = FieldObject '=' value = (FieldObject | TemporalObject | NumberObject | NullObject)
+	field = FieldObject '=' value = (FieldObject | TemporalObject | NumberObject | NullObject | BooleanObject | EnumObject)
 ;
 
 //  x + (x) + (( x + y) * x + y) 
@@ -910,7 +911,11 @@ enum AssociationType:
 	CONTAINS = 'contains' |	REFERS = 'refers'
 ;
 
-BooleanObject returns ecore::EBooleanObject:
+BooleanObject:
+	value = BooleanValue
+;
+
+BooleanValue returns ecore::EBooleanObject:
 	'false' | 'true'
 ;
 

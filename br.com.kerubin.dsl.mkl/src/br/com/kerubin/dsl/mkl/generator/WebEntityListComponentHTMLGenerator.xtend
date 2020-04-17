@@ -46,6 +46,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		  	<div class="ui-g">
 				«entity.generateHTMLFilters»
+				«IF !hasHideWebListActions»
+				«entity.generateHTMLButtonsOnTop»
+				«ENDIF»
 				«entity.generateHTMLGrid»
 				«IF !hasHideWebListActions»
 				«entity.generateHTMLButtons»
@@ -461,7 +464,15 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		return ''
 	}
 	
+	def CharSequence generateHTMLButtonsOnTop(Entity entity) {
+		entity.generateHTMLButtons(true)
+	}
+	
 	def CharSequence generateHTMLButtons(Entity entity) {
+		entity.generateHTMLButtons(false)
+	}
+	
+	def CharSequence generateHTMLButtons(Entity entity, boolean showOnTop) {
 		val ruleFormCrudButtons = entity.getRuleFormCrudButtons
 		
 		val crudButtons = ruleFormCrudButtons?.apply?.crudButtons
@@ -469,11 +480,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 		
-		<div class="ui-g-12 crud-buttons">
+		<!-- Begin buttons -->
+		<div class="ui-g-12 «IF showOnTop»crud-buttons-top kb-mobile-only«ELSE»crud-buttons-bottom«ENDIF»">
 		  <div class="ui-g-12 ui-md-2 ui-fluid">
 		    <a routerLink="/«entity.toWebName»/novo" pButton «buttonNew»></a>
 		  </div>
 		</div>
+		<!-- End buttons -->
 		
 		'''
 	}

@@ -285,6 +285,10 @@ class NumberObject extends AbstractObject {
 	Double value
 }
 
+class BooleanObject extends AbstractObject {
+	Boolean value
+}
+
 class NullObject extends AbstractObject {
 	String nullValue
 }

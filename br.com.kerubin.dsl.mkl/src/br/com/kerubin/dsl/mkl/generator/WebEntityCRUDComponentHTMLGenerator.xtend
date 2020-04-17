@@ -55,9 +55,9 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		<div class="container">
 			«entity.generateEntityTitle»
 		
-		  <form #form1="ngForm" (ngSubmit)="save(form1.form)">
+		  <form #«entity.getWebFormName»="ngForm" (ngSubmit)="«entity.getWebFormSaveMethodName»(«entity.getWebFormName».form)">
 		  	<div class="ui-g">
-		  	
+				«entity.generateButtonsOnTop»
 				«entity.generateEntityFields»
 				«IF !rules.empty»«entity.generateEntityCopies(rules.head)»«ENDIF»
 				«entity.generateButtons»
@@ -149,7 +149,15 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
+	def CharSequence generateButtonsOnTop(Entity entity) {
+		entity.generateButtons(true)
+	}
+	
 	def CharSequence generateButtons(Entity entity) {
+		entity.generateButtons(false)
+	}
+	
+	def CharSequence generateButtons(Entity entity, boolean showOnTop) {
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
 		val hasRulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD.size > 0
 		val ruleFormWithDisableCUDMethodName = entity.toRuleFormWithDisableCUDMethodName
@@ -163,12 +171,13 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 		
-		<div class="ui-g-12 crud-buttons">
+		<!-- Begin buttons -->
+		<div class="ui-g-12 «IF showOnTop»crud-buttons-top kb-mobile-only«ELSE»crud-buttons-bottom«ENDIF»">
 			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<button«IF hasRulesFormWithDisableCUD» [disabled]="«ruleFormWithDisableCUDMethodName»()"«ENDIF» pButton type="submit" «buttonSave»></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
-				<button pButton (click)="begin(form1)" type="button" «buttonNew»></button>
+				<button pButton (click)="«entity.getWebFormBeginMethodName»(«entity.getWebFormName»)" type="button" «buttonNew»></button>
 			</div>
 			<div class="ui-g-12 ui-md-2 ui-fluid">
 				<a routerLink="/«entity.toWebName»" pButton «buttonBack»></a>
@@ -182,6 +191,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			<!-- End rule functions -->
 			«ENDIF»
 		</div>
+		<!-- End buttons -->
 		
 		'''
 	}
@@ -286,7 +296,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		slot.isToMany
 		«ELSE»
 		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»«IF ruleWithSlotAppyHiddeComponent !== null» «slot.toRuleWithSlotAppyHiddeComponentHTMLDirective»«ENDIF»>
-			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldName»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>
+			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldNameFull»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>
 				«slot.webLabel»
 				«IF !slot.isOptional && !slot.isHiddenSlot»<span class="kb-label-required">*</span>«ENDIF»
 				«IF help !== null»
@@ -389,7 +399,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateComponentMessages(Slot slot, StringConcatenationExt builder) {
 		if (!slot.UUID && !slot.optional) {
-			builder.add('''<div class="invalid-message" *ngIf="«slot.fieldName».invalid && «slot.fieldName».dirty">Campo obrigatório.</div>''')
+			builder.add('''<div class="invalid-message" *ngIf="«slot.fieldNameFull».invalid && «slot.fieldNameFull».dirty">Campo obrigatório.</div>''')
 		}
 	}
 	
@@ -488,12 +498,12 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def void decorateWebComponentName(Slot slot, StringConcatenationExt builder) {
-		builder.concat(''' name="«slot.fieldName»"''')
+		builder.concat(''' name="«slot.fieldNameFull»"''')
 	}
 	
 	def void decorateWebComponentOnChange(Slot slot, StringConcatenationExt builder) {
 		if (slot.onChange) {
-			builder.concat(''' (onChange)="«slot.fieldName»Change($event)"''')
+			builder.concat(''' (onChange)="«slot.fieldNameFull»Change($event)"''')
 		}
 	}
 	
@@ -509,7 +519,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	
 	def void decorateWebComponentNgModel(Slot slot, StringConcatenationExt builder) {
-			builder.concat(''' #«slot.fieldName»="ngModel" [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
+			builder.concat(''' #«slot.fieldNameFull»="ngModel" [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
 			// builder.concat(''' #«slot.fieldName»="ngModel" ngModel [(ngModel)]="«slot.ownerEntity.fieldName».«slot.fieldName»"''')
 	}
 	
@@ -524,8 +534,8 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 				builder.concat('>')
 				isOpenTagClosed = true
 				builder.addIndent('''
-					<ng-template let-«slot.fieldName» pTemplate="item">
-						<div class="ui-helper-clearfix">{{ «slot.webAutoCompleteFieldConverter»(«slot.fieldName») }}</div>
+					<ng-template let-«slot.fieldNameFull» pTemplate="item">
+						<div class="ui-helper-clearfix">{{ «slot.webAutoCompleteFieldConverter»(«slot.fieldNameFull») }}</div>
 					</ng-template>
 				''')
 			}

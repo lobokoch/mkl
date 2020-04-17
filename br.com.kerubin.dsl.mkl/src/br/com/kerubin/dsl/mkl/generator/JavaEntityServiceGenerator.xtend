@@ -82,6 +82,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			
 			public void delete(«idType» «idVar»);
 			
+			public «entity.buildEntityDeleteInBulkMethdName»;
+			
 			public Page<«entityName»> list(«entity.toEntityListFilterClassName» «entity.toEntityListFilterName», Pageable pageable);
 			
 			«IF entity.hasAutoComplete»
@@ -386,6 +388,16 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 				// Replicate the delete event.
 				publishEvent(entity, «entityEventName».«entity.toEntityEventConstantName('deleted')»);
 				«ENDIF»
+			}
+			
+			@Transactional
+			@Override
+			public «entity.buildEntityDeleteInBulkMethdName» {
+				// Delete it.
+				«repositoryVar».«buildEntityDeleteInBulkMethdNameCall»;
+				
+				// Force flush to the database, for relationship validation and must throw exception because of this here.
+				«repositoryVar».flush();
 			}
 			
 			«IF entity.hasPublishEntityEvents»

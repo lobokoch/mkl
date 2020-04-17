@@ -45,6 +45,7 @@ import br.com.kerubin.dsl.mkl.model.ModelFactory
 import br.com.kerubin.dsl.mkl.model.RuleError
 import java.text.MessageFormat
 import br.com.kerubin.dsl.mkl.model.RuleWhenOpIsAfter
+import br.com.kerubin.dsl.mkl.model.BooleanObject
 
 class RuleWebUtils {
 	
@@ -106,6 +107,10 @@ class RuleWebUtils {
 			val object = (abstratcValue as NullObject)
 			valueExp = object.nullValue
 		} 
+		else if (abstratcValue instanceof BooleanObject) {
+			val object = (abstratcValue as BooleanObject)
+			valueExp = object.value.toString
+		} 
 		
 		'''
 		«slot.buildMethodSetForTypeScript(valueExp)»
@@ -113,7 +118,11 @@ class RuleWebUtils {
 	}
 	
 	def static void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp) {
-		expression.buildRuleWhenExpression(resultStrExp)
+		expression.buildRuleWhenExpression(resultStrExp, true)
+	}
+	
+	def static void buildRuleWhenForGridRowStyleClass(RuleWhenExpression expression, StringBuilder resultStrExp, boolean isThis) {
+		expression.buildRuleWhenExpression(resultStrExp, isThis)
 	}
 	
 	def static void buildRuleApplyFieldMathExpression(FieldMathExpression fieldMathExpression, StringBuilder result) {
