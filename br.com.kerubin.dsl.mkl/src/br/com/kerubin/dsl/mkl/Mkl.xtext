@@ -122,6 +122,15 @@ Help:
 	')'
 ;
 
+Unaccent:
+{Unaccent}
+	'unaccent' (
+	'('
+		
+	')'
+	)?
+;
+
 Label:
 {Label}	
 	('@label' | 'label') '('
@@ -298,6 +307,8 @@ Slot:
 			(lookupKey?='lookupKey')? &
 			(lookupResult?='lookupResult')? &
 			(help = Help)? &
+			(unaccent = Unaccent)? &
+			
 			('label' ':' label=STRING)? &
 			//('labelGrid' ':' labelGrid=STRING)? &
 			(sumField = SumField)? &

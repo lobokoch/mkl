@@ -178,6 +178,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		val slots = #[slot]
 		
 		'''
+		
 		// WARNING: supports only where clause with like for STRING fields. For relationships entities will get the first string autocomplete key field name.
 		@Query("«slot.ownerEntity.generateAutoCompleteSQL(slots, slots)»")
 		Collection<«autoComplateName.toFirstUpper»> «autoComplateName»(@Param("query") String query);
@@ -196,7 +197,10 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		sql.append(" from ").append(entity.toEntityName).append(" ").append(alias)
 		sql.append(" where ")  // do not support where in fields that is not STRING yeat
 		val keyFields = slotKeyFields.filter[it.isString || it.isEntity].map[it | // it.name.toFirstLower
-			"( upper(" + alias + "." + it.resolveAutocompleteFieldName + ") like upper(concat('%', :query, '%')) )"
+			val query = if (it.hasUnassent) 'unaccent(:query)' else ':query'
+			val beginUpper = if (it.hasUnassent) 'upper(unaccent(' else 'upper('
+			val endUpper = if (it.hasUnassent) '))' else ')'
+			"( " + beginUpper + alias + "." + it.resolveAutocompleteFieldName + endUpper + " like upper(concat('%', " + query + ", '%')) )"
 		].join(" or ")
 		sql.append(keyFields)
 		

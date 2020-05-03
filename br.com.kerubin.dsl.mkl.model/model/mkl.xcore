@@ -25,6 +25,10 @@ class Help extends BaseHelp {
 	}
 }
 
+class Unaccent {
+	
+}
+
 class Label {
 	String title
 	String shortTitle
@@ -1073,6 +1077,7 @@ class Slot extends Element {
 	contains RepositoryFindBy[] repositoryFindBy opposite ownerSlot
 	
 	contains Help help
+	contains Unaccent unaccent
 	String label
 	//String labelGrid
 	String mask
@@ -1086,6 +1091,10 @@ class Slot extends Element {
 	contains Relationship relationship opposite ownerSlot
 	String[] annotations
 	container Slotted ownerObject opposite slots
+	
+	op boolean hasUnassent() {
+		return unaccent !== null
+	}
 	
 	op boolean hasSeparator() {
 		return separator !== null && separator.enabled
