@@ -95,6 +95,7 @@ Entity:
 		(publishEntityEvents=PublishEntityEvents)? & 
 		(enableReplication?='@enableReplication')? &
 		(enableWebCustomService?='@enableWebCustomService')? &
+		(enableWebCustomListService?='@enableWebCustomListService')? &
 		(disableWebAnalytics?='@disableWebAnalytics')? &
 		(secure?='@secure')? &
 		(mapped?='@mapped')? &
@@ -585,6 +586,7 @@ RuleApply:
 		('equation' '(' fieldMathExpression = FieldMathExpression ')')? &
 		(actionExpression = FieldAssignExpression)? &
 		(makeCopiesExpression = MakeCopiesExpression)? &
+		(addColumnExpression = AddColumnExpression)? &
 		(searchCEPExpression = SearchCEPExpression)? &
 		(disableCUD = DisableCUD)? &
 		(disableComponent = DisableComponent)? &
@@ -684,6 +686,20 @@ MakeCopiesExpression:
 	')'
 ;
 
+AddColumnExpression:
+	'addColumn' '('
+		(
+			('name' ':' name = STRING) &
+			('title' ':' title = STRING) &
+			('position' ':' position = INT) &
+			('align' ':' align = 'left' | 'center' | 'right')? &
+			('styleClass' ':' styleClass = STRING)? & 
+			('styleCss' ':' styleCss = STRING)? &
+			('columnWidth' ':' columnWidth = STRING)?
+		)
+	')'
+;
+
 SearchCEPExpression:
 	'searchCEP' '('
 		(
@@ -744,10 +760,12 @@ RuleTargetField:
 ;
 
 RuleTargetEnum:
-	target = RuleTarget
+	(target = RuleTarget) | (target = RuleTarget '[' (range += INT (',' range += INT)*) ']' ('.' 'group' '(' group = STRING ')')?)
 ;
 
 enum RuleTarget:
+	 GRID='grid' | 
+	 GRID_COLUMNS='grid.columns' | 
 	 GRID_ROWS='grid.rows' | 
 	 GRID_ROW_CELL='grid.row.cell' | 
 	 GRID_SUMROW_LAST_CELL = 'grid.sumRow.lastCell' |
@@ -785,6 +803,8 @@ Grid:
 			(noCurrencySimbol ?= 'noCurrencySimbol')? &
 			('label' ':' label = STRING)? &
 			('columnWidth' ':' columnWidth = STRING)? &
+			('columnAlign' ':' columnAlign = STRING)? &
+			('columnStyle' ':' columnStyle = STRING)? &
 			(showDataWithIcon = ShowDataWithIcon)? &
 			('styleClass' ':' styleClass = STRING)?
 		)

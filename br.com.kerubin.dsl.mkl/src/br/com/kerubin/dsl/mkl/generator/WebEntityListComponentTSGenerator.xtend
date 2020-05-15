@@ -10,10 +10,14 @@ import java.util.Map.Entry
 import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleWebUtils.*
+import java.util.LinkedHashSet
 
 class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
 	StringConcatenationExt imports
+	
+	val LinkedHashSet<String> customActions = newLinkedHashSet
+	val LinkedHashSet<String> customActionsImport = newLinkedHashSet
 	
 	val periodItems = newLinkedHashMap(
 		'Minha competência' -> '12',
@@ -51,11 +55,66 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val path = entity.webEntityPath
 		val entityFile = path + entity.toEntityWebListComponentName + '.ts'
 		generateFile(entityFile, entity.doGenerateEntityComponentTS)
+		
+		if (entity.enableWebCustomListService) {
+			val fileName = path + entity.toEntityWebListCustomServiceFileName + '.ts'
+			generateFile(fileName, entity.doGenerateEntityTSListCustomService)
+		}
+	}
+	
+	def CharSequence doGenerateEntityTSListCustomService(Entity entity) {
+		val customServiceName = entity.toEntityWebCustomListServiceClassName
+		
+		val component = entity.toEntityWebListComponentName
+		val componentClassName = entity.toEntityWebListClassName
+		
+		'''
+		import { «componentClassName» } from './«component»';
+		import { Injectable } from '@angular/core';
+		
+		«customActionsImport.map[it].join»
+		
+		@Injectable()
+		export class «customServiceName» {
+		
+		  component: «componentClassName»;
+		
+		  setComponent(component: «componentClassName») {
+		    this.component = component;
+		  }
+		
+		  «customActions.map[it.generateActionDefinition].join»
+		
+		}
+		
+		'''	
+	}
+	
+	def CharSequence generateActionDefinition(String methodDef) {
+		
+		var String returnValue = null
+		if (methodDef.endsWith(': boolean')) {
+			returnValue = 'return true'
+		} else if (methodDef.endsWith(': string')) {
+			returnValue = 'return null'
+		} 
+		
+		'''
+		
+		«methodDef» {
+			// This method can be overridden.
+			«IF returnValue !== null»
+			«returnValue»;
+			«ENDIF»
+		}
+		
+		'''
 	}
 	
 	def CharSequence doGenerateEntityComponentTS(Entity entity) {
 		imports = new StringConcatenationExt()
 		
+		val webName = entity.toWebName
 		val dtoName = entity.toDtoName
 		val fieldName = entity.fieldName
 		val serviceName = entity.toEntityWebServiceClassName
@@ -73,6 +132,9 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		val idVar = entity.id.name.toFirstLower
 		
 		val rulesFormWithDisableCUD = entity.getRulesFormWithDisableCUD
+		
+		val customListServiceName = entity.toEntityWebCustomListServiceClassName
+		val customListServiceVar = entity.toEntityWebCustomListServiceVarName
 		
 		imports.add('''
 		import { Component, OnInit } from '@angular/core';
@@ -110,9 +172,15 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			imports.add('''import { «entitySumFieldsClassName» } from './«entity.toEntityWebModelName»';''')
 		}
 		
+		if (entity.enableWebCustomListService) {
+			imports.add('''import { «customListServiceName» } from './custom-list-«webName».service';''')
+		}
+		
 		val component = entity.toEntityWebListComponentName
 		
 		val sortFields = entity.sortFields
+		val rulesGridColumns = entity.getRulesGridColumns
+		val rulesGridWithAddColumn = entity.getRulesGridWithAddColumn
 		
 		val body = '''
 		
@@ -144,10 +212,17 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			
 			constructor(
 			    private «serviceVar»: «serviceName»,
+			    «IF entity.enableWebCustomListService»
+			    private «customListServiceVar»: «customListServiceName»,
+			    «ENDIF»
 			    private «service.toTranslationServiceVarName»: «service.toTranslationServiceClassName»,
 			    private confirmation: ConfirmationService,
 			    private messageHandler: MessageHandlerService
-			) { }
+			) { 
+				«IF entity.enableWebCustomService»
+				this.«customListServiceVar».setComponent(this);
+				«ENDIF»
+			}
 			
 			ngOnInit() {
 				«filterSlots.filter[it.isBetween && it.isDate].map['''this.«toIsBetweenOptionsOnClickMethod»(null);'''].join('\r\n')»
@@ -240,6 +315,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			    	«ENDIF»
 			    }
 			    const pageNumber = event.first / event.rows;
+			    this.«listFilterNameVar».pageSize = event.rows;
 			    this.«entity.toEntityListListMethod»(pageNumber);
 			}
 			
@@ -259,7 +335,15 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			«filterSlots.filter[it.isBetween && it.isDate].map[generatePeriodIntervalSelectMethod].join»
 			«ENDIF»
 			
-			«IF entity.hasRules»«entity.buildRulesForGridRowStyleClass»«ENDIF»
+			«IF entity.hasRules»
+			«entity.buildRulesForGridRowStyleClass»
+			«ENDIF»
+			«IF !rulesGridColumns.empty»
+			«rulesGridColumns.buildRulesGridColumns»
+			«ENDIF»
+			«IF !rulesGridWithAddColumn.empty»
+			«rulesGridWithAddColumn.map[buildRuleGridWithAddColumn].join»
+			«ENDIF»
 			«ruleActions.map[generateRuleActions].join»
 			
 			«buildTranslationMethod(service)»
@@ -392,6 +476,78 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 			}
 			'''
 		}
+	}
+	
+	def CharSequence buildRulesGridColumns(Iterable<Rule> ruls) {
+		
+		val entity = ruls.head.entity
+		val dtoName = entity.toEntityDTOName
+		
+		val entityVar = entity.fieldName
+		
+		val customListService = entity.toEntityWebCustomListServiceVarName
+		customActionsImport.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
+		val groups = ruls.groupBy[ruleAsRuleTargetEnum.group]
+		
+		groups.entrySet.map[it |
+		val rules = it.value
+		val group = it.key
+		val methodNameDef = '''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entityVar»: «entity.toDtoName»): string'''
+		val methodNameCall = '''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entityVar»)'''
+		
+		customActions.add(methodNameDef);
+		
+		'''
+				
+		«methodNameDef» {
+			const result = this.«customListService».«methodNameCall»;
+			if(result) {
+				return result === '' ? null : result;
+			}
+			
+			«rules.map[buildRuleWhenExpression].join»
+		
+		    return null;
+		}
+		'''
+		].join
+	}
+	
+	def CharSequence buildRuleGridWithAddColumn(Rule rule) {
+		val entity = rule.entity
+		
+		val entityVar = entity.fieldName
+		val fieldName = rule.apply.addColumnExpression.name
+		val customListService = entity.toEntityWebCustomListServiceVarName
+		val dtoName = entity.toEntityDTOName
+		
+		//tem que ter um método GET VALUE, e fazer import da classe da entidade conta no custom list serve.
+		val addColumnMethodNameCall = '''«fieldName.toRuleAddColumnGetValueMethodName»(«entityVar»)'''
+		val addColumnMethodNameDef = '''«fieldName.toRuleAddColumnGetValueMethodName»(«entityVar»: «dtoName»)'''
+		customActions.add(addColumnMethodNameDef.concat(': string'));
+		customActionsImport.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
+		
+		'''
+				
+		«fieldName.toRuleAddColumnGetValueMethodName»(«entityVar»: «entity.toDtoName»): String {
+			
+		    return this.«customListService».«addColumnMethodNameCall»;
+		    
+		}
+		'''
+	}
+	
+	
+	def CharSequence buildRuleWhenExpression(Rule rule) {
+		val resultStrExp = new StringBuilder
+		rule.when.expression.buildRuleWhenExpression(resultStrExp, false)
+		val exp = resultStrExp.toString
+		'''
+		
+		if («exp») {
+			return '«rule.apply.getResutValue»';
+		}
+		'''
 	}
 	
 	def CharSequence buildRuleForGridRowStyleClass(Rule rule) {

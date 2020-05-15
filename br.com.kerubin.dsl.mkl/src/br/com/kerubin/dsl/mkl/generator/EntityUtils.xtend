@@ -698,6 +698,10 @@ class EntityUtils {
 		'custom-' + entity.name.toLowerCase.removeUnderline + '.service'
 	}
 	
+	def static toEntityWebListCustomServiceFileName(Entity entity) {
+		'custom-list-' + entity.name.toLowerCase.removeUnderline + '.service'
+	}
+	
 	def static toEntityWebCRUDAppComponentName(Entity entity) {
 		'app-crud-' + entity.name.toLowerCase.removeUnderline
 	}
@@ -762,6 +766,14 @@ class EntityUtils {
 	
 	def static toEntityWebCustomServiceVarName(Entity entity) {
 		'custom' + entity.toDtoName + 'Service'
+	}
+	
+	def static toEntityWebCustomListServiceClassName(Entity entity) {
+		'Custom' + entity.toDtoName + 'ListService'
+	}
+	
+	def static toEntityWebCustomListServiceVarName(Entity entity) {
+		entity.toEntityWebCustomListServiceClassName.toFirstLower
 	}
 	
 	def static toEntityWebModuleClassName(Entity entity) {
@@ -938,6 +950,20 @@ class EntityUtils {
 		rules
 	}
 	
+	def static getRulesGridWithAddColumn(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID && 
+			it.apply !== null && it.apply.hasAddColumnExpression]
+		
+		rules
+	}
+	
+	def static getRulesGridColumns(Entity entity) {
+		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_COLUMNS && 
+			it.apply !== null]
+		
+		rules
+	}
+	
 	def static getRulesGridActionsWebActionsColumn(Entity entity) {
 		var rules = entity?.rulesWithTargetEnum?.filter[it.ruleAsTargetEnum == RuleTarget.GRID_ACTIONS && 
 			it.apply !== null && it.apply.hasWebActionsColumn]
@@ -994,6 +1020,13 @@ class EntityUtils {
 		if (rule.target !== null && rule.target instanceof RuleTargetEnum) {
 			val result = (rule.target as RuleTargetEnum).target
 			return result
+		}
+		return null
+	}
+	
+	def static RuleTargetEnum ruleAsRuleTargetEnum(Rule rule) {
+		if (rule.target !== null && rule.target instanceof RuleTargetEnum) {
+			return rule.target as RuleTargetEnum
 		}
 		return null
 	}
@@ -2345,4 +2378,132 @@ class EntityUtils {
 	def static callDefaultElementSetFocus(Entity entity) {
 		'''this.«entity.getDefaultElementSetFocusMethodName»();'''
 	}
+	
+	def static createRuleSlot(Entity owner, String name, String label) {
+		val slot = ModelFactory.eINSTANCE.createSlot
+		slot.name = name
+		slot.label = label
+		slot.implicit = true
+		slot.ruled = true
+		slot.ownerObject = owner
+		
+		slot.grid = ModelFactory.eINSTANCE.createGrid
+		slot.web = ModelFactory.eINSTANCE.createWeb
+		
+		
+		val basicTypeReference = ModelFactory.eINSTANCE.createBasicTypeReference
+		basicTypeReference.basicType = ModelFactory.eINSTANCE.createStringType
+		slot.slotType = basicTypeReference
+		slot
+	}
+	
+	def static toRuleGridColumnsApplyStyleClassMethodName(String group) {		
+		'''applyRuleGridColumnsStyleClass_«group.toFirstUpper»'''
+	}
+	
+	def static toRuleGridColumnsApplyStyleClassMethodCall(Entity entity, String group) {
+		'''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entity.fieldName»)'''
+	}
+	
+	//tem que ter um método GET VALUE
+	def static toRuleAddColumnGetValueMethodName(String name) {
+		'''applyRuleAddColumn«name.toFirstUpper»GetValue'''
+	}
+	
+	def static toRuleAddColumnGetValueMethodCall(Slot slot) {
+		val entity = slot.ownerEntity
+		
+		'''«slot.fieldName.toRuleAddColumnGetValueMethodName»(«entity.fieldName»)'''
+	}
+	
+	
+	// BEGIN CUSTOM WEB ACTIONS
+	
+	def CharSequence buildCustomActionBefore(String customServiceName, String action, Entity entity) {
+		val config = new ActionConfig()
+		.setEntity(entity)
+		.setCustomServiceName(customServiceName)
+		.setAction(action)
+		
+		buildCustomActionBefore(config)
+	}
+	
+	def CharSequence buildCustomActionAfter(String customServiceName, String action, Entity entity) {
+		val config = new ActionConfig()
+		.setEntity(entity)
+		.setCustomServiceName(customServiceName)
+		.setAction(action)
+		
+		buildCustomActionAfter(config)
+	}
+	
+	def CharSequence buildCustomActionBefore(ActionConfig config) {
+		config.prefix = 'before';
+		buildCustomAction(config)
+	}
+	
+	def CharSequence buildCustomActionAfter(ActionConfig config) {
+		config.prefix = 'after';
+		buildCustomAction(config)
+	}
+		
+	def CharSequence buildCustomAction(ActionConfig config) {
+		if (config.entity === null) {
+			throw new IllegalArgumentException('ActionConfig.entity cannot be null.')
+		}
+		
+		if (/*config.entity === null || */!config.entity.enableWebCustomService)  {
+			return ''
+		}
+		
+		val sbMethoCall = new StringBuilder
+		val sbMethoDefine = new StringBuilder
+		if (config.prefix !== null) {
+			sbMethoDefine.append(config.prefix)
+			sbMethoDefine.append(config.action.toFirstUpper)
+		}
+		else {
+			sbMethoDefine.append(config.action.toFirstUpper)
+		}
+		
+		sbMethoDefine.append('(');
+		sbMethoCall.append(sbMethoDefine.toString)
+		
+		if (config.params !== null) {
+			for (var i = 0; i < config.params.size; i++) {
+				if (i > 0) {
+					sbMethoDefine.append(', ')
+					sbMethoCall.append(', ')
+				}
+				sbMethoDefine.append(config.params.get(i)).append(': ').append(config.paramsTypes.get(i))
+				sbMethoCall.append(config.params.get(i))
+			}
+		}
+		
+		sbMethoDefine.append(')');
+		sbMethoCall.append(')');
+		
+		if (!config.isVoid) {
+			sbMethoDefine.append(': boolean');
+		}
+		
+		config.customActions.add(sbMethoDefine.toString);
+		
+		'''
+		
+		// Begin custom action.
+		«IF config.isVoid»
+		this.«config.customServiceName».«sbMethoCall.toString»;
+		«ELSE»
+		if (!this.«config.customServiceName».«sbMethoCall.toString») {
+			return;
+		}
+		«ENDIF»
+		// End custom action.
+		
+		'''
+	}
+	
+	// BEGIN CUSTOM WEB ACTIONS
+	
 }

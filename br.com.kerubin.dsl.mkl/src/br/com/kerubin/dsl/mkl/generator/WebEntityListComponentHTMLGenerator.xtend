@@ -14,6 +14,8 @@ import br.com.kerubin.dsl.mkl.model.FieldObject
 import br.com.kerubin.dsl.mkl.model.BasicTypeReference
 import br.com.kerubin.dsl.mkl.model.BooleanType
 import br.com.kerubin.dsl.mkl.model.RuleApply
+import java.util.ArrayList
+import java.util.List
 
 class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -121,7 +123,10 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	}
 	
 	def CharSequence generateHTMLGrid(Entity entity) {
-		val slots = entity.slots.filter[!mapped].filter[it.isShowOnGrid]
+		val filteredSlots = entity.slots.filter[!mapped].filter[it.isShowOnGrid]
+		val slots = new ArrayList()
+		slots.addAll(filteredSlots)
+		
 		val hasSum = slots.exists[hasSumField]
 		
 		val ruleActions = entity.ruleActions
@@ -142,18 +147,39 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			webActionsColumnWidth = rule.apply.webActionsColumn.width
 		}
 		
+		// Adicionar colunas dinamicamente
+		var rulesGridWithAddColumn = entity.getRulesGridWithAddColumn
+		if (!rulesGridWithAddColumn.empty) {
+			// User can write addcolumns in any order.
+			rulesGridWithAddColumn = rulesGridWithAddColumn.sortBy[it.apply.addColumnExpression.position]
+			
+			//Adicionar novos pseudo slots
+			rulesGridWithAddColumn.forEach[it | 
+				val addColumn = it.apply.addColumnExpression
+				val newSlotColumn = entity.createRuleSlot(addColumn.name, addColumn.title)
+				newSlotColumn.web.styleClass = addColumn.styleClass
+				newSlotColumn.grid.slotIsUnordered = true
+				newSlotColumn.grid.styleClass = addColumn.styleClass
+				newSlotColumn.grid.columnStyle = addColumn.styleCss
+				newSlotColumn.grid.columnWidth = addColumn.columnWidth
+				
+				slots.add(addColumn.position, newSlotColumn)
+			]
+		}
+		
 		var attrColSpan = slots.size
 		if (!hasHideWebListActions) {
 			attrColSpan++ // + 1 for actions column
 		} 
 		
 		
-		
 		'''
 		
 		<!-- Begin GRID -->
 		<div class="ui-g-12" name="data-grid">
-			<p-table selectionMode="single" [loading]="tableLoading" 
+			<p-table selectionMode="single" [loading]="tableLoading"
+				[showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,50,100]"
+				currentPageReportTemplate="Mostrando {first} até {last} de {totalRecords} registros."
 				[responsive]="true" sortMode="multiple" [paginator]="true" [resizableColumns]="true"
 				[value]="«entity.toEntityWebListItems»"
 			    [rows]="«entity.toEntityListFilterName».«LIST_FILTER_PAGE_SIZE»" 
@@ -168,9 +194,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		            	val userClasses = slot.getUserWebClassesArray
 		            	'''
 	            		«IF slot.isOrderedOnGrid»
-	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF» «slot.buildGridColumnWidth»[pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
+	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF» «slot.buildGridColumnStyle»[pSortableColumn]="'«slot.fieldName»'">«slot.getTranslationKeyGridFunc»<p-sortIcon [field]="'«slot.fieldName»'"></p-sortIcon></th>
 	            		«ELSE»
-	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»>«slot.getTranslationKeyGridFunc»</th>
+	            			<th«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF» «slot.buildGridColumnStyle»>«slot.getTranslationKeyGridFunc»</th>
 	            		«ENDIF»
 		            	'''
 		            ].join»
@@ -180,7 +206,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		        
 			    <ng-template pTemplate="body" let-«entity.fieldName»>
 		            <tr [pSelectableRow]="«entity.fieldName»">
-		            	«slots.map[generateHTMLGridDataRow].join»
+		            	«val idx = new ArrayList<Integer>»
+		            	«slots.map[it.generateHTMLGridDataRow(idx)].join»
 		              	«IF !hasHideWebListActions»
 		              	<td class="kb-actions">
 		              		«IF hasHideCUDWebListActions»
@@ -245,7 +272,62 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
-	def CharSequence buildGridColumnWidth(Slot slot) {
+	def CharSequence buildGridColumnStyle(Slot slot) {
+		
+		var columnWidth = if (slot.hasGridColumnWidth) slot.grid.columnWidth else ''
+		if (!columnWidth.empty) {
+			columnWidth = '''width: «columnWidth»;'''
+		}
+		else if (slot.isDate) {
+			columnWidth = '''width: 7em;'''
+		}
+		else if (slot.isMoney) {
+			columnWidth = '''width: 8em;'''
+		}
+		
+		var columnAlign = if (slot.hasGridColumnAlign) slot.grid.columnAlign else '' 
+		if (!columnAlign.empty) {
+			columnAlign = '''text-align: «columnAlign»;'''
+		}
+		
+		
+		val sb = new StringBuilder
+		var has = false
+		sb.append('style="')
+		if (slot.hasGridColumnStyle) {
+			var columnStyle = slot.grid.columnStyle
+			if (!columnStyle.endsWith(";"))
+			columnStyle += ";"
+			sb.append(columnStyle)
+			has = true
+		}
+		
+		if (!columnWidth.empty) {
+			if (has) {
+				sb.append(" ")				
+			}
+			sb.append(columnWidth)
+			has = true
+		}
+		
+		if (!columnAlign.empty) {
+			if (has) {
+				sb.append(" ")				
+			}
+			sb.append(columnAlign)
+			has = true
+		}
+		
+		sb.append('"')
+		
+		if (has) {
+			return sb.toString			
+		}
+		
+		return ''
+	}
+	
+	/*def CharSequence buildGridColumnWidth(Slot slot) {
 		var columnWidth = if (slot.hasGridColumnWidth) slot.grid.columnWidth else ''
 		
 		if (!columnWidth.empty) {
@@ -260,7 +342,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		else {
 			''''''
 		}
-	}
+	}*/
 	
 	def CharSequence generateRuleActions(Rule rule, Iterable<Rule> ruleActions) {
 		val actionName = rule.getRuleActionName
@@ -409,7 +491,9 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		'''
 	}
 	
-	def CharSequence generateHTMLGridDataRow(Slot slot) {
+	def CharSequence generateHTMLGridDataRow(Slot slot, List<Integer> idx) {
+		val index = idx.size
+		idx.add(index);
 		var fieldName = slot.entityFieldName
 		if (slot.isNumber && slot.isGridShowNumberAsNegative) {
 			fieldName = fieldName.toGridShowNumberAsNegative
@@ -419,11 +503,34 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		val hasStyleClass = slot.hasGridStyleClass
 		val hasDataIcon = slot.hasShowDataWithIcon
 		val showDataWithIcon = slot.showDataWithIcon
+
+		val rulesGridColumns = slot.ownerEntity.getRulesGridColumns
+		var hasRulesGridColumnsForThisSlot = false
+		var rulesGridColumnsGroup = 'default'
+		if (!rulesGridColumns.isEmpty) {
+			// Ou estão todos com range == null, ou respeita apenas os índices.
+			hasRulesGridColumnsForThisSlot = (
+				rulesGridColumns.exists[it.ruleAsRuleTargetEnum.range.isEmpty] &&  // Tem ao menos um item com range == null E
+				!rulesGridColumns.exists[it.ruleAsRuleTargetEnum.range.size > 0] // NÃO tem nenhum item com range !== nulll
+			) || // OU tem itens com range definido.
+				rulesGridColumns.exists[it1 | it1.ruleAsRuleTargetEnum.range.exists[it2 | it2.equals(index)]]
+				
+			if (hasRulesGridColumnsForThisSlot) {
+				val rule = rulesGridColumns.findFirst[it1 | it1.ruleAsRuleTargetEnum.range.exists[it2 | it2.equals(index)]]
+				if (rule !== null) {
+					rulesGridColumnsGroup = rulesGridColumnsGroup = rule.ruleAsRuleTargetEnum.group
+				}
+				
+			}
+		}
 		
 		'''
 		<td«IF hasDataIcon» style="text-align: center"«ENDIF»«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
 			<span class="ui-column-title">«slot.getTranslationKeyGridFunc»:</span>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
+			«IF hasRulesGridColumnsForThisSlot»
+			<div [ngClass]="«slot.ownerEntity.toRuleGridColumnsApplyStyleClassMethodCall(rulesGridColumnsGroup)»">
+			«ENDIF»
 			«IF slot.isDate»
 			{{«fieldName» | date:'dd/MM/yyyy' }}
 			«ELSEIF slot.isDateTime»
@@ -438,8 +545,13 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			{{«slot.webAutoCompleteFieldConverter»(«fieldName»)}}
 			«ELSEIF slot.isEnum»
 			«slot.getTranslationKeyFunc(fieldName + '?.toLowerCase()')»
+			«ELSEIF slot.isRuled»
+			{{«slot.toRuleAddColumnGetValueMethodCall»}}
 			«ELSE»
 			«IF hasDataIcon»<i«IF 'true' == showDataWithIcon.onlyNotNullValue» *ngIf="«fieldName»"«ENDIF» class="«showDataWithIcon.icon»" style="font-size: «showDataWithIcon.iconSize»" [pTooltip]=«fieldName»></i>«ELSE»{{ «fieldName» }}«ENDIF»
+			«ENDIF»
+			«IF hasRulesGridColumnsForThisSlot»
+			</div>
 			«ENDIF»
 			«IF hasStyleClass»</div">«ENDIF»
 		</td>

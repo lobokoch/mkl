@@ -103,6 +103,16 @@ class DisableEntityGeneration {
 
 // BEGIN Rule
 
+class AddColumnExpression {
+	String name
+	String title
+	int position
+	String align = 'left'
+	String styleClass
+	String styleCss
+	String columnWidth
+}
+
 class SearchCEPExpression {
 	contains FieldObject cepField
 	contains FieldObject ufField
@@ -480,6 +490,11 @@ class RuleApply {
 	contains HideWebListActions hideWebListActions
 	contains WebActionsColumn webActionsColumn
 	contains ModifierFunction modifierFunction
+	contains AddColumnExpression addColumnExpression
+	
+	op boolean hasAddColumnExpression() {
+		return addColumnExpression !== null
+	}
 	
 	op boolean hasHiddeComponent() {
 		return hiddeComponent !== null
@@ -620,6 +635,8 @@ class RuleTargetField  extends AbstractRuleTarget {
 
 class RuleTargetEnum extends AbstractRuleTarget {
 	RuleTarget target
+	Integer[] range
+	String group = "default"
 	
 	op boolean isTargetEnum() {
 		return true
@@ -634,6 +651,8 @@ enum MathOperator {
 }
 
 enum RuleTarget {
+	GRID as 'grid'
+	GRID_COLUMNS as 'grid.columns'
 	GRID_ROWS as 'grid.rows'
 	GRID_ROW_CELL as 'grid.row.cell'
 	GRID_SUMROW_LAST_CELL as 'grid.sum.lastCell'
@@ -983,6 +1002,8 @@ class Grid {
 	String label
 	String styleClass
 	String columnWidth
+	String columnAlign
+	String columnStyle
 	contains ShowDataWithIcon showDataWithIcon
 	
 	op boolean hasShowDataWithIcon() {
@@ -1051,6 +1072,7 @@ abstract class Slotted extends Element {
 class Slot extends Element {
 	contains TypeReference slotType opposite ownerSlot
 	boolean implicit = 'false'
+	boolean ruled = 'false'
 	boolean optional
 	boolean parent
 	boolean many
@@ -1196,6 +1218,14 @@ class Slot extends Element {
 	
 	op boolean hasGridColumnWidth() {
 		return hasGrid && grid.columnWidth !== null && !grid.columnWidth.trim.empty
+	}
+	
+	op boolean hasGridColumnAlign() {
+		return hasGrid && grid.columnAlign !== null && !grid.columnAlign.trim.empty
+	}
+	
+	op boolean hasGridColumnStyle() {
+		return hasGrid && grid.columnStyle !== null && !grid.columnStyle.trim.empty
 	}
 	
 	op boolean isOrderedOnGrid() {
@@ -1589,6 +1619,7 @@ class Entity extends PublicObject, Rulled {
 	boolean baseRepository
 	boolean enableReplication
 	boolean enableWebCustomService
+	boolean enableWebCustomListService
 	boolean externalEntity = 'false'
 	boolean disableWebAnalytics
 	contains Label label

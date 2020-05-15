@@ -2,6 +2,7 @@ package br.com.kerubin.dsl.mkl.generator
 
 import java.util.List
 import br.com.kerubin.dsl.mkl.model.Entity
+import java.util.LinkedHashSet
 
 class ActionConfig {
 	public Entity entity;
@@ -11,6 +12,12 @@ class ActionConfig {
 	public List<String> params; 
 	public List<String> paramsTypes; 
 	public boolean isVoid;
+	public LinkedHashSet<String> customActions = newLinkedHashSet
+	
+	def ActionConfig setCustomActions(LinkedHashSet<String> customActions) {
+		this.customActions = customActions
+		return this
+	}
 	
 	def ActionConfig setEntity(Entity entity) {
 		this.entity = entity;
