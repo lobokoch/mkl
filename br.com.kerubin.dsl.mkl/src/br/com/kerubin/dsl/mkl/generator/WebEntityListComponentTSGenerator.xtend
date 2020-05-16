@@ -95,7 +95,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		var String returnValue = null
 		if (methodDef.endsWith(': boolean')) {
 			returnValue = 'return true'
-		} else if (methodDef.endsWith(': string')) {
+		} else if (methodDef.endsWith(': String')) {
 			returnValue = 'return null'
 		} 
 		
@@ -492,7 +492,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		groups.entrySet.map[it |
 		val rules = it.value
 		val group = it.key
-		val methodNameDef = '''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entityVar»: «entity.toDtoName»): string'''
+		val methodNameDef = '''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entityVar»: «entity.toDtoName»): String'''
 		val methodNameCall = '''«group.toRuleGridColumnsApplyStyleClassMethodName»(«entityVar»)'''
 		
 		customActions.add(methodNameDef);
@@ -524,7 +524,7 @@ class WebEntityListComponentTSGenerator extends GeneratorExecutor implements IGe
 		//tem que ter um método GET VALUE, e fazer import da classe da entidade conta no custom list serve.
 		val addColumnMethodNameCall = '''«fieldName.toRuleAddColumnGetValueMethodName»(«entityVar»)'''
 		val addColumnMethodNameDef = '''«fieldName.toRuleAddColumnGetValueMethodName»(«entityVar»: «dtoName»)'''
-		customActions.add(addColumnMethodNameDef.concat(': string'));
+		customActions.add(addColumnMethodNameDef.concat(': String'));
 		customActionsImport.add('''import { «dtoName» } from './«entity.toEntityWebModelName»';''')
 		
 		'''

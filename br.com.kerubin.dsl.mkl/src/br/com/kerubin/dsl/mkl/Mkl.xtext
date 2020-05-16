@@ -692,7 +692,7 @@ AddColumnExpression:
 			('name' ':' name = STRING) &
 			('title' ':' title = STRING) &
 			('position' ':' position = INT) &
-			('align' ':' align = 'left' | 'center' | 'right')? &
+			('align' ':' align = STRING)? &
 			('styleClass' ':' styleClass = STRING)? & 
 			('styleCss' ':' styleCss = STRING)? &
 			('columnWidth' ':' columnWidth = STRING)?

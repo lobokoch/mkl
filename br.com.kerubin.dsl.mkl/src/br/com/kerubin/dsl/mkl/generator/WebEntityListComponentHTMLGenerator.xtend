@@ -162,6 +162,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 				newSlotColumn.grid.styleClass = addColumn.styleClass
 				newSlotColumn.grid.columnStyle = addColumn.styleCss
 				newSlotColumn.grid.columnWidth = addColumn.columnWidth
+				newSlotColumn.grid.columnAlign = addColumn.align
 				
 				slots.add(addColumn.position, newSlotColumn)
 			]
@@ -177,7 +178,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		<!-- Begin GRID -->
 		<div class="ui-g-12" name="data-grid">
-			<p-table selectionMode="single" [loading]="tableLoading"
+			<p-table styleClass="kb-grid kb-grid-«entity.name.toLowerCase»" selectionMode="single" [loading]="tableLoading"
 				[showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,50,100]"
 				currentPageReportTemplate="Mostrando {first} até {last} de {totalRecords} registros."
 				[responsive]="true" sortMode="multiple" [paginator]="true" [resizableColumns]="true"
@@ -288,6 +289,8 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		var columnAlign = if (slot.hasGridColumnAlign) slot.grid.columnAlign else '' 
 		if (!columnAlign.empty) {
 			columnAlign = '''text-align: «columnAlign»;'''
+		} else if (slot.isMoney) {
+			columnAlign = '''text-align: right;''' // Default for money column.
 		}
 		
 		
@@ -318,7 +321,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			has = true
 		}
 		
-		sb.append('"')
+		sb.append('" ')
 		
 		if (has) {
 			return sb.toString			
@@ -526,7 +529,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 		
 		'''
 		<td«IF hasDataIcon» style="text-align: center"«ENDIF»«IF userClasses !== null» [ngClass]="«userClasses»"«ENDIF»«slot.ownerEntity.applyRulesOnGrid»«slot.buildBodyRowStyleCss»>
-			<span class="ui-column-title">«slot.getTranslationKeyGridFunc»:</span>
+			<span «IF slot.ruled»style="float: left !important;" «ENDIF»class="ui-column-title">«slot.getTranslationKeyGridFunc»:</span>
 			«IF hasStyleClass»<div class="«slot.grid.styleClass»">«ENDIF»
 			«IF hasRulesGridColumnsForThisSlot»
 			<div [ngClass]="«slot.ownerEntity.toRuleGridColumnsApplyStyleClassMethodCall(rulesGridColumnsGroup)»">
