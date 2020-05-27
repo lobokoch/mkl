@@ -147,9 +147,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 		«ENDIF»
 		«slot.generateAnnotations(entity)»
 		«IF slot.isOneToMany»
-		«entity.addImport('import java.util.List;')»
-		«entity.addImport('import java.util.ArrayList;')»
-		private List<«slot.toJavaType»> «slot.name.toFirstLower» = new ArrayList<>();
+		«entity.addImport('import java.util.Set;')»
+		«entity.addImport('import java.util.HashSet;')»
+		private Set<«slot.toJavaType»> «slot.name.toFirstLower» = new HashSet<>();
 		«ELSEIF slot.isManyToMany»
 		«entity.addImport('import java.util.Set;')»
 		«IF slot.isRelationContains»
@@ -298,7 +298,8 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 				cascade = ', cascade = CascadeType.ALL '
 			}
 			else if (slot.isRelationRefers && !isBidirectional) {
-				cascade = ', cascade = {CascadeType.PERSIST, CascadeType.MERGE}'
+				// not necessary for OneToMany: https://docs.jboss.org/hibernate/orm/3.6/reference/en-US/html_single/#example-one-to-many-with-join-table
+				// cascade = ', cascade = {CascadeType.PERSIST, CascadeType.MERGE}' aparenteli not necessary
 			}
 		}
 		
@@ -325,7 +326,7 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			builder.newLine
 			builder.append('\t')
 			builder.append('joinColumns = @JoinColumn(name = "')
-			builder.append(entity.getEntityIdAsKey)
+			builder.append(entity.getEntityAsEntityIdFK)
 			builder.append('"),')
 			builder.newLine
 			builder.append('\t')
@@ -465,10 +466,11 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	}
 	
 	def CharSequence generateGetter(Slot slot) {
+		// toMany não bi-direcional use set.
 		'''
-		«IF slot.isOneToMany»
+		«IF slot.isOneToMany && slot.isBidirectional»
 		public java.util.List<«slot.toJavaType»> get«slot.name.toFirstUpper»() {
-		«ELSEIF slot.isManyToMany»
+		«ELSEIF slot.isOneToMany || slot.isManyToMany»
 		public java.util.Set<«slot.toJavaType»> get«slot.name.toFirstUpper»() {
 		«ELSE»
 		public «slot.toJavaType» get«slot.name.toFirstUpper»() {
@@ -532,18 +534,25 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	def CharSequence generateSetter(Slot slot) {
 		val slotName = slot.name.toFirstLower
+		
+		if (slot.isOneToMany) {
+			println("OK.")
+		}
+		
 		'''
-		«IF slot.many && slot.isOneToMany»
+		«IF slot.many && slot.isOneToMany && slot.isBidirectional»
 		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaType»> «slotName») {
-		«ELSEIF slot.many && slot.isManyToMany && slot.isRelationContains»
+		«ELSEIF slot.many && ((slot.isManyToMany && slot.isRelationContains) || slot.isOneToMany)»
 		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaType»> «slotName») {
 		«ELSEIF ! slot.isManyToMany»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slotName») {
 		«ENDIF»
-			«IF slot.many && slot.isToMany && slot.isRelationContains»
+			
+			«IF slot.many && slot.isToMany /*&& slot.isRelationContains*/»
 			// First remove existing items.
 			if (this.«slotName» != null) {
-				this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
+				this.«slotName».clear();
+				// this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
 			}
 			
 			if («slotName» != null) {

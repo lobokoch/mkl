@@ -33,6 +33,19 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		generateFile(entityFile, entity.doGenerateEntityWebService)
 	}
 	
+	def CharSequence normalizeTimeFields(Entity entity) {
+		
+		val name = entity.fieldName
+		val timeSlots = entity.slots.filter[isTime]
+		
+		'''
+		
+		«name» = {... «name»}; // Make a clone.
+		«timeSlots.map['''«name».«it.fieldName» = this.«getTimeAsStringMethodName»(«name».«it.fieldName»);'''].join('\r\n')»
+		
+		'''
+	}
+	
 	def CharSequence doGenerateEntityWebService(Entity entity) {
 		imports = new StringConcatenationExt()
 		entity.initializeImports()
@@ -83,7 +96,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val ruleMakeCopies = entity.ruleMakeCopies
 		
 		val ruleFormActionsWithFunction = entity.ruleFormActionsWithFunction
-		
+		val hasTimeFields = entity.hasTime
 		
 		val body = '''
 		
@@ -109,7 +122,10 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			}
 			
 			create(«varName»: «dtoName»): Promise<«dtoName»> {
-				const headers = this.getHeaders();    
+				«IF hasTimeFields»
+				«entity.normalizeTimeFields»
+				«ENDIF»
+				const headers = this.getHeaders();
 				«entity.generateAnalitycsSendEvent('create')»
 			    return this.http.post(this.url, «varName», { headers })
 			    .toPromise()
@@ -122,6 +138,9 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 			}
 			
 			update(«varName»: «dtoName»): Promise<«dtoName»> {
+				«IF hasTimeFields»
+				«entity.normalizeTimeFields»
+				«ENDIF»
 			    const headers = this.getHeaders();
 				«entity.generateAnalitycsSendEvent('update')»
 			    return this.http.put(`${this.url}/${«varName».«entity.id.fieldName»}`, «varName», { headers })
@@ -170,6 +189,22 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 				      '''
 				      ].join('\r\n')»
 				});
+			}
+			«ENDIF»
+			
+			«IF entity.hasTime»
+			
+			«getTimeAsStringMethodName»(timeCandidate: any): string {
+			    if (timeCandidate === null) {
+			      return null;
+			    }
+			
+			    if (typeof timeCandidate === 'string') {
+			      return timeCandidate;
+			    }
+			    const result = moment(timeCandidate).format('HH:mm');
+			    return result;
+			
 			}
 			«ENDIF»
 			

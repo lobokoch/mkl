@@ -117,7 +117,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 		«IF isEnableDoc»
 		@ApiModelProperty(notes = "«title»"«IF slot.mandatory», required = «slot.required»«ENDIF», position = «slot.position»)
 		«ENDIF»
-		«IF slot.isToMany»
+		«IF slot.isOneToMany && slot.isRelationRefers»
+		private java.util.Set<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
+		«ELSEIF slot.isToMany»
 		private java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower»;
 		«ELSE»
 		private «slot.toJavaTypeDTO» «slot.name.toFirstLower»«IF slot.hasDefaultValue» = «slot.defaultValue»«ENDIF»;
@@ -141,7 +143,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateGetter(Slot slot) {
 		
 		'''
-		«IF slot.isToMany»
+		«IF slot.isOneToMany && slot.isRelationRefers»
+		public java.util.Set<«slot.toJavaTypeDTO»> get«slot.name.toFirstUpper»() {
+		«ELSEIF slot.isToMany»
 		public java.util.List<«slot.toJavaTypeDTO»> get«slot.name.toFirstUpper»() {
 		«ELSE»
 		public «slot.toJavaTypeDTO» get«slot.name.toFirstUpper»() {
@@ -161,7 +165,9 @@ class JavaEntityDTOGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateSetter(Slot slot) {
 		
 		'''
-		«IF slot.many && slot.isToMany»
+		«IF slot.many && slot.isOneToMany && slot.isRelationRefers»
+		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaTypeDTO»> «slot.name.toFirstLower») {
+		«ELSEIF slot.many && slot.isToMany»
 		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaTypeDTO»> «slot.name.toFirstLower») {
 		«ELSE»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaTypeDTO» «slot.name.toFirstLower») {

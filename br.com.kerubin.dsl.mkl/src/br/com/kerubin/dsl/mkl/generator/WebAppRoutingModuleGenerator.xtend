@@ -84,7 +84,7 @@ class WebAppRoutingModuleGenerator extends GeneratorExecutor implements IGenerat
 		val entityWebName = entity.toWebName
 		
 		'''
-		{ path: '«entityWebName»', loadChildren: './modules/«service.domain.webName»/«service.name.webName»/«entityWebName»/«entityWebName».module#«entity.toEntityWebModuleClassName»' },
+		{ path: '«entityWebName»',  loadChildren: () => import('./modules/«service.domain.webName»/«service.name.webName»/«entityWebName»/«entityWebName».module').then(m => m.«entity.toEntityWebModuleClassName») },
 		'''
 	}
 	

@@ -212,9 +212,13 @@ class EntityUtils {
 		entity.databaseName + '_' + slot.databaseName + '_idx'
 	}
 	
+	def static String getEntityAsEntityIdFK(Entity entity) {
+		val result = entity.databaseName + '_' + entity.id.databaseName
+		return result
+	}
+	
 	def static String getSlotAsEntityIdFK(Slot slot) {
-		val entity = slot.asEntity
-		entity.databaseName + '_' + entity.id.databaseName
+		return slot.asEntity.getEntityAsEntityIdFK
 	}
 	
 	def static String getSlotAsOwnerEntityIdFK(Slot slot) {
@@ -243,16 +247,10 @@ class EntityUtils {
 		entity.alias.getDatabaseName
 	}
 	
-	
-	/*def static Entity asEntity(Slot slot) {
-		val reference = slot.slotType as ObjectTypeReference
-		reference.referencedType as Entity
+	def static getTimeAsStringMethodName() {
+		'getTimeAsStr'
 	}
 	
-	def static Enumeration asEnum(Slot slot) {
-		val reference = slot.slotType as ObjectTypeReference
-		reference.referencedType as Enumeration
-	}*/
 	
 	def static boolean hasEntitySlots(Entity entity) {
 		entity.slots.exists[it.isEntity]
@@ -260,6 +258,10 @@ class EntityUtils {
 	
 	def static boolean hasDateOnly(Entity entity) {
 		entity.slots.exists[isDate]
+	}
+	
+	def static boolean hasTime(Entity entity) {
+		entity.slots.exists[isTime]
 	}
 	
 	def static boolean hasDate(Entity entity) {
@@ -402,7 +404,7 @@ class EntityUtils {
 	}
 	
 	def static boolean isDTOLookupResult(Slot slot) {
-		slot.isEntity && ! slot.isDTOFull
+		slot.isEntity && ((slot.isOneToMany && slot.isRelationRefers) || !slot.isDTOFull)
 	}
 	
 	def static boolean isOneToOne(Slot slot) {
@@ -1749,7 +1751,12 @@ class EntityUtils {
 			sb.append(' != null ? ')
 			sb.append(get)
 			if (slot.isMany) {
-				sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toList())')
+				if (slot.isBidirectional) {
+					sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toList())')					
+				} else {
+					sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toSet())')				
+					
+				}
 			}
 			else {
 				sb.append('.clone(visited)')
@@ -2095,7 +2102,7 @@ class EntityUtils {
 			"Date"
 		}
 		else if (basicType instanceof TimeType) {
-			"Date"
+			"any" // must be any to work!
 		}
 		else if (basicType instanceof DateTimeType) {
 			"Date"

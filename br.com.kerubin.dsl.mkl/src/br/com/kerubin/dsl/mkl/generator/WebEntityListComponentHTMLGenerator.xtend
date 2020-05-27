@@ -539,7 +539,7 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 			«ELSEIF slot.isDateTime»
 			{{«fieldName» | date:'dd/MM/yyyy HH:mm'}}
 			«ELSEIF slot.isTime»
-			{{«fieldName» | date:'HH:mm:ss'}}
+			{{«fieldName» | date:'HH:mm'}}
 			«ELSEIF slot.isMoney»
 			{{«fieldName» | «IF slot.isGridNoCurrencySimbol»number:'1.2-2'«ELSE»currency:'BRL':'symbol':'1.2-2':'pt'«ENDIF» }}
 			«ELSEIF slot.isBoolean»

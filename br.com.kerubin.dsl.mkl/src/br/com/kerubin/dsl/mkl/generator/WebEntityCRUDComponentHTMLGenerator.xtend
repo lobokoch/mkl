@@ -292,9 +292,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		«IF slot.hasSeparatorBefore»
 		«slot.generateSeparator»
 		«ENDIF»
-		«IF slot.isToMany»
-		slot.isToMany
-		«ELSE»
 		<div class="«slot.webClass»"«IF !styleClassMethodName.empty» [ngClass]="«styleClassMethodName»()"«ENDIF»«IF ruleWithSlotAppyHiddeComponent !== null» «slot.toRuleWithSlotAppyHiddeComponentHTMLDirective»«ENDIF»>
 			<label «IF slot.isBoolean»style="display: block" «ENDIF»for="«slot.fieldNameFull»"«IF slot.isHiddenSlot» class="hidden"«ENDIF»>
 				«slot.webLabel»
@@ -314,7 +311,6 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		</div>
 		«IF slot.hasSeparatorAfter»
 		«slot.generateSeparator»
-		«ENDIF»
 		«ENDIF»
 		'''
 	}
@@ -550,8 +546,16 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 			webComponentType = 'p-autoComplete'
 			builder
 			.concat('''«webComponentType» ''')
-			.concat('''«IF slot.isWebReadOnly»[readonly]="true"«ENDIF»''').concat('\r\n')
-			.concat('''«webComponentType» placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''').concat('\r\n')
+			
+			if (slot.isMany && slot.isRelationRefers) {
+				builder.concat('''[multiple]="true"''').concat('\r\n')				
+			}
+			
+			if (slot.isWebReadOnly) {
+				builder.concat('''[readonly]="true"''').concat('\r\n')
+			}
+			
+			builder.concat(''' placeholder="Digite para pesquisar..." [dropdown]="true" [forceSelection]="true"''').concat('\r\n')
 			.concat(''' [suggestions]="«slot.webAutoCompleteSuggestions»"''').concat('\r\n')
 			.concat(''' (completeMethod)="«slot.toAutoCompleteName»($event)"''').concat('\r\n')
 			.concat(''' (onClear)="«slot.toAutoCompleteClearMethodName»($event)"''').concat('\r\n')
@@ -616,7 +620,7 @@ class WebEntityCRUDComponentHTMLGenerator extends GeneratorExecutor implements I
 		}
 		else if (basicType instanceof TimeType) {
 			webComponentType = 'p-calendar'
-			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dateFormat="hh:MM:ss"«IF slot.isWebReadOnly» [disabledDays]="[0,1,2,3,4,5,6]" [readonlyInput]="true"«ENDIF»''')
+			builder.concat('''«webComponentType» [locale]="«getCalendarLocaleSettingsVarName»" dataType="string" [timeOnly]="true"«IF slot.isWebReadOnly» [disabledDays]="[0,1,2,3,4,5,6]" [readonlyInput]="true"«ENDIF»''')
 		}
 		else if (basicType instanceof DateTimeType) {
 			webComponentType = 'p-calendar'
