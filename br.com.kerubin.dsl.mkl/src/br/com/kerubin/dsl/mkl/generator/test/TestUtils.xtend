@@ -22,6 +22,7 @@ import static extension br.com.kerubin.dsl.mkl.generator.EntityUtils.*
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import br.com.kerubin.dsl.mkl.model.Rule
+import br.com.kerubin.dsl.mkl.util.Param
 
 class TestUtils {
 	
@@ -39,6 +40,9 @@ class TestUtils {
 	public static val EVENT_CREATED = 'created'
 	public static val EVENT_UPDATED = 'updated'
 	public static val EVENT_DELETED = 'deleted'
+	
+	public static val NEW_ENTIY_LIST_SIZE = '3'
+	public static val NEW_ENTIY_LIST_SIZE_INT = 3
 	
 	public static val TEST_VISITOR_INTERFACE_NAME = 'TestVisitor'
 	
@@ -101,8 +105,7 @@ class TestUtils {
 		'''
 		«IF slot.isOneToMany»
 		assertThat(«varName».«slot.buildMethodGet»).isNotNull();
-		assertThat(«varName».«slot.buildMethodGet»).hasSize(1);
-		assertThat(«varName».«slot.buildMethodGet».get(0).«idGetMethod»).isNotNull();
+		assertThat(«varName».«slot.buildMethodGet»).hasSize(«NEW_ENTIY_LIST_SIZE»);
 		«ELSE»
 		assertThat(«varName».«slot.buildMethodGet».«idGetMethod»).isNotNull();
 		«ENDIF»
@@ -151,7 +154,7 @@ class TestUtils {
 		
 		'''
 		«IF slot.isOneToMany»
-		assertThat(«varName».«getField».get(0)).isEqualToIgnoringGivenFields(«fieldName».«getField».get(0), «IGNORED_FIELDS»);
+		assertThat(«varName».«getField»).isEqualTo(«fieldName».«getField»);
 		«ELSE»
 		assertThat(«varName».«getField»).isEqualToIgnoringGivenFields(«fieldName».«getField», «IGNORED_FIELDS»);
 		«ENDIF»
@@ -163,7 +166,6 @@ class TestUtils {
 		
 		«slot.buildAssertThatEntitySlotIdIsNotNull(varName)»
 		«slot.buildAssertThatIsEqualToIgnoringGivenFields(varName)»
-		
 		'''
 	}
 	
@@ -194,7 +196,6 @@ class TestUtils {
 		
 		«slots.filter[it.isRequired].map[it.buildAssertEntityFKsIsEqualToIgnoringGivenFields(ACTUAL)].join»
 		«slots.filter[!it.isRequired].map[it.buildAssertEntityFKsIsNull(ACTUAL)].join»
-		
 		'''
 	}
 	
@@ -353,7 +354,7 @@ class TestUtils {
 	}
 	
 	
-	def static CharSequence buildNewEntityMethod(Entity entity) {
+	def static CharSequence buildNewEntityMethod(Entity entity, Slot slot) {
 		var name = entity.toEntityName
 		val fieldName = entity.entityFieldName
 		
@@ -364,9 +365,11 @@ class TestUtils {
 		]
 		
 		val slotManyToOne_OneToMany = entity.getOneToManyOpposite
-		val hasOneToMany = entity.hasOneToMany
-		
 		val hasOwnerOneToMany = slotManyToOne_OneToMany !== null
+		val isOneToMany = slot !== null && slot.isOneToMany
+		
+		val hasMany = hasOwnerOneToMany || isOneToMany
+		
 		var ownerOneToManyEntityType = ''
 		var ownerOneToManyEntityVar = ''
 		if (hasOwnerOneToMany) {
@@ -375,55 +378,38 @@ class TestUtils {
 			ownerOneToManyEntityVar = slotManyToOne_OneToManyAsEntity.fieldName
 		}
 		
-		var params = new StringBuilder
-		val oneToManySize = 'oneToManySize'
-		var String paramsOwnerOneToMany = ''
-		if (hasOwnerOneToMany) {
-			params.append(ownerOneToManyEntityType).append(' ').append(ownerOneToManyEntityVar)
-			paramsOwnerOneToMany = params.toString
-			
-			params.append(', ')
-			
-			params.append('int ').append(oneToManySize)
-			
-		}
-		paramsOwnerOneToMany = params.toString
+		val listSize = 'listSize'
+		val paramList = if (hasMany) Param.of(listSize, 'int', NEW_ENTIY_LIST_SIZE) else null
+		val paramOwnerEntity = if (hasOwnerOneToMany) Param.of(ownerOneToManyEntityVar, ownerOneToManyEntityType) else null
 		
-		params = new StringBuilder
-		if (hasOneToMany && !hasOwnerOneToMany) {
-			params.append('int ').append(oneToManySize)
-		} else if (hasOwnerOneToMany) {
-			params.append(ownerOneToManyEntityType).append(' ').append(ownerOneToManyEntityVar)
+		var listIntf = 'List' 
+		var listImpl = 'ArrayList'
+		if (isOneToMany) {
+			listIntf = 'Set' 
+			listImpl = 'HashSet'
 		}
-		
 		
 		'''
-		«IF hasOneToMany»
-		protected «name» new«name»() {
-			return new«name»(2);
-		}
 		
-		«ENDIF»
-		
-		«IF hasOwnerOneToMany»
-		protected List<«name»> new«name»(«paramsOwnerOneToMany») {
-			List<«entity.toEntityName»> items = new ArrayList<>(«oneToManySize»);
-			for(int i = 0; i < «oneToManySize»; i++) {
-				items.add(new«name»(«ownerOneToManyEntityVar»));
+		«IF hasMany»
+		protected «listIntf»<«name»> «name.buildNewEntityListMethod»(«Param.buildParamsSignature(paramList, paramOwnerEntity)») {
+			«listIntf»<«entity.toEntityName»> result = new «listImpl»<>(«paramList.name»);
+			while (result.size() < «paramList.name») {
+				result.add(new«name»(«Param.buildParamsCall(paramOwnerEntity)»));
 			}
-			return items;
+			return result;
 		}
 		
 		«ENDIF»
 		
-		protected «name» new«name»(«params.toString») {
+		protected «name» new«name»(«IF hasOwnerOneToMany»«Param.buildParamsSignature(paramOwnerEntity)»«ENDIF») {
 			«entity.buildNewEntityWithVar»
 			
 			«slots.filter[!it.isAuditingSlot && !it.isVersionSlot && !it.isOneToMany].map[generateSetterForTest].join»
 			
 			«slots.filter[it.isOneToMany].map[it | 
 				'''
-				«entity.toEntityNameVar».«it.getFieldNameAsSet»(new«it.asEntity.toEntityName»(«entity.toEntityNameVar», «oneToManySize»));
+				«entity.toEntityNameVar».«it.getFieldNameAsSet»(«it.asEntity.toEntityName.buildNewEntityListMethod»(«paramList?.name ?: NEW_ENTIY_LIST_SIZE»«IF it.relationContains», «entity.toEntityNameVar»«ENDIF»));
 				'''
 			].join»
 			«IF !hasOwnerOneToMany»
@@ -433,6 +419,32 @@ class TestUtils {
 		}
 		
 		'''
+	}
+	
+	def static buildNewEntityMethodCall(Slot slot) {
+		// «fieldName».set«slot.name.toFirstUpper»(«slot.asEntity.toEntityName.buildNewEntityListMethod»(«NEW_ENTIY_LIST_SIZE»));
+		val ownerEntity = slot.ownerEntity
+			
+		val sb = new StringBuilder('new' + slot.asEntity.toEntityName)
+		if (slot.isToMany) {
+			sb.append('List')
+			.append('(')
+			.append(NEW_ENTIY_LIST_SIZE);
+			
+			if(slot.isRelationContains) {
+				sb.append(', ')
+				.append(ownerEntity.fieldName)
+			}
+			sb.append(')')
+		} else {
+			sb.append('()')
+		}
+		
+		sb.toString
+	}
+	
+	def static CharSequence buildNewEntityListMethod(String entityName) {
+		'''new«entityName»List'''
 	}
 	
 	def static CharSequence buildNewEntityLookupResultMethod(Entity entity) {
@@ -518,21 +530,23 @@ class TestUtils {
 		
 		val fieldName = entity.fieldName
 		
-		val paramName = if (slot.isEntity && hasOneToMany) slot.asEntity.getEntityParamFieldName else slot.fieldName
+		val paramName = if (slot.isEntity/* && hasOneToMany*/) slot.asEntity.getEntityParamFieldName else slot.fieldName
 		
 		'''
 		«IF slot.isEntity»
 		
+		«IF !slot.isOneToMany»
 		«slot.buildNewEntityVar»
+		«ENDIF»
 		«IF hasOneToMany»
 		«IF slot.isOneToMany»
-		«fieldName».set«slot.name.toFirstUpper»(Arrays.asList(«paramName»));
+		«fieldName».set«slot.name.toFirstUpper»(«slot.buildNewEntityMethodCall»);
 		«ELSE»
 		«fieldName».set«slot.name.toFirstUpper»(«paramName»);
 		«ENDIF»
 		«ELSE»
 		«slot.buildNewEntityLookupResultVar»
-		«fieldName».set«slot.name.toFirstUpper»(«paramName»);
+		«fieldName».set«slot.name.toFirstUpper»(«slot.fieldName»);
 		«ENDIF»
 		
 		«ELSE»
@@ -703,6 +717,10 @@ class TestUtils {
 		entity.slots.filter[isEntity].forEach[
 			val slotEntity = it.asEntity
 			entity.addImport('import ' + slotEntity.package + '.' + slotEntity.toEntityName + ';')
+			if (it.isOneToMany/* && it.isRelationRefers*/) {
+				entity.addImport('import java.util.Set;')				
+				entity.addImport('import java.util.HashSet;')				
+			}
 		]
 	}
 	
@@ -1064,7 +1082,7 @@ class TestUtils {
 	}
 	
 	def static CharSequence generateInicializeCreateDataForEntity(Entity entity) {
-		entity.generateInicializeCreateDataForEntity(1, 33)
+		entity.generateInicializeCreateDataForEntity(1, NEW_ENTIY_LIST_SIZE_INT)
 	}
 	
 	def static CharSequence generateInicializeCreateDataForEntity(Entity entity, int lastRecord) {
@@ -1090,7 +1108,7 @@ class TestUtils {
 		List<«entityName»> «TEST_DATA» = new ArrayList<>();
 		final int «LAST_RECORD_VAR» = «lastRecord»;
 		«IF hasOwnerOneToMany»
-		«ownerEntityName» «ownerEntityNameVar» = new«ownerEntityName»(lastRecord);
+		«ownerEntityName» «ownerEntityNameVar» = new«ownerEntityName»(/*lastRecord*/);
 		«TEST_DATA».addAll(«ownerEntityNameVar».«slotManyToOne_OneToMany.getOppositeSlot.buildMethodGet»);
 		«ELSE»
 		final int «FIRST_RECORD_VAR» = «firstRecord»;
@@ -1288,7 +1306,7 @@ class TestUtils {
 		val entity = slot.ownerEntity
 		val autoComplateName = slot.toAutoCompleteName
 		
-		val size = 33;
+		val size = NEW_ENTIY_LIST_SIZE_INT;
 		val resultSize = 1;
 		
 		val testMethodName = '''test«autoComplateName.toFirstUpper»'''
@@ -1340,7 +1358,7 @@ class TestUtils {
 		
 		val firstAutocompleteKeySlot = entity.slots.filter[it.isAutoCompleteKey].head
 		
-		val size = 33;
+		val size = NEW_ENTIY_LIST_SIZE_INT;
 		val resultSize = 1;
 		
 		

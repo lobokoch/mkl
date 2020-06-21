@@ -415,6 +415,7 @@ class RuleWhenOperator {
 }*/
 
 enum RepositoryResultKind {
+	DEFAULT as 'Default'
 	ENTITY as 'Entity'
 	OPTIONAL as 'Optional'
 	LIST as 'List'
@@ -1032,16 +1033,47 @@ class Validation {
 	String custom
 }
 
+class Param {
+	String paramName
+	String paramType
+}
+
 class RepositoryFindBy {
 	String methodName
 	String query = 'auto' // default, can be 'none' or a custom SQL command.
-	String name
-	String custom
+	String customName
+	//String custom
 	RepositoryResultKind resultKind
 	String[] packages
+	contains Param[] params
 	boolean paged
+	boolean noController = 'false'
 	String documentation
 	refers Slot ownerSlot opposite repositoryFindBy
+	
+	op boolean hasNoResultKind() {
+		!hasResultKind
+	}
+	
+	op boolean hasResultKind() {
+		RepositoryResultKind.DEFAULT !== resultKind
+	}
+	
+	op boolean isResultMany() {
+		RepositoryResultKind.COLLECTION == resultKind || RepositoryResultKind.LIST == resultKind
+	}
+	
+	op boolean isResultOptional() {
+		RepositoryResultKind.OPTIONAL == resultKind
+	}
+	
+	op boolean isResultEntity() {
+		RepositoryResultKind.ENTITY == resultKind
+	}
+	
+	op boolean isResultVoid() {
+		RepositoryResultKind.VOID == resultKind
+	}
 	
 	op boolean isDeleteBy() {
 		return 'deleteBy' == methodName
@@ -1055,9 +1087,16 @@ class RepositoryFindBy {
 		documentation !== null && !documentation.empty
 	}
 	
-	op boolean hasCustom() {
-		custom !== null && !custom.empty
+	op boolean hasParams() {
+		params !== null && params.length > 0
 	}
+	op boolean hasCustomName() {
+		customName !== null && !customName.trim.isEmpty
+	}
+	
+	/*op boolean hasCustom() {
+		custom !== null && !custom.empty
+	}*/
 	
 	op boolean hasPackages() {
 		packages !== null && !packages.empty

@@ -43,6 +43,7 @@ import org.eclipse.emf.ecore.EObject
 
 import static extension br.com.kerubin.dsl.mkl.generator.Utils.*
 import static extension org.apache.commons.lang3.StringUtils.*
+import br.com.kerubin.dsl.mkl.model.Param
 
 class EntityUtils {
 	
@@ -421,6 +422,11 @@ class EntityUtils {
 	
 	def static boolean hasOneToMany(Entity entity) {
 		val result = entity.slots.exists[oneToMany]
+		result
+	}
+	
+	def static boolean hasToMany(Entity entity) {
+		val result = entity.slots.exists[oneToMany || manyToMany]
 		result
 	}
 	
@@ -1751,12 +1757,12 @@ class EntityUtils {
 			sb.append(' != null ? ')
 			sb.append(get)
 			if (slot.isMany) {
-				if (slot.isBidirectional) {
+				/*if (slot.isBidirectional) {
 					sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toList())')					
-				} else {
+				} else {*/
 					sb.append('.stream().map(it -> it.clone(visited)).collect(java.util.stream.Collectors.toSet())')				
 					
-				}
+				/*}*/
 			}
 			else {
 				sb.append('.clone(visited)')
@@ -1894,6 +1900,10 @@ class EntityUtils {
 	}
 	
 	def static getIdGetMethod(Entity entity) {
+		'get' + entity.id.name.toFirstUpper + '(' + ')'
+	}
+	
+	def static buildIdGetMethod(Entity entity) {
 		'get' + entity.id.name.toFirstUpper + '(' + ')'
 	}
 	
@@ -2155,7 +2165,149 @@ class EntityUtils {
 		'import ' + service.servicePackage + '.' + service.toServiceConstantsName2 + ';'
 	}
 	
-	def static String generateRepositoryFindByMethod(RepositoryFindBy findByObj, boolean isRepository, boolean isCall) {
+	def static buildFindByMethodName(RepositoryFindBy findByObj, boolean isRepository) {
+		val slot = findByObj.ownerSlot
+		val ownerEntity = slot.ownerEntity
+		val isEntity = slot.isEntity
+		
+		if (findByObj.hasCustomName) 
+			return findByObj.customName
+
+		val entity = slot.asEntity
+		val field = if (isEntity) entity.id else slot
+		
+		val methodName = findByObj.methodName
+		val method = methodName.replace('By', '')
+		
+		val findBy = new StringBuilder
+		findBy.append(method)
+		if (!isRepository) {
+			findBy.append(ownerEntity.toDtoName)
+		}
+		findBy.append('By')
+		
+		findBy.append(slot.fieldName.toFirstUpper)
+		
+		if (isEntity && isRepository) { // field is slot.asEntity.id
+			findBy.append(field.fieldName.toFirstUpper)
+		}
+		
+		findBy.toString
+		
+	}
+	
+	def static buildFindByMethodReturn(RepositoryFindBy findByObj, boolean isController) {
+		val slot = findByObj.ownerSlot
+		val paged = findByObj.isPaged
+		val ownerEntity = slot.ownerEntity
+		val isFindBy = findByObj.isFindBy
+		val isEntity = slot.isEntity
+		
+		val entityName = if (isController) ownerEntity.toEntityDTOName else ownerEntity.toEntityName
+		
+		if (paged) {
+			if (isController) {
+				return '''PageResult<«entityName»>'''
+				
+			} else {
+				ownerEntity.addImport('import org.springframework.data.domain.Page;')
+				return '''Page<«entityName»>'''				
+			}
+		} else {
+			val isMany = isEntity && (slot.isManyToOne || slot.isManyToMany)
+			if (isMany && isFindBy && findByObj.hasNoResultKind) { // If is an manyto entity slot, returns a collection.
+				ownerEntity.addImport('import java.util.Collection;')
+				return '''Collection<«entityName»>'''				
+			}
+			
+			val resultKindEnum = findByObj?.resultKind ?: if (isFindBy) RepositoryResultKind.ENTITY else RepositoryResultKind.VOID
+			val resultKind = switch resultKindEnum {
+				case RepositoryResultKind.OPTIONAL: {
+					ownerEntity.addImport('import java.util.Optional;')
+					'''Optional<«entityName»>'''
+				}
+				case RepositoryResultKind.COLLECTION: {
+					ownerEntity.addImport('import java.util.Collection;')
+					'''Collection<«entityName»>'''
+				}
+				case RepositoryResultKind.LIST: {
+					ownerEntity.addImport('import java.util.List;')
+					'''List<«entityName»>'''
+				}
+				case RepositoryResultKind.VOID: {
+					'''void'''
+				}
+				default: '''«IF isFindBy»«entityName»«ELSE»void«ENDIF»'''
+			}
+			
+			return resultKind;
+		}
+		
+	}
+	
+	def static String buildFindByMethodParams(RepositoryFindBy findByObj, boolean isCall) {
+		findByObj.buildFindByMethodParams(isCall, /*isController=*/false)
+	}
+	
+	def static String buildFindByMethodParams(RepositoryFindBy findByObj, boolean isCall, boolean isController) {
+		val slot = findByObj.ownerSlot
+		val paged = findByObj.isPaged
+		val ownerEntity = slot.ownerEntity
+		val isEntity = slot.isEntity
+		val hasParams = findByObj.hasParams
+		
+		if (slot.isEnum) {
+			ownerEntity.addImport('import ' + slot.asEnum.enumPackage + ';')
+		}
+		
+		val findBy = new StringBuilder
+		
+		val entity = slot.asEntity
+		val field = if (isEntity) entity.id else slot
+		
+		if (isCall) {
+			if (hasParams) {
+				val params = findByObj.params.map[it.paramName].join(', ')
+				findBy.append(params)		
+			} else {
+				findBy.append(field.fieldName)				
+			}
+		} else {
+			if (hasParams) {
+				val params = findByObj.params.map[it.buildFindByCallParam(isController, ownerEntity)].join(', ')
+				findBy.append(params)		
+			} else {
+				findBy.append(buildFindByCallParam(field.toJavaType, field.fieldName, isController, ownerEntity))				
+			}
+		}
+		
+		if (paged) {
+			ownerEntity.addImport('import org.springframework.data.domain.Pageable;')
+			findBy.append(', ')
+			
+			if (!isCall) {
+				findBy.append('Pageable ')
+			}
+			
+			findBy.append('pageable')
+		}
+		
+		return findBy.toString
+	}
+	
+	def static buildFindByCallParam(Param param, boolean isController, Entity ownerEntity) {
+		buildFindByCallParam(param.paramType, param.paramName, isController, ownerEntity)
+	}
+	
+	def static buildFindByCallParam(String paramType, String paramName, boolean isController, Entity ownerEntity) {
+		if (isController && ownerEntity !== null) {
+			ownerEntity.addImport('import org.springframework.web.bind.annotation.RequestParam;')
+		}
+		
+		'''«IF isController»@RequestParam «ENDIF»«paramType» «paramName»'''
+	}
+	
+	def static String generateRepositoryFindByMethod_OLD(RepositoryFindBy findByObj, boolean isRepository, boolean isCall) {
 		val slot = findByObj.ownerSlot
 		val paged = findByObj.isPaged
 		val ownerEntity = slot.ownerEntity
@@ -2166,7 +2318,7 @@ class EntityUtils {
 		
 		val resultKindEnum = findByObj?.resultKind ?: if (isFindBy) RepositoryResultKind.ENTITY else RepositoryResultKind.VOID 
 		
-		if (findByObj.hasCustom) {
+		if (findByObj.hasCustomName) {
 			
 			val resultKind = switch resultKindEnum {
 				case RepositoryResultKind.OPTIONAL: {
@@ -2199,7 +2351,7 @@ class EntityUtils {
 			 * «findByObj.documentation»
 			 **/
 			«ENDIF»
-			«resultKind» «findByObj.custom»;
+			«resultKind» «findByObj.hasCustomName»;
 			'''
 			
 			return customResult

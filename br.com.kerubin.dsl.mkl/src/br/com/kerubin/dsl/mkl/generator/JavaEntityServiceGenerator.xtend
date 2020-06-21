@@ -11,6 +11,7 @@ import static extension br.com.kerubin.dsl.mkl.generator.RuleUtils.*
 import br.com.kerubin.dsl.mkl.model.RepositoryFindBy
 import br.com.kerubin.dsl.mkl.model.RuleTargetField
 import br.com.kerubin.dsl.mkl.model.ModifierFunctionName
+import org.eclipse.emf.common.util.EList
 
 class JavaEntityServiceGenerator extends GeneratorExecutor implements IGeneratorExecutor {
 	
@@ -56,8 +57,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		val ruleMakeCopies = entity.ruleMakeCopies
 		val fkSlots = entity.getEntitySlots
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
-		val findBy = findBySlots.map['public ' + it.repositoryFindBy.map[generateRepositoryFindByMethod(false, false) + ';'].join('\r\n')].join('\r\n')
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy/* && it.repositoryFindBy.exists[it.noController]*/].map[it.repositoryFindBy]
+		val findBy = findBySlots.generateInterfaceFindByForEntity
 		
 		if (entity.hasAutoComplete) {
 			entity.addImport('import java.util.Collection;')
@@ -105,21 +106,25 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			«ruleActions.map[generateRuleActionsInterfaceMethod].join»
 			«ruleMakeCopies.map[generateRuleMakeCopiesActionsInterfaceMethod].join»
-			«IF !findBy.isEmpty»
-			// findBy methods
+			«IF !findBySlots.isEmpty»
 			«findBy»
 			«ENDIF»
 		}
 		'''
 	}
 	
-	/*def CharSequence generateInterfaceFindByForEntity(Slot slot) {
-		val findByList = slot.repositoryFindBy;
+	def CharSequence generateInterfaceFindByForEntity(Iterable<EList<RepositoryFindBy>> findBySlots) {
 		'''
-		// findBy for field «slot.fieldName»
-		«findByList.map[it.generateSlotFindBy].join»
+		// Begin findBy methods
+		«findBySlots.map[it.map[it2 |
+			val signature = '''
+			«it2.buildFindByMethodReturn(false)» «it2.buildFindByMethodName(false)»(«it2.buildFindByMethodParams(false)»);
+			'''
+			return signature
+		].join].join»
+		// End findBy methods
 		'''
-	}*/
+	}
 	
 	
 	def Object generateSlotAutoCompleteInterfaceMethod(Slot slot) {
@@ -201,7 +206,7 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		val rulesFormBeforeSave = entity.getRulesFormBeforeSave
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy/* && it.repositoryFindBy.exists[!it.hasCustom]*/]
 		
 		if (entity.hasAutoComplete) {
 			entity.addImport('import java.util.Collection;')
@@ -466,8 +471,9 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 			«ENDIF»
 			«IF !findBySlots.isEmpty»
 			
-			// findBy methods
+			// Begin findBy methods
 			«findBySlots.map[it.generateFindByImplementations].join»
+			// End findBy methods
 			«ENDIF»
 		}
 		'''
@@ -563,8 +569,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 	
 	def CharSequence generateFindByImplementation(RepositoryFindBy findByObj) {
 		
-		val findByMethod = findByObj.generateRepositoryFindByMethod(false, false)
-		val findByMethodCall = findByObj.generateRepositoryFindByMethod(true, true)
+		//val findByMethod = findByObj.generateRepositoryFindByMethod(false, false)
+		//val findByMethodCall = findByObj.generateRepositoryFindByMethod(true, true)
 		
 		val slot = findByObj.ownerSlot
 		val ownerEntity = slot.ownerEntity
@@ -575,10 +581,8 @@ class JavaEntityServiceGenerator extends GeneratorExecutor implements IGenerator
 		
 		@Transactional«IF isFindBy»(readOnly = true)«ENDIF»
 		@Override
-		public «findByMethod» {
-			
-			«IF isFindBy»return «ENDIF»«repositoryVar».«findByMethodCall»;
-			
+		public «findByObj.buildFindByMethodReturn(false)» «findByObj.buildFindByMethodName(false)»(«findByObj.buildFindByMethodParams(false)») {
+			«IF isFindBy»return «ENDIF»«repositoryVar».«findByObj.buildFindByMethodName(true)»(«findByObj.buildFindByMethodParams(true)»);
 		}
 		'''
 	}

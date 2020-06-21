@@ -107,11 +107,13 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 		'''
 		
 		«findByList.map[
-			var code = it.generateRepositoryFindByMethod(true, false)
-			if (!it.hasCustom) {
+			var code = ''//it.generateRepositoryFindByMethod(false)
+			/*if (!it.hasCustom) {
 				code += ';'
-			}
+			}*/
 			
+			val signature = '''«it.buildFindByMethodReturn(false)» «it.buildFindByMethodName(true)»(«it.buildFindByMethodParams(false)»);'''
+			code += signature
 			// Gera o comando delete
 			if (it.isDeleteBy) {
 				var query = it.query

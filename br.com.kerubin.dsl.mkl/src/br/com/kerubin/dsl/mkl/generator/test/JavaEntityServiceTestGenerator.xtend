@@ -47,7 +47,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		val dependenciesSource = new StringBuilder() 
 		
-		entity.generateTestDependencies(dependenciesSource, new ArrayList())
+		entity.generateTestDependencies(null, dependenciesSource, new ArrayList())
 		
 		val ruleMakeCopies = entity.ruleMakeCopies
 		
@@ -137,17 +137,17 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 	}
 	
-	def void generateTestDependencies(Entity entity, StringBuilder source, List<String> visited) {
+	def void generateTestDependencies(Entity entity, Slot slot, StringBuilder source, List<String> visited) {
 		
 		if (!visited.contains(entity.name)) {
-			var result = entity.buildNewEntityMethod
+			var result = entity.buildNewEntityMethod(slot)
 			result = result + '' + entity.buildNewEntityLookupResultMethod
 			source.append(result)
 			
 			visited.add(entity.name)
 			
 			val slots = entity.slots.filter[it.isEntity]
-			slots.forEach[it.asEntity.generateTestDependencies(source, visited)]
+			slots.forEach[it.asEntity.generateTestDependencies(it, source, visited)]
 		}
 		
 	}

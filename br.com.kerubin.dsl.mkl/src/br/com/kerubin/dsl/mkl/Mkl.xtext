@@ -282,7 +282,7 @@ PublicObject:
 // WARNING: Cannot ad 'id' here, errors will happen in the grammar.
 ID_KEYWORD:
 	ID | 'name' | 'parent' | 'optional' | 'many' | 'form' | 'password' | 
-	'transient' | 'validation' | 'description' | 'version' | 'title'
+	'transient' | 'validation' | 'description' | 'version' | 'title' | 'java'
 ;
 
  fragment Name returns Named:
@@ -349,18 +349,30 @@ RepositoryFindBy:
 	methodName = ('findBy' | 'deleteBy') ('('
 		(
 			('documentation' ':' documentation = STRING)? &
-			('custom' ':' custom = STRING)? &
+			/*('custom' ':' custom = STRING)? &*/
+			('methodName' ':' customName = ID)? &
 			('query' ':' (query = STRING | 'auto' | 'none'))? & // default is auto
-			('resultKind' ':' resultKind = RepositoryResultKind)? & 
+			('resultType' ':' resultKind = RepositoryResultKind)? & 
 			(paged ?= 'paged')? & 
-			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')?
+			(noController ?= 'noController')? & 
+			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')? &
+			('params' ':' '[' params += Param* ']')?
 			
 		)
 	')')?
 ;
 
+Param:
+	'param' '('
+	(
+		('name' ':' paramName = ID) &
+		('type' ':' paramType = STRING)
+	)
+	')' | (',' Param)
+;
+
 enum RepositoryResultKind:
-	ENTITY='Entity' | OPTIONAL='Optional' | LIST='List' | COLLECTION='Collection' | VOID='void'
+	DEFAULT='Default' | ENTITY='Entity' | OPTIONAL='Optional' | LIST='List' | COLLECTION='Collection' | VOID='void'
 ;
 
 Validation:

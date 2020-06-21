@@ -57,23 +57,25 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			entity.addImport('import java.util.Collection;')
 		}
 		
+		entity.addImport('import java.util.List;')
+		
 		entity.addImport('import org.springframework.data.domain.Page;')
 		entity.addImport('import org.springframework.data.domain.Pageable;')
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.hasCustom]]
+		if (entity.hasAutoComplete) {
+			entity.addImport('import org.springframework.web.bind.annotation.RequestParam;')			
+		}
+		
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.noController]]
 		val findBySlotsContent = findBySlots.map[it.generateFindByImplementations].join
 		
 		
 		'''
 		package «entity.package»;
 		
-		«IF entity.hasAutoComplete»
-		import org.springframework.web.bind.annotation.RequestParam;
-		«ENDIF»
 		«IF !ruleActions.empty || !ruleMakeCopies.isEmpty»
 		import org.springframework.web.server.ResponseStatusException;
 		«ENDIF»
-		import java.util.List;
 		import java.util.stream.Collectors;
 		
 		import javax.validation.Valid;
@@ -224,8 +226,9 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«ENDIF»
 			«IF !findBySlots.isEmpty»
 						
-			// findBy methods
+			// Begin findBy methods
 			«findBySlotsContent»
+			// End findBy methods
 			«ENDIF»
 		}
 		'''
@@ -239,8 +242,72 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 	
 	def CharSequence generateFindByImplementation(RepositoryFindBy findByObj) {
 		
-		val findByMethod = findByObj.generateRepositoryFindByMethod(false, false)
-		val findByMethodCall = findByObj.generateRepositoryFindByMethod(false, true)
+		val findByMethod =  findByObj.buildFindByMethodName(false)
+		
+		val slot = findByObj.ownerSlot
+		val ownerEntity = slot.ownerEntity
+		
+		val isEnableDoc = ownerEntity.service.isEnableDoc
+		val title = ownerEntity.title
+		
+		val by = if (slot.isEntity) slot.asEntity.title else slot.name
+		val entityDTOName = ownerEntity.toEntityDTOName
+		
+		val entityDTOVar = ownerEntity.toEntityDTOName.toFirstLower
+		val entityServiceVar = ownerEntity.toServiceName.toFirstLower
+		val toDTO = 'convertEntityToDto'
+		val isPaged = findByObj.isPaged
+		
+		val isEntity = slot.isEntity
+		val isMany = isEntity && (slot.isManyToOne || slot.isManyToMany)
+		
+		val isFindBy = findByObj.isFindBy
+		val isResultMany = (findByObj.isResultMany || (isMany && findByObj.hasNoResultKind))
+		val isResultOptional = findByObj.isResultOptional && !isPaged
+		
+		val findByMethodReturnNotController = findByObj.buildFindByMethodReturn(false)
+		val findByMethodReturnController = if (isResultOptional) entityDTOName else findByObj.buildFindByMethodReturn(true)
+		
+		'''
+		
+		«IF isFindBy»
+		@Transactional(readOnly = true)
+		@GetMapping("/«findByMethod»")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Retrieves «IF isMany»collection of «ENDIF»«title» by «by»")
+		«ENDIF»
+		public «findByMethodReturnController» «findByMethod»(«findByObj.buildFindByMethodParams(false, true)») {
+			«findByMethodReturnNotController» content = «entityServiceVar».«findByMethod»(«findByObj.buildFindByMethodParams(true)»);
+			«IF isResultMany || isPaged»
+			List<«entityDTOName»> result = content«IF isPaged».getContent()«ENDIF».stream().map(it -> «entityDTOVar»DTOConverter.«toDTO»(it)).collect(Collectors.toList());
+			«ELSE»
+			«findByMethodReturnController» result = «entityDTOVar»DTOConverter.«toDTO»(content«IF isResultOptional».orElse(null)«ENDIF»);
+			«ENDIF»
+			«IF isPaged»
+			PageResult<«entityDTOName»> pageResult = new PageResult<>(result, content.getNumber(), content.getSize(), content.getTotalElements());
+			return pageResult;
+			«ELSE»
+			return result;
+			«ENDIF»
+		}
+		«ELSE»
+		@ResponseStatus(HttpStatus.NO_CONTENT)
+		@DeleteMapping("/«findByMethod»/{id}")
+		«IF isEnableDoc»
+		@ApiOperation(value = "Deletes «title» by «by»")
+		«ENDIF»
+		public «findByObj.buildFindByMethodReturn(true)» «findByMethod»(«findByObj.buildFindByMethodParams(false, true)») {
+			«entityServiceVar». «entityServiceVar».«findByMethod»(«findByObj.buildFindByMethodParams(true)»);
+		}
+		«ENDIF»
+		
+		'''
+	}
+	
+	def CharSequence generateFindByImplementation_OLD(RepositoryFindBy findByObj) {
+		
+		val findByMethod = ''//findByObj.generateRepositoryFindByMethod(false, false)
+		val findByMethodCall = ''//findByObj.generateRepositoryFindByMethod(false, true)
 		
 		val slot = findByObj.ownerSlot
 		val ownerEntity = slot.ownerEntity

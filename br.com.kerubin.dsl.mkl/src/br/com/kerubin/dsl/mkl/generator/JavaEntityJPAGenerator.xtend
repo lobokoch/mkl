@@ -468,15 +468,19 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateGetter(Slot slot) {
 		// toMany não bi-direcional use set.
 		'''
-		«IF slot.isOneToMany && slot.isBidirectional»
-		public java.util.List<«slot.toJavaType»> get«slot.name.toFirstUpper»() {
-		«ELSEIF slot.isOneToMany || slot.isManyToMany»
+		«IF slot.isToMany»
 		public java.util.Set<«slot.toJavaType»> get«slot.name.toFirstUpper»() {
 		«ELSE»
 		public «slot.toJavaType» get«slot.name.toFirstUpper»() {
 		«ENDIF»
 			return «slot.name.toFirstLower»;
 		}
+		«IF slot.isBoolean»
+		
+		public boolean is«slot.name.toFirstUpper»() {
+			return Boolean.TRUE.equals(«slot.fieldName»);
+		}
+		«ENDIF»
 		'''
 	}
 	
@@ -535,24 +539,16 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	def CharSequence generateSetter(Slot slot) {
 		val slotName = slot.name.toFirstLower
 		
-		if (slot.isOneToMany) {
-			println("OK.")
-		}
-		
 		'''
-		«IF slot.many && slot.isOneToMany && slot.isBidirectional»
-		public void set«slot.name.toFirstUpper»(java.util.List<«slot.toJavaType»> «slotName») {
-		«ELSEIF slot.many && ((slot.isManyToMany && slot.isRelationContains) || slot.isOneToMany)»
+		«IF slot.isToMany»
 		public void set«slot.name.toFirstUpper»(java.util.Set<«slot.toJavaType»> «slotName») {
 		«ELSEIF ! slot.isManyToMany»
 		public void set«slot.name.toFirstUpper»(«slot.toJavaType» «slotName») {
 		«ENDIF»
-			
 			«IF slot.many && slot.isToMany /*&& slot.isRelationContains*/»
 			// First remove existing items.
 			if (this.«slotName» != null) {
 				this.«slotName».clear();
-				// this.«slotName».forEach(this::remove«slot.relationFieldNameToAddRemoveMethod.toFirstUpper»);
 			}
 			
 			if («slotName» != null) {
@@ -616,7 +612,9 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 	
 	//From https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
 	def CharSequence generateEquals(Entity entity) {
-		val id = if (entity.id.isEntity) 'id' else entity.id.name
+		// Não lembro mais pra que usa isso: val id = if (entity.id.isEntity) 'id' else entity.id.name
+		val slots = entity.slots
+		
 		'''
 		
 		@Override
@@ -628,16 +626,52 @@ class JavaEntityJPAGenerator extends GeneratorExecutor implements IGeneratorExec
 			if (getClass() != obj.getClass())
 				return false;
 			«entity.toEntityName» other = («entity.toEntityName») obj;
-			if («id» == null) {
-				if (other.«id» != null)
-					return false;
-			} else if (!«id».equals(other.«id»))
-				return false;
+				
+			«slots.map[buildSlotEquals].join»
 			
 			return true;
 		}
 		'''
 		
+	}
+	
+	def CharSequence buildSlotEquals(Slot slot) {
+		val name = slot.fieldName
+		val isEntity = slot.isEntity
+		val isMany = isEntity && (slot.isOneToMany || slot.isManyToMany)
+		val getId = if (isEntity) slot.asEntity.buildIdGetMethod else null
+		
+		'''
+		
+		// Field: «name»
+		«IF slot.isSmallint»
+		if («name» != other.«name»)
+			return false;
+		«ELSE»
+		if («name» == null) {
+			if (other.«name» != null) {
+				return false;
+			}
+		«IF isEntity»
+		«IF isMany»
+		} else if («name».size() != other.«name».size()) {
+			return false;
+		} else if (!«name».stream().allMatch(it1 -> other.«name».stream().anyMatch(it2 -> it1.«getId».equals(it2.«getId»)))) {
+			return false;
+		}
+		«ELSE»
+		} else if («name».«getId» == null) {
+			if (other.«name».«getId» != null)
+				return false;
+		} else if (!«name».«getId».equals(other.«name».«getId»)) 
+			return false;
+		«ENDIF»
+		«ELSE»
+		} else if (!«name».equals(other.«name»))
+			return false;
+		«ENDIF»
+		«ENDIF»
+		'''
 	}
 	
 	//From: https://vladmihalcea.com/the-best-way-to-implement-equals-hashcode-and-tostring-with-jpa-and-hibernate/
