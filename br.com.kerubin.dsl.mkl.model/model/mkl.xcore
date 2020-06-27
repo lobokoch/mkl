@@ -1047,7 +1047,7 @@ class RepositoryFindBy {
 	String[] packages
 	contains Param[] params
 	boolean paged
-	boolean noController = 'false'
+	boolean enableController = 'false'
 	String documentation
 	refers Slot ownerSlot opposite repositoryFindBy
 	
