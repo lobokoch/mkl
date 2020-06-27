@@ -66,7 +66,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			entity.addImport('import org.springframework.web.bind.annotation.RequestParam;')			
 		}
 		
-		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[!it.noController]]
+		val findBySlots = entity.slots.filter[it.hasRepositoryFindBy && it.repositoryFindBy.exists[it.enableController]]
 		val findBySlotsContent = findBySlots.map[it.generateFindByImplementations].join
 		
 		

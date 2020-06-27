@@ -151,9 +151,15 @@ class TestUtils {
 		val entity = slot.ownerEntity
 		val getField = slot.buildMethodGet
 		val fieldName = entity.fieldName
+		val idName = slot.asEntity.id.fieldNameAsSet
 		
 		'''
 		«IF slot.isOneToMany»
+		
+		// Ids can be null in one of sides
+		«varName».«getField».forEach(it -> it.«idName»(null));
+		«fieldName».«getField».forEach(it -> it.«idName»(null));
+		
 		assertThat(«varName».«getField»).isEqualTo(«fieldName».«getField»);
 		«ELSE»
 		assertThat(«varName».«getField»).isEqualToIgnoringGivenFields(«fieldName».«getField», «IGNORED_FIELDS»);

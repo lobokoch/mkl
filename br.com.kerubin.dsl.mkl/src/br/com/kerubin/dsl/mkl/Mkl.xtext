@@ -311,7 +311,6 @@ Slot:
 			(unaccent = Unaccent)? &
 			
 			('label' ':' label=STRING)? &
-			//('labelGrid' ':' labelGrid=STRING)? &
 			(sumField = SumField)? &
 			('mask' ':' mask=STRING)? &
 			(^hidden ?= 'hidden')? &
@@ -322,7 +321,6 @@ Slot:
 			(web = Web)? &
 			(sort = Sort)? &
 			(validations += Validation*) &
-			//(hibFilterDefList += HibFilterDef*) &
 			(repositoryFindBy += RepositoryFindBy*) &
 			(onChange ?= 'onChange')? &
 			(autoFocus ?= 'autoFocus')? &
@@ -349,12 +347,11 @@ RepositoryFindBy:
 	methodName = ('findBy' | 'deleteBy') ('('
 		(
 			('documentation' ':' documentation = STRING)? &
-			/*('custom' ':' custom = STRING)? &*/
 			('methodName' ':' customName = ID)? &
 			('query' ':' (query = STRING | 'auto' | 'none'))? & // default is auto
 			('resultType' ':' resultKind = RepositoryResultKind)? & 
 			(paged ?= 'paged')? & 
-			(noController ?= 'noController')? & 
+			(enableController ?= 'enableController')? & 
 			('packages' ':' '[' packages += STRING | (',' packages += STRING*) ']')? &
 			('params' ':' '[' params += Param* ']')?
 			
