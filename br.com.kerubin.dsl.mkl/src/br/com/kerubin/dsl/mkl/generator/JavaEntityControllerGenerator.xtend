@@ -208,7 +208,7 @@ class JavaEntityControllerGenerator extends GeneratorExecutor implements IGenera
 			«ENDIF»
 			
 			«IF entity.hasListFilterMany»
-			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
+			«entity.slots.filter[it.isListFilterManyEntity].map[generateListFilterAutoComplete].join»
 			«ENDIF»
 			
 			«IF entity.hasSumFields»

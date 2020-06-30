@@ -776,23 +776,43 @@ class WebEntityListComponentHTMLGenerator extends GeneratorExecutor implements I
 	
 	def CharSequence generateHTMLFilterManyField(Slot slot) {
 		val entity = slot.ownerEntity
-		var styleClass = slot?.listFilter?.styleClass?.getStyleClass
-		if ('ui-md-2' == styleClass) {
-			styleClass = 'ui-md-12'
+		
+		if (slot.isEnum) { // Many for enum, use p-multiSelect
+			val pair = slot.getSlotNameAndTypeForWeb
+			val fieldName = pair.value
+			val isHidden = slot.listFilter.hidden
+			val isReadOnly = slot.listFilter.readOnly
+			
+			'''
+			
+			<div class="«slot.getWebClassForContainerFilter»">
+				<label class="label-r«IF isHidden» hidden«ENDIF»">«slot?.listFilter?.filterOperator?.label ?: fieldName»</label>
+				<p-multiSelect«IF isHidden» class="hidden"«ENDIF»«IF isReadOnly» [disabled]="true"«ENDIF» [options]="«slot.webDropdownOptions»"
+					filterPlaceHolder="Digite para filtrar..." defaultLabel="Selecione"
+					[(ngModel)]="«entity.toEntityListFilterName».«fieldName»">
+				</p-multiSelect>
+			</div>
+			'''
 		}
-		
-		'''
-		
-		<div class="«slot.getWebClassForContainerFilter»">
-			<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
-			<p-autoComplete name="«slot.toAutoCompleteName»" 
-			placeholder="Digite para pesquisar..." [dropdown]="true" 
-			[(ngModel)]="«entity.toEntityListFilterName».«slot.fieldName»" [multiple]="true"
-			[suggestions]="«slot.webAutoCompleteSuggestions»"
-			(completeMethod)="«slot.webAutoCompleteMethod»($event)"
-			field="«slot.fieldName»"></p-autoComplete>
-		</div>
-		'''
+		else { // Many for entity
+			var styleClass = slot?.listFilter?.styleClass?.getStyleClass
+			if ('ui-md-2' == styleClass) {
+				styleClass = 'ui-md-12'
+			}
+			
+			return '''
+			
+			<div class="«slot.getWebClassForContainerFilter»">
+				<label class="label-r">«slot?.listFilter?.filterOperator?.label ?: slot.fieldName»</label>
+				<p-autoComplete name="«slot.toAutoCompleteName»" 
+				placeholder="Digite para pesquisar..." [dropdown]="true" 
+				[(ngModel)]="«entity.toEntityListFilterName».«slot.fieldName»" [multiple]="true"
+				[suggestions]="«slot.webAutoCompleteSuggestions»"
+				(completeMethod)="«slot.webAutoCompleteMethod»($event)"
+				field="«slot.fieldName»"></p-autoComplete>
+			</div>
+			'''
+		}
 	}
 	
 	def CharSequence generateEntityTitle(Entity entity) {

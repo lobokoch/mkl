@@ -254,6 +254,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		val isNull = slot.isNull
 		
 		val isMany = slot.isListFilterMany
+		val isEnum = slot.enum
 		
 		val isBetween = slot.isBetween
 		
@@ -270,7 +271,7 @@ class WebEntityModelGenerator extends GeneratorExecutor implements IGeneratorExe
 		«fieldName2»: «fieldType»;
 		«ENDIF»
 		«IF isMany»
-		«fieldName»: «slot.toAutoCompleteClassName»[];
+		«fieldName»: «IF isEnum»«slot.toWebType»«ELSE»«slot.toAutoCompleteClassName»«ENDIF»[];
 		«ELSEIF isNotNull && isNull»
 		«slot.isNotNullFieldName»: boolean;
 		«slot.isNullFieldName»: boolean;

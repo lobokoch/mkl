@@ -22,7 +22,7 @@ class JavaEntityListFilterAutoCompleteGenerator extends GeneratorExecutor implem
 	}
 	
 	def generateAutoComplete(Entity entity) {
-		val slots = entity.slots.filter[it.isListFilterMany]
+		val slots = entity.slots.filter[it.isListFilterManyEntity]
 		val basePakage = clientGenSourceFolder
 		slots.forEach[ slot |
 			val file = basePakage + entity.packagePath + '/' + slot.toAutoCompleteDTOName + '.java'

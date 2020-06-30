@@ -77,7 +77,7 @@ class JavaEntityRepositoryGenerator extends GeneratorExecutor implements IGenera
 			Collection<«entity.toAutoCompleteName»> autoComplete(@Param("query") String query);
 			«ENDIF»
 			«IF entity.hasListFilterMany»
-			«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoComplete].join»
+			«entity.slots.filter[it.isListFilterManyEntity].map[generateListFilterAutoComplete].join»
 			«ENDIF»
 			«IF !findBySlots.empty»
 			

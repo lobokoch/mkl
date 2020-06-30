@@ -288,6 +288,7 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 		
 		val numberOfCopies1 = 1;
 		val numberOfCopies11 = 11;
+		val numberOfCopies10 = 10;
 		
 		val testMethodName = '''test«actionName.toFirstUpper»_«numberOfCopies1»Copy'''
 		
@@ -329,6 +330,25 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 			«referenceField.generateEntityListByField('copies')»
 			
 			«generateAssertThatListIsEqual('actual', 'copies', /*size=*/numberOfCopies11 + 1)»
+		}
+		
+		@Test
+		public void test«actionName.toFirstUpper»_Day1Copies() {
+			«entityName» baseEntity = «entity.generateNewEntityRecord»;
+			baseEntity.setDataVencimento(LocalDate.of(2020, 7, 1)); // Fixed date of day 1
+						
+			«rule.generateAndSetEntityMakeCopies(/*numberOfCopies=*/numberOfCopies10, /*referenceFieldInterval=*/30)»
+			
+			«rule.generateCallActionEntityMakeCopies»
+			
+			«rule.generateEntityMakeCopiesExpected(numberOfCopies10)»
+			
+			List<«entityName»> actual = «repositoryVar».findAll();
+			
+			«referenceField.generateEntityListByField('actual')»
+			«referenceField.generateEntityListByField('copies')»
+			
+			«generateAssertThatListIsEqual('actual', 'copies', /*size=*/numberOfCopies10 + 1)»
 		}
 		'''
 		
@@ -647,9 +667,10 @@ class JavaEntityServiceTestGenerator extends GeneratorExecutor implements IGener
 	}
 	
 	def CharSequence generateListFilterAutoCompleteTests(Entity entity) {
+		// Only for entity slots, can be also an enum with many.
 		
 		'''
-		«entity.slots.filter[it.isListFilterMany].map[generateListFilterAutoCompleteTest].join»
+		«entity.slots.filter[it.isListFilterManyEntity].map[generateListFilterAutoCompleteTest].join»
 		'''
 	}
 	

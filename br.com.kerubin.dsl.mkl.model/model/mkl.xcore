@@ -1494,6 +1494,10 @@ class Slot extends Element {
 		hasListFilter() && this.listFilter.filterOperator.filterOperatorEnum == FilterOperatorEnum.MANY
 	}
 	
+	op boolean isListFilterManyEntity() {
+		isListFilterMany() && !this.isEnum // Pra enum tem tratamento um pouco diferente.
+	}
+	
 	op boolean hasListFilter() {
 		return this.listFilter !== null
 	}

@@ -496,6 +496,7 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		val isNull = slot.isNull
 			
 		val isMany = isMany(slot)
+		val isEnum = slot.isEnum
 		
 		val isBetween = slot.isBetween 
 		
@@ -525,8 +526,12 @@ class WebEntityServiceGenerator extends GeneratorExecutor implements IGeneratorE
 		«ENDIF»
 		«IF isMany»
 		// «fieldName = slot.fieldName»
-		if («VAR_FILTER».«fieldName») {
+		if («VAR_FILTER».«fieldName»«IF isEnum» && «VAR_FILTER».«fieldName».length > 0«ENDIF») {
+			«IF isEnum»
+			const «fieldName» = «VAR_FILTER».«fieldName».join(',');
+			«ELSE»
 			const «fieldName» = «VAR_FILTER».«fieldName».map(item => item.«fieldName»).join(',');
+			«ENDIF»
 			params = params.set('«fieldName»', «fieldName»);
 		}
 		«ELSEIF isNotNull && isNull»

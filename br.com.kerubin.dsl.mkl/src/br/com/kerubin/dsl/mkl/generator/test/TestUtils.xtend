@@ -1450,26 +1450,15 @@ class TestUtils {
 		'''
 		// Mount expected
 		LocalDate lastDate = «entityVar».«referenceField.buildMethodGet»;
-		List<«entityName»> copies = new ArrayList<>(«size + 1»);
+		List<«entityName»> copies = new ArrayList<>();
 		long interval = «makeCopiesNameVar».getReferenceFieldInterval();
-		int fixedDay = lastDate.getDayOfMonth();
-		int fixedDayCopy = fixedDay;
 		for (int i = 0; i < «makeCopiesNameVar».getNumberOfCopies(); i++) {
 			«entityName» copiedEntity = «entityVar».clone();
 			copies.add(copiedEntity);
 			copiedEntity.«entity.id.buildMethodSet('null')»;
-			lastDate = lastDate.plus(interval, ChronoUnit.DAYS);
-			if (interval == 30) {
-				int length = lastDate.lengthOfMonth();
-				while (fixedDay > length) {
-				    fixedDay--;
-				}
-				lastDate = lastDate.withDayOfMonth(fixedDay);
-				fixedDay = fixedDayCopy;
-			}
+			lastDate = interval == 30 ? lastDate.plusMonths(1) : lastDate.plus(interval, ChronoUnit.DAYS);
 			copiedEntity.«referenceField.buildMethodSet('lastDate')»;
 		}
-		
 		copies.add(«entityVar»);
 		'''
 	}
